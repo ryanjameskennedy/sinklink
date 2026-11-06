@@ -52,7 +52,7 @@ workflow PIPELINE_INITIALISATION {
     //
     // Validate parameters and generate parameter summary to stdout
     //
-    command = "nextflow run ${workflow.manifest.name} -profile <docker/singularity/.../institute> --input samplesheet.csv --outdir <OUTDIR>"
+    command = "nextflow run ${workflow.manifest.name} -profile <docker/singularity/.../institute> --input samplesheet.csv --metadata metadata.csv --schemas_dir <SCHEMAS_DIR> --outdir <OUTDIR>"
 
     UTILS_NFSCHEMA_PLUGIN (
         workflow,
@@ -74,26 +74,20 @@ workflow PIPELINE_INITIALISATION {
     )
 
     //
-    // Create channel from input file provided through params.input
+    // Create channel from input file provided through params.input, adding the
+    // transmission group, growth, schema and expected genome size from params.metadata
     //
+    def metadata     = readMetadata(params.metadata)
+    def species_map  = readTsv(assetPath(params.species_map, 'species_map.tsv')).collectEntries { row -> [ row.growth, row.schema ] }
+    def schema_table = readTsv(assetPath(params.schema_table, 'schemas.tsv')).collectEntries { row -> [ row.schema, row ] }
 
     channel
         .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
-        .map {
-            meta, fastq_1, fastq_2 ->
-                if (!fastq_2) {
-                    return [ meta.id, meta + [ single_end:true ], [ fastq_1 ] ]
-                } else {
-                    return [ meta.id, meta + [ single_end:false ], [ fastq_1, fastq_2 ] ]
-                }
+        .map { meta, fastq_1, fastq_2 ->
+            validateInputSamplesheet(meta, fastq_1, fastq_2)
         }
-        .groupTuple()
-        .map { samplesheet ->
-            validateInputSamplesheet(samplesheet)
-        }
-        .map {
-            meta, fastqs ->
-                return [ meta, fastqs.flatten() ]
+        .map { meta, fastqs ->
+            [ annotateSample(meta, metadata, species_map, schema_table), fastqs ]
         }
         .set { ch_samplesheet }
 
@@ -141,27 +135,89 @@ workflow PIPELINE_COMPLETION {
 //
 // Validate channels from input samplesheet
 //
-def validateInputSamplesheet(input) {
-    def (metas, fastqs) = input[1..2]
-
-    // Check that multiple runs of the same sample are of the same datatype i.e. single-end / paired-end
-    def endedness_ok = metas.collect{ meta -> meta.single_end }.unique().size == 1
-    if (!endedness_ok) {
-        error("Please check input samplesheet -> Multiple runs of a sample must be of the same datatype i.e. single-end or paired-end: ${metas[0].id}")
+def validateInputSamplesheet(meta, fastq_1, fastq_2) {
+    if (meta.platform == 'nanopore' && fastq_2) {
+        error("Please check input samplesheet -> Nanopore samples take fastq_1 only: ${meta.id}")
     }
-
-    return [ metas[0], fastqs ]
+    def single_end = !fastq_2
+    def fastqs = single_end ? [ fastq_1 ] : [ fastq_1, fastq_2 ]
+    return [ meta + [ single_end: single_end ], fastqs ]
 }
+
+//
+// A table from --schema_table, --species_map or --qc_thresholds, or the copy in assets/
+//
+def assetPath(value, name) {
+    return value ?: "${projectDir}/assets/${name}"
+}
+
+//
+// Read a TSV file with a header into a list of maps
+//
+def readTsv(path) {
+    return file(path, checkIfExists: true).splitCsv(header: true, sep: '\t')
+}
+
+//
+// Read the study metadata (translation_id, transmission, growth, ...) keyed by translation_id
+//
+def readMetadata(path) {
+    def rows = file(path, checkIfExists: true).splitCsv(header: true)
+    def missing = [ 'translation_id', 'transmission', 'growth' ].findAll { column -> !rows || !rows[0].containsKey(column) }
+    if (missing) {
+        error("Please check the metadata file -> missing column(s): ${missing.join(', ')}")
+    }
+    return rows.collectEntries { row -> [ row.translation_id, row ] }
+}
+
+//
+// Add the transmission group, growth label, schema and expected genome size to a sample's meta map
+//
+def annotateSample(meta, metadata, species_map, schema_table) {
+    def row = metadata[meta.id]
+    if (!row) {
+        log.warn("Sample ${meta.id} is not in the metadata file; it is assembled and QC'd only")
+    }
+    def growth = row?.growth ?: ''
+    def schema = species_map[growth] ?: ''
+    if (row && !schema) {
+        log.warn("Sample ${meta.id} has no schema for growth '${growth}'; add it to the species map to call alleles")
+    }
+    def genome_size = ''
+    if (schema) {
+        def size_min = schema_table[schema].genome_size_min_mb as Double
+        def size_max = schema_table[schema].genome_size_max_mb as Double
+        genome_size = String.format('%.1fm', (size_min + size_max) / 2)
+    }
+    return meta + [
+        transmission: row?.transmission ?: '',
+        growth      : growth,
+        schema      : schema,
+        genome_size : genome_size
+    ]
+}
+
 //
 // Generate methods description for MultiQC
 //
 def toolCitationText() {
-    // TODO nf-core: Optionally add in-text citation tools to this list.
-    // Can use ternary operators to dynamically construct based conditions, e.g. params["run_xyz"] ? "Tool (Foo et al. 2023)" : "",
-    // Uncomment function in methodsDescriptionText to render in MultiQC report
     def citation_text = [
             "Tools used in the workflow included:",
+            params.trim ? "Trimmomatic (Bolger et al. 2014)," : "",
+            params.filtlong ? "Filtlong (Wick 2017)," : "",
             "FastQC (Andrews 2010),",
+            "NanoPlot (De Coster et al. 2018),",
+            params.assembler == 'spades' ? "SPAdes (Prjibelski et al. 2020)," : "SKESA (Souvorov et al. 2018),",
+            "Flye (Kolmogorov et al. 2019),",
+            "Medaka (Oxford Nanopore Technologies),",
+            "QUAST (Gurevich et al. 2013),",
+            params.gambit_db ? "gambitcore with the GAMBIT database (Lumpe et al. 2023)," : "",
+            "BWA (Li 2013),",
+            "minimap2 (Li 2018),",
+            "SAMtools (Danecek et al. 2021),",
+            "mlst (Seemann),",
+            params.kraken_db ? "Kraken2 (Wood et al. 2019), Bracken (Lu et al. 2017)," : "",
+            params.skip_chewbbaca ? "" : "chewBBACA (Silva et al. 2018),",
             "MultiQC (Ewels et al. 2016)",
             "."
         ].join(' ').trim()
@@ -170,11 +226,19 @@ def toolCitationText() {
 }
 
 def toolBibliographyText() {
-    // TODO nf-core: Optionally add bibliographic entries to this list.
-    // Can use ternary operators to dynamically construct based conditions, e.g. params["run_xyz"] ? "<li>Author (2023) Pub name, Journal, DOI</li>" : "",
-    // Uncomment function in methodsDescriptionText to render in MultiQC report
     def reference_text = [
+            params.trim ? "<li>Bolger AM, Lohse M, Usadel B. (2014) Trimmomatic: a flexible trimmer for Illumina sequence data. Bioinformatics 30(15):2114-2120. doi: 10.1093/bioinformatics/btu170</li>" : "",
+            params.filtlong ? "<li>Wick R. (2017) Filtlong, URL: https://github.com/rrwick/Filtlong</li>" : "",
             "<li>Andrews S, (2010) FastQC, URL: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/).</li>",
+            "<li>De Coster W, et al. (2018) NanoPack: visualizing and processing long-read sequencing data. Bioinformatics 34(15):2666-2669. doi: 10.1093/bioinformatics/bty149</li>",
+            params.assembler == 'spades' ? "<li>Prjibelski A, et al. (2020) Using SPAdes de novo assembler. Curr Protoc Bioinformatics 70(1):e102. doi: 10.1002/cpbi.102</li>" : "<li>Souvorov A, Agarwala R, Lipman DJ. (2018) SKESA: strategic k-mer extension for scrupulous assemblies. Genome Biol 19:153. doi: 10.1186/s13059-018-1540-z</li>",
+            "<li>Kolmogorov M, et al. (2019) Assembly of long, error-prone reads using repeat graphs. Nat Biotechnol 37:540-546. doi: 10.1038/s41587-019-0072-8</li>",
+            "<li>Gurevich A, et al. (2013) QUAST: quality assessment tool for genome assemblies. Bioinformatics 29(8):1072-1075. doi: 10.1093/bioinformatics/btt086</li>",
+            "<li>Li H. (2018) Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics 34(18):3094-3100. doi: 10.1093/bioinformatics/bty191</li>",
+            "<li>Danecek P, et al. (2021) Twelve years of SAMtools and BCFtools. GigaScience 10(2):giab008. doi: 10.1093/gigascience/giab008</li>",
+            params.kraken_db ? "<li>Wood DE, Lu J, Langmead B. (2019) Improved metagenomic analysis with Kraken 2. Genome Biol 20:257. doi: 10.1186/s13059-019-1891-0</li>" : "",
+            params.kraken_db ? "<li>Lu J, et al. (2017) Bracken: estimating species abundance in metagenomics data. PeerJ Comput Sci 3:e104. doi: 10.7717/peerj-cs.104</li>" : "",
+            params.skip_chewbbaca ? "" : "<li>Silva M, et al. (2018) chewBBACA: A complete suite for gene-by-gene schema creation and strain identification. Microb Genom 4(3):e000166. doi: 10.1099/mgen.0.000166</li>",
             "<li>Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics , 32(19), 3047–3048. doi: /10.1093/bioinformatics/btw354</li>"
         ].join(' ').trim()
 
@@ -202,12 +266,8 @@ def methodsDescriptionText(mqc_methods_yaml) {
     meta["nodoi_text"] = meta.manifest_map.doi ? "" : "<li>If available, make sure to update the text to include the Zenodo DOI of version of the pipeline used. </li>"
 
     // Tool references
-    meta["tool_citations"] = ""
-    meta["tool_bibliography"] = ""
-
-    // TODO nf-core: Only uncomment below if logic in toolCitationText/toolBibliographyText has been filled!
-    // meta["tool_citations"] = toolCitationText().replaceAll(", \\.", ".").replaceAll("\\. \\.", ".").replaceAll(", \\.", ".")
-    // meta["tool_bibliography"] = toolBibliographyText()
+    meta["tool_citations"] = toolCitationText().replaceAll(", \\.", ".").replaceAll("\\. \\.", ".").replaceAll(", \\.", ".")
+    meta["tool_bibliography"] = toolBibliographyText()
 
 
     def methods_text = mqc_methods_yaml.text
