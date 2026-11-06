@@ -4,6 +4,8 @@ nf_core_version: 3.5.2
 
 lint:
   files_unchanged:
+    - LICENSE
+    - .github/ISSUE_TEMPLATE/feature_request.yml
     - .github/CONTRIBUTING.md
     - .prettierignore
     - .prettierignore

@@ -1,7 +1,7 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://raw.githubusercontent.com/ryanjameskennedy/sinklink/master/nextflow_schema.json",
-    "title": "sinklink pipeline parameters",
+    "title": "ryanjameskennedy/sinklink pipeline parameters",
     "description": "Sink-to-patient transmission checks with read QC, assembly, assembly QC and cgMLST/wgMLST allele distances",
     "type": "object",
     "$defs": {
