@@ -1,148 +1,108 @@
-# sinklink: Usage
+# Running sinklink
 
-> _Documentation of pipeline parameters is generated automatically from the pipeline schema and can no longer be found in markdown files._
+## One run for all species
 
-## Introduction
-
-sinklink assembles and QCs bacterial isolates from Illumina or Nanopore reads,
-calls cgMLST/wgMLST alleles with chewBBACA and compares isolates within each
-suspected transmission group (for example a sink and a patient) against
-species-specific allele-difference thresholds. See the [README](../README.md)
-for the background, the thresholds and how to read the results.
-
-Before the first run, set up the chewBBACA schemas (and, optionally, the GAMBIT
-database) with the Makefile in the repository root:
-
-```bash
-make -C containers all CONTAINERS_DIR=/mnt/cache/singularity
-make schemas databases ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
-```
+One samplesheet and one metadata file cover every isolate, whatever its
+species. sinklink reads each isolate's `growth` label from the metadata, picks
+its schema, and groups the assemblies by schema for allele calling (one
+chewBBACA job per schema). Pairs are only compared within a transmission group,
+and only when both isolates were typed with the same schema. There is no need
+for one CSV per species.
 
 ## Samplesheet input
 
-The samplesheet lists the reads for each isolate. It is a comma-separated file
-with a header row and 4 columns:
+The samplesheet (`--input`) lists the reads for each isolate: a CSV with a
+header row and 4 columns.
 
-```bash
---input '[path to samplesheet file]'
-```
-
-```csv title="samplesheet.csv"
+```text
 sample,platform,fastq_1,fastq_2
 S01,illumina,/data/reads/S01_R1.fastq.gz,/data/reads/S01_R2.fastq.gz
-S02,illumina,/data/reads/S02_R1.fastq.gz,
+S02,illumina,/data/reads/S02.fastq.gz,
 S03,nanopore,/data/reads/S03.fastq.gz,
 ```
 
-| Column     | Description                                                                                       |
-| ---------- | ------------------------------------------------------------------------------------------------- |
-| `sample`   | Isolate ID. Must match `translation_id` in the metadata. Letters, digits, `.`, `_` and `-` only. |
-| `platform` | `illumina` or `nanopore`.                                                                         |
-| `fastq_1`  | Gzipped FastQ file (`.fastq.gz` or `.fq.gz`): read 1, single-end reads or Nanopore reads.         |
-| `fastq_2`  | Gzipped FastQ file for Illumina read 2. Leave empty for single-end and Nanopore reads.            |
+| Column     | Description |
+| ---------- | ----------- |
+| `sample`   | Isolate ID, matching `translation_id` in the metadata. Letters, digits, `.`, `_` and `-` only; each sample once. |
+| `platform` | `illumina` or `nanopore`. |
+| `fastq_1`  | Gzipped FastQ (`.fastq.gz` or `.fq.gz`): read 1, single-end reads or Nanopore reads. |
+| `fastq_2`  | Gzipped FastQ for Illumina read 2. Leave empty for single-end and Nanopore reads. |
 
-One row per isolate; concatenate reads from several runs beforehand. An
-[example samplesheet](../assets/samplesheet.csv) is provided with the pipeline.
+The samplesheet is checked against
+[`assets/schema_input.json`](https://github.com/ryanjameskennedy/sinklink/blob/master/assets/schema_input.json)
+before anything runs: the files must exist, and a Nanopore row with a
+`fastq_2` is rejected. Use absolute paths; relative paths are resolved from the
+folder you launch from. Several runs of one isolate are not merged, so
+concatenate them first. An
+[example samplesheet](https://github.com/ryanjameskennedy/sinklink/blob/master/assets/samplesheet.csv)
+is provided.
 
 ## Metadata input
 
-The metadata file describes the study design. It is a comma-separated file with
-at least `translation_id`, `transmission` and `growth`:
+The metadata (`--metadata`) describes the study: a CSV with one row per
+isolate.
 
-```bash
---metadata '[path to metadata file]'
-```
+| Column               | Required | Description |
+| -------------------- | -------- | ----------- |
+| `translation_id`     | yes      | Isolate ID, matching `sample` in the samplesheet |
+| `transmission`       | yes      | Suspected transmission group; isolates in the same group are compared pairwise |
+| `growth`             | yes      | Species reported by the laboratory, mapped to a schema by `assets/species_map.tsv` (exact match) |
+| `studypatientnumber` | no       | Study patient, shown in the pair table |
+| `sample`             | no       | Sample type, e.g. `environment` or `airway`, shown in the pair table |
+| `date`               | no       | Sampling date, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM`, used for `days_apart` |
 
-| Column               | Description                                                                         |
-| -------------------- | ----------------------------------------------------------------------------------- |
-| `translation_id`     | Isolate ID, matching `sample` in the samplesheet                                    |
-| `transmission`       | Suspected transmission group; isolates in the same group are compared pairwise     |
-| `growth`             | Species reported by the laboratory, mapped to a schema by `assets/species_map.tsv` |
-| `studypatientnumber` | Study patient (optional, shown in the pair table)                                   |
-| `sample`             | Sample type, e.g. `environment` or `airway` (optional)                              |
-| `date`               | Sampling date, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM` (optional, gives `days_apart`)    |
+Other columns (such as `comment`) are ignored; quoted commas are fine.
 
-Isolates in the samplesheet but not in the metadata, or whose `growth` has no
-schema, are assembled and QC'd but not allele called.
+How it is used:
+
+1. **At start-up**, each samplesheet row is matched to its metadata row.
+   `growth` gives the schema, and the schema's genome size range in
+   `assets/schemas.tsv` gives the expected genome size passed to Flye (for
+   *P. aeruginosa*, 5.5–7.8 Mb becomes `6.7m`). The run stops if a required
+   column is missing.
+2. An isolate missing from the metadata, or whose `growth` has no schema, gets a
+   warning and is assembled and QC'd but not allele called. The same goes for
+   a schema that is not set up in `--schemas_dir`.
+3. **Allele calling** groups the assemblies by schema.
+4. **The QC summary** uses the schema's accepted species and genome size.
+5. **The distance check** pairs isolates within each transmission group. Every
+   metadata row is included, so isolates listed in the metadata but missing
+   from the samplesheet show up as `missing_profile`.
 
 ## Running the pipeline
 
-The typical command for running the pipeline is as follows:
-
 ```bash
-nextflow run ryanjameskennedy/sinklink \
+nextflow run ryanjameskennedy/sinklink -r master \
     -profile apptainer \
-    --input ./samplesheet.csv \
-    --metadata ./metadata.csv \
+    --input samplesheet.csv \
+    --metadata metadata.csv \
     --schemas_dir /path/to/schemas \
     --kraken_db /path/to/kraken2_db \
     --gambit_db /path/to/gambit_db \
-    --outdir ./results
+    --outdir results
 ```
 
-On thedonkey, the `thedonkey` profile sets the database paths, Apptainer and
-the resource caps (15 CPUs, 141 GB):
+On thedonkey, the [thedonkey profile](setup/thedonkey.md) sets the database
+paths, Apptainer and the resource caps:
 
 ```bash
-nextflow run ryanjameskennedy/sinklink -profile thedonkey \
-    --input samplesheet.csv --metadata metadata.csv --outdir /media/Lagring/$USER/vask
+nextflow run ryanjameskennedy/sinklink -r master -profile thedonkey \
+    --input samplesheet.csv --metadata vask_colonisation_hidden.csv \
+    --outdir /media/Lagring/$USER/vask
 ```
 
-Useful options:
+All options are listed under [parameters](reference/parameters.md). Nextflow
+keeps intermediate files in the work directory; add `-resume` to continue a
+stopped run.
 
-| Parameter                 | Default    | Meaning                                                              |
-| ------------------------- | ---------- | -------------------------------------------------------------------- |
-| `--assembler`             | `skesa`    | `skesa` or `spades` for Illumina reads                               |
-| `--trim`                  | off        | Trim Illumina reads with Trimmomatic (`--trimmomatic_args`)          |
-| `--filtlong`              | off        | Filter Nanopore reads with Filtlong (`--filtlong_args`)              |
-| `--kraken_db`             | none       | Kraken2/Bracken database; the species check is skipped without it    |
-| `--gambit_db`             | none       | GAMBIT database for gambitcore; completeness is skipped without it   |
-| `--bracken_read_length`   | 150        | Bracken k-mer distribution read length                               |
-| `--skip_chewbbaca`        | off        | Stop after assembly and QC                                           |
-| `--schema_table`, `--species_map`, `--qc_thresholds` | `assets/` | Override the tables that drive the checks |
-
-A stub test with placeholder inputs checks the wiring without real data
-(run from the repository root):
+A stub test with placeholder inputs checks the wiring without real data (run
+from the repository root):
 
 ```bash
 nextflow run . -profile test,docker -stub --outdir results
 ```
 
-This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
-
-Note that the pipeline will create the following files in your working directory:
-
-```bash
-work                # Directory containing the nextflow working files
-<OUTDIR>            # Finished results in specified location (defined with --outdir)
-.nextflow_log       # Log file from Nextflow
-# Other nextflow hidden files, eg. history of pipeline runs and old logs.
-```
-
-If you wish to repeatedly use the same parameters for multiple runs, rather than specifying each flag in the command, you can specify these in a params file.
-
-Pipeline settings can be provided in a `yaml` or `json` file via `-params-file <file>`.
-
-> [!WARNING]
-> Do not use `-c <file>` to specify parameters as this will result in errors. Custom config files specified with `-c` must only be used for [tuning process resource specifications](https://nf-co.re/docs/usage/configuration#tuning-workflow-resources), other infrastructural tweaks (such as output directories), or module arguments (args).
-
-The above pipeline run specified with a params file in yaml format:
-
-```bash
-nextflow run ryanjameskennedy/sinklink -profile docker -params-file params.yaml
-```
-
-with:
-
-```yaml title="params.yaml"
-input: './samplesheet.csv'
-outdir: './results/'
-<...>
-```
-
-You can also generate such `YAML`/`JSON` files via [nf-core/launch](https://nf-co.re/launch).
-
-### Updating the pipeline
+## Updating the pipeline
 
 When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
 
@@ -150,7 +110,7 @@ When you run the above command, Nextflow automatically pulls the pipeline code f
 nextflow pull ryanjameskennedy/sinklink
 ```
 
-### Reproducibility
+## Reproducibility
 
 It is a good idea to specify the pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
 

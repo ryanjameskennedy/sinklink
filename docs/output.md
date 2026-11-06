@@ -96,7 +96,7 @@ One AlleleCall job per schema, run with `--no-inferred` so the schemas are never
 
 </details>
 
-See the README for the QC thresholds, the verdicts and how to read a pair.
+See [quality control](pipeline/qc.md) for the QC flags and [interpreting the results](results/interpreting.md) for the verdicts and how to read a pair.
 
 ### MultiQC
 
