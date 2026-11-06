@@ -5,7 +5,7 @@
 on top of the defaults.
 
 ```bash
-nextflow run ryanjameskennedy/sinklink -r master -profile thedonkey \
+nextflow run ryanjameskennedy/sinklink -r v0.1.0 -profile thedonkey \
     --input samplesheet.csv \
     --metadata vask_colonisation_hidden.csv \
     --outdir /media/Lagring/$USER/vask
