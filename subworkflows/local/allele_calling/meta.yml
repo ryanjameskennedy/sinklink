@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: "allele_calling"
+description: "chewBBACA AlleleCall, one job per schema"
+keywords:
+  - bacteria
+  - transmission
+  - genomics
+components:
+  - chewbbaca/allelecall
+input:
+  - ch_assembly:
+      type: channel
+      description: "[ val(meta), path(fasta) ], with meta.schema set"
+  - schemas_dir:
+      type: string
+      description: "Folder holding <schema>/alleles_rereffed"
+output:
+  - alleles:
+      type: channel
+      description: "[ val([ id: schema ]), path(<schema>_results_alleles.tsv) ]"
+  - stats:
+      type: channel
+      description: "[ val([ id: schema ]), path(<schema>_results_statistics.tsv) ]"
+authors:
+  - "@ryanjameskennedy"

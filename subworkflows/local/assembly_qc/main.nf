@@ -1,0 +1,72 @@
+//
+// Assembly QC: QUAST statistics, gambitcore completeness, read depth over the
+// isolate's own assembly and 7-gene MLST
+//
+
+include { QUAST             } from '../../../modules/nf-core/quast/main'
+include { GAMBITCORE        } from '../../../modules/local/gambitcore/main'
+include { BWA_INDEX         } from '../../../modules/nf-core/bwa/index/main'
+include { BWA_MEM           } from '../../../modules/nf-core/bwa/mem/main'
+include { MINIMAP2_ALIGN    } from '../../../modules/nf-core/minimap2/align/main'
+include { SAMTOOLS_INDEX    } from '../../../modules/nf-core/samtools/index/main'
+include { SAMTOOLS_COVERAGE } from '../../../modules/nf-core/samtools/coverage/main'
+include { MLST              } from '../../../modules/nf-core/mlst/main'
+
+workflow ASSEMBLY_QC {
+
+    take:
+    ch_assembly // channel: [ val(meta), path(fasta) ]
+    ch_reads    // channel: [ val(meta), [ fastq ] ]
+    gambit_db   // path: GAMBIT database folder, or [] to skip gambitcore
+
+    main:
+    QUAST ( ch_assembly, [ [:], [] ], [ [:], [] ] )
+    MLST ( ch_assembly )
+
+    ch_gambitcore = channel.empty()
+    if (gambit_db) {
+        GAMBITCORE ( ch_assembly, gambit_db )
+        ch_gambitcore = GAMBITCORE.out.tsv
+    }
+
+    ch_reads
+        .join(ch_assembly)
+        .branch { meta, _reads, _fasta ->
+            illumina: meta.platform == 'illumina'
+            nanopore: meta.platform == 'nanopore'
+        }
+        .set { ch_mapping }
+
+    BWA_INDEX ( ch_mapping.illumina.map { meta, _reads, fasta -> [ meta, fasta ] } )
+    ch_mapping.illumina
+        .join(BWA_INDEX.out.index)
+        .multiMap { meta, reads, fasta, index ->
+            reads: [ meta, reads ]
+            index: [ meta, index ]
+            fasta: [ meta, fasta ]
+        }
+        .set { ch_bwa }
+    BWA_MEM ( ch_bwa.reads, ch_bwa.index, ch_bwa.fasta, true )
+    SAMTOOLS_INDEX ( BWA_MEM.out.bam )
+
+    ch_mapping.nanopore
+        .multiMap { meta, reads, fasta ->
+            reads    : [ meta, reads ]
+            reference: [ meta, fasta ]
+        }
+        .set { ch_minimap2 }
+    MINIMAP2_ALIGN ( ch_minimap2.reads, ch_minimap2.reference, true, 'bai', false, false )
+
+    BWA_MEM.out.bam
+        .join(SAMTOOLS_INDEX.out.index)
+        .mix(MINIMAP2_ALIGN.out.bam.join(MINIMAP2_ALIGN.out.index))
+        .set { ch_bam }
+    SAMTOOLS_COVERAGE ( ch_bam, [ [:], [], [] ] )
+
+    emit:
+    quast         = QUAST.out.tsv                 // channel: [ val(meta), path(tsv) ]
+    coverage      = SAMTOOLS_COVERAGE.out.coverage // channel: [ val(meta), path(txt) ]
+    gambitcore    = ch_gambitcore                 // channel: [ val(meta), path(tsv) ]
+    mlst          = MLST.out.tsv                  // channel: [ val(meta), path(tsv) ]
+    multiqc_files = QUAST.out.tsv.map { _meta, tsv -> tsv } // channel: [ path ]
+}

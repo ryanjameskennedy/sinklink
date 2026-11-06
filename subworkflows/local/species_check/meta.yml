@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: "species_check"
+description: "Read-based species check with Kraken2 and Bracken"
+keywords:
+  - bacteria
+  - transmission
+  - genomics
+components:
+  - kraken2/kraken2
+  - bracken/bracken
+input:
+  - ch_reads:
+      type: channel
+      description: "[ val(meta), [ fastq ] ]"
+  - kraken_db:
+      type: file
+      description: "Kraken2/Bracken database folder"
+output:
+  - kraken_report:
+      type: channel
+      description: "[ val(meta), path(txt) ]"
+  - bracken:
+      type: channel
+      description: "Species-level Bracken output: [ val(meta), path(tsv) ]"
+  - multiqc_files:
+      type: channel
+      description: "Kraken2 reports for MultiQC"
+authors:
+  - "@ryanjameskennedy"
