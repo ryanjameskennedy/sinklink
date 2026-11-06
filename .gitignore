@@ -10,5 +10,6 @@ assets/prodigal_training_files/
 vask_colonisation_hidden.csv
 .nextflow*
 work/
-results/
+/results/
 null/
+docs/_build/
