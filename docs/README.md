@@ -1,8 +1,12 @@
 # sinklink: Documentation
 
-The sinklink documentation is split into the following pages:
+The documentation is published at <https://sinklink.readthedocs.io> and built
+from this folder with Sphinx and MyST:
 
-- [Usage](usage.md)
-  - An overview of how the pipeline works, how to run it and a description of all of the different command-line flags.
-- [Output](output.md)
-  - An overview of the different results produced by the pipeline and how to interpret them.
+```bash
+pip install -r docs/requirements.txt
+sphinx-build -W -b html docs docs/_build/html
+```
+
+- [usage.md](usage.md): samplesheet, metadata and how to run the pipeline
+- [output.md](output.md): what the pipeline writes

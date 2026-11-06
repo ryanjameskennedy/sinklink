@@ -1,0 +1,21 @@
+Step,Tool,Version,Module
+Illumina trimming,Trimmomatic,0.39,nf-core/trimmomatic
+Nanopore filtering,Filtlong,0.2.1,nf-core/filtlong
+Read QC,FastQC,0.12.1,nf-core/fastqc
+Read QC,NanoPlot,1.47.0,nf-core/nanoplot
+Illumina assembly,SKESA,2.5.1,nf-core/skesa
+Illumina assembly,SPAdes,4.1.0,nf-core/spades
+Nanopore assembly,Flye,2.9.5,nf-core/flye
+Nanopore polishing,Medaka,2.2.2,nf-core/medaka
+Assembly statistics,QUAST,5.3.0,nf-core/quast
+Completeness,gambitcore,0.0.2,local/gambitcore
+Read depth,BWA,0.7.19,nf-core/bwa/mem
+Read depth,minimap2,2.30,nf-core/minimap2/align
+Read depth,SAMtools,1.24,nf-core/samtools/coverage
+7-gene MLST,mlst,2.25.0,nf-core/mlst
+Species check,Kraken2,2.1.6,nf-core/kraken2/kraken2
+Species check,Bracken,3.1,nf-core/bracken/bracken
+Allele calling,chewBBACA,3.5.4,nf-core/chewbbaca/allelecall (container pinned to 3.5.4)
+Report,MultiQC,1.32,nf-core/multiqc
+Schema prep (Makefile),chewBBACA,3.5.4,containers/Makefile
+Schema prep (Makefile),Prodigal,2.6.3,containers/Makefile
