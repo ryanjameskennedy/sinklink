@@ -18,4 +18,4 @@ database's `database<length>mers.kmer_distrib` file for the read length given
 with `--bracken_read_length` (default 150); if Bracken fails, the Kraken2
 report is used instead.
 
-On thedonkey both are set by the [thedonkey profile](thedonkey.md).
+On a server, set them in the parameters file (see [running on a server](servers.md)).

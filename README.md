@@ -38,7 +38,8 @@ Then run every isolate, whatever its species, with one samplesheet and one
 metadata file:
 
 ```bash
-nextflow run ryanjameskennedy/sinklink -r v0.1.0 -profile thedonkey \
+nextflow run ryanjameskennedy/sinklink -r v0.1.0 -profile apptainer \
+    -c thedonkey.config -params-file thedonkey.yaml \
     --input samplesheet.csv \
     --metadata metadata.csv \
     --outdir results
@@ -52,8 +53,8 @@ S02,nanopore,/data/reads/S02.fastq.gz,
 
 The metadata needs `translation_id`, `transmission` and `growth` columns. See
 [running sinklink](https://sinklink.readthedocs.io/en/latest/usage.html) for
-the formats and [the thedonkey profile](https://sinklink.readthedocs.io/en/latest/setup/thedonkey.html)
-for running elsewhere.
+the formats and [running on a server](https://sinklink.readthedocs.io/en/latest/setup/servers.html)
+for the `-c` config and parameters file.
 
 ## Species and thresholds
 
