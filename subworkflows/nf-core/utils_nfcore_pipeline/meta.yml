@@ -19,3 +19,6 @@ output:
         Dummy output to indicate success
 authors:
   - "@adamrtalbot"
+maintainers:
+  - "@adamrtalbot"
+  - "@maxulysse"

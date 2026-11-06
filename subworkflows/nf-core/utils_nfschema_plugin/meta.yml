@@ -31,3 +31,5 @@ output:
       description: Dummy emit to make nf-core subworkflows lint happy
 authors:
   - "@nvnieuwk"
+maintainers:
+  - "@nvnieuwk"

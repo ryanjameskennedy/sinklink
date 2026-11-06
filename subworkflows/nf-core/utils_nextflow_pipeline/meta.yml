@@ -32,3 +32,7 @@ output:
 authors:
   - "@adamrtalbot"
   - "@drpatelh"
+maintainers:
+  - "@adamrtalbot"
+  - "@drpatelh"
+  - "@maxulysse"

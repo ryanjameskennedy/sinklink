@@ -68,3 +68,5 @@ topics:
           description: The command used to obtain the version of the tool
 authors:
   - "@paulwolk"
+maintainers:
+  - "@paulwolk"

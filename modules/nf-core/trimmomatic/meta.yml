@@ -108,3 +108,5 @@ topics:
           description: The expression to obtain the version of the tool
 authors:
   - "@alyssa-ab"
+maintainers:
+  - "@alyssa-ab"
