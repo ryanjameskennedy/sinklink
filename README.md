@@ -1,544 +1,83 @@
 # sinklink
 
-Tools for testing whether bacteria isolated from a hospital sink (or other
-environmental site) and from a patient belong to the same strain, i.e.
-whether the patient's infection or colonisation could have come from the sink.
+[![CI](https://github.com/ryanjameskennedy/sinklink/actions/workflows/ci.yml/badge.svg)](https://github.com/ryanjameskennedy/sinklink/actions/workflows/ci.yml)
+[![Docs](https://readthedocs.org/projects/sinklink/badge/?version=latest)](https://sinklink.readthedocs.io)
+[![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A525.04.0-23aa62.svg)](https://www.nextflow.io/)
 
-Starting from Illumina or Nanopore reads, sinklink:
+*Did the sink infect the patient?*
+
+sinklink tests whether bacteria isolated from a hospital sink (or another
+environmental site) and from a patient belong to the same strain. Starting from
+Illumina or Nanopore reads, it:
 
 1. QCs the reads (FastQC or NanoPlot, optional Trimmomatic or Filtlong);
-2. assembles each isolate (SKESA or SPAdes for Illumina, Flye + Medaka for
-   Nanopore);
-3. QCs the assembly (QUAST, gambitcore completeness, read depth, 7-gene MLST)
-   and confirms the species from the reads (Kraken2/Bracken);
-4. calls alleles with [chewBBACA](https://github.com/B-UMMI/chewBBACA) against
-   species-specific cgMLST/wgMLST schemas;
+2. assembles each isolate (SKESA or SPAdes for Illumina, Flye + Medaka for Nanopore);
+3. QCs the assembly (QUAST, gambitcore, read depth, 7-gene MLST) and confirms
+   the species from the reads (Kraken2/Bracken);
+4. calls alleles with chewBBACA against species-specific cgMLST/wgMLST schemas;
 5. compares every pair of isolates within each suspected transmission group
-   against published, species-specific allele-difference thresholds, flagging
+   against a published, species-specific allele-difference threshold, flagging
    pairs where either isolate failed QC.
 
-It is a Nextflow pipeline built on the [nf-core](https://nf-co.re) template
-and nf-core modules, with tool choices, arguments and the asset Makefiles
-modelled on [JASEN](https://github.com/genomic-medicine-sweden/JASEN). It runs
-on a single server with the local executor, so no job scheduler is needed; the
-`thedonkey` profile sets the caps and database paths for that server.
+It is a Nextflow pipeline built on the [nf-core](https://nf-co.re) template,
+modelled on [JASEN](https://github.com/genomic-medicine-sweden/JASEN), and runs
+on a single server without a job scheduler.
 
-- [Background](#background)
-- [The dataset](#the-dataset)
-- [What the literature says](#what-the-literature-says)
-- [Thresholds used](#thresholds-used)
-- [Stenotrophomonas maltophilia wgMLST](#stenotrophomonas-maltophilia-wgmlst)
-- [Installation](#installation)
-- [Running](#running)
-- [Pipeline steps](#pipeline-steps)
-- [Output](#output)
-- [Quality control](#quality-control)
-- [Interpreting the results](#interpreting-the-results)
-- [Caveats](#caveats)
-- [Repository layout](#repository-layout)
-- [References](#references)
+**Documentation: <https://sinklink.readthedocs.io>**
 
-## Background
+## Quick start
 
-Hospital sinks and drains are a recognised reservoir for Gram-negative
-opportunists. Biofilms in the drain trap can grow up towards the strainer and
-be splashed onto hands, equipment and patients. When the same species turns up
-in a sink and in a patient, the question is whether they are the same strain
-and, if so, which way it moved.
-
-Whole-genome sequencing answers the first part: two isolates that are only a
-few allele differences apart across the core genome are the same strain. The
-direction of spread and whether the sink was the source have to come from the
-epidemiology (dates, rooms, admission screening).
-
-## The dataset
-
-`vask_colonisation_hidden.csv` lists 26 isolates (13 environmental, 13 airway)
-in 9 suspected transmission groups. It is not included in this repository
-because it contains study patient identifiers; keep it outside version control
-and pass it to the pipeline with `--metadata`. Columns:
-
-| Column | Meaning |
-|---|---|
-| `translation_id` | Isolate ID; must match `sample` in the samplesheet |
-| `transmission` | Suspected transmission group |
-| `studypatientnumber` | Study patient (for environmental samples, the patient linked to that site) |
-| `sample` | `environment` or `airway` |
-| `date` | Sampling date |
-| `growth` | Species reported by the laboratory |
-| `comment` | Free text |
-
-| Group | Species | Isolates | Span | Notes |
-|---|---|---|---|---|
-| Transmission_1 | *Enterobacter cloacae* (complex) | 2 environment, 1 airway | 59 days | Lab labels differ ("cloacae" vs "cloacae complex"); confirm species from the genome |
-| Transmission_2 | *Stenotrophomonas maltophilia* | 1 environment, 1 airway (same patient) | 5 days | Sink positive before airway: the best fit for sink-to-patient spread |
-| Transmission_3 | *Pseudomonas aeruginosa* | 1 environment, 2 airway | 338 days | Patient positive ~10 months before the sink; long span means more expected diversity |
-| Transmission_4 | *Klebsiella oxytoca* | 2 environment, 1 airway | 357 days | Environmental isolates a year apart |
-| Transmission_5 | *Klebsiella oxytoca* (group) | 1 environment, 1 airway (same patient) | 3 days | Lab labels differ ("oxytoca" vs "oxytoca group") |
-| Transmission_6 | *Citrobacter freundii* | 1 environment, 2 airway (same patient) | 3 days | Sink and airway sampled on the same day: direction unknown |
-| Transmission_7 | *Serratia marcescens* | 1 environment, 3 airway | 50 days | Three patients |
-| Transmission_8 | *Pseudomonas aeruginosa* | 2 environment, 1 airway | 60 days | Patient positive before the second sink |
-| Transmission_9 | *Klebsiella pneumoniae* | 2 environment, 1 airway | 68 days | Sink and airway sampled on the same day; second sink later |
-
-Several patients appear in more than one group (different species from the
-same sites).
-
-## What the literature says
-
-**1. Confirm the species from the genome first.** Several of these organisms
-are species complexes that MALDI-TOF cannot reliably separate. *K. oxytoca* is
-often confused with *K. michiganensis* and *K. grimontii*
-(Dabernig-Heinz et al. 2024); "*S. marcescens*" NICU outbreaks have turned out
-to involve *S. sarumanii* and *S. bockelmannii*; the *E. cloacae* complex
-contains many species; *S. maltophilia* is a complex of 23 lineages
-(Gröschel et al. 2020). Isolates of different species cannot be the same
-strain.
-
-**2. Use cgMLST or core-genome SNPs.** cgMLST gives results comparable to SNP
-typing and is easier to standardise between labs (Tönnies et al. 2021). SNPs
-give finer resolution for borderline pairs. Seven-gene MLST can only exclude a
-link: isolates of the same sequence type can still be unrelated.
-
-**3. There is no universal threshold.** Each cut-off belongs to one species,
-one scheme and one allele-calling software. Pipelines differ in how they call
-alleles, so counts for the same pair can differ between tools. Near-identical
-profiles do not by themselves prove transmission; epidemiological information
-is always needed (Tönnies et al. 2021). In the Graz *K. oxytoca* sink outbreak,
-an unrelated isolate from the same hospital and same ST was only 10 alleles
-from the outbreak cluster, showing how narrow the gap can be
-(Dabernig-Heinz et al. 2024).
-
-**4. Account for how long the source was contaminated.** Bacteria keep
-mutating while they persist in a sink, so the longer the interval between
-samples, the more differences are expected even from a single source. Fixed
-thresholds ignore mutation rate and duration of contamination
-(Duval, Opatowski & Brisse 2023).
-
-**5. Sinks hold mixed, long-lived populations.** A single drain can carry
-several strains of the same species, so one colony may miss the strain that
-reached the patient; picking several colonies per sample helps
-(Constantinides et al. 2020). Clones can persist in plumbing for years:
-carbapenemase-producing *C. freundii* clusters linked patients and drains from
-2018 to 2021 (Hamerlinck et al. 2023).
-
-**6. Genomics cannot tell you the direction.** In a review of ICU sink studies,
-sequencing linked sink and patient isolates in about half of cases, but where
-timelines were clear they mostly showed patient-to-sink spread; only 8 reports
-supported sink-to-patient spread. Direction has to come from sampling dates,
-room layout and whether the patient screened negative on admission.
-
-## Thresholds used
-
-Defined in [`assets/schemas.tsv`](assets/schemas.tsv). A pair is
-`within_threshold` when its allele differences are at or below the threshold.
-
-| Schema | Organism | Scheme | Loci | Threshold (alleles) | Source |
-|---|---|---|---|---|---|
-| `paeruginosa` | *P. aeruginosa* | cgmlst.org Paeruginosa | 3,867 | ≤12 | cgmlst.org complex type distance; Tönnies et al. 2021 |
-| `kpneumoniae` | *K. pneumoniae* sensu lato | cgmlst.org Kpneumoniae_complex | 2,358 | ≤15 | cgmlst.org complex type distance (SNP alternative: ≤21 SNPs, David et al. 2019) |
-| `koxytoca` | *K. oxytoca* species complex | cgmlst.org Koxytoca_complex | 2,536 | ≤6, borderline ≤9 | Dabernig-Heinz et al. 2024 (6 strict, 9 sensitive) |
-| `smarcescens` | *S. marcescens* | cgmlst.org Smarcescens | 2,692 | ≤12 | cgmlst.org; Kampmeier et al. 2022 |
-| `cfreundii` | *C. freundii* | cgmlst.org Cfreundii | 3,250 | ≤10 | cgmlst.org; Kieninger et al. 2025 |
-| `ehormaechei` | *E. hormaechei* | cgmlst.org Ehormaechei | 2,178 | ≤12 | cgmlst.org; Prior et al. 2025 |
-| `smaltophilia` | *S. maltophilia* complex | Gröschel et al. 2020 wgMLST | 17,603 | ≤10 | Gröschel et al. 2020 (d10) |
-
-Notes:
-
-- The *P. aeruginosa* paper itself does not state a cut-off; 12 is the complex
-  type distance listed on cgmlst.org.
-- There is no cgmlst.org scheme for the whole *E. cloacae* complex, only for
-  *E. hormaechei*. The `enterobacter_cloacae` isolates are run against it, which
-  is only valid if the genome confirms *E. hormaechei*. A 2026 preprint
-  describing an *E. cloacae* complex cgMLST found epidemiologically linked
-  isolates 0–3 alleles apart.
-- For *S. marcescens*, an earlier wgMLST scheme (9,377 loci) used ≤20 alleles,
-  with most outbreak isolates ≤4 apart.
-
-## Stenotrophomonas maltophilia wgMLST
-
-No cgmlst.org scheme exists for *S. maltophilia*, so the wgMLST scheme from
-Gröschel et al. (2020) is used. It was built by Applied Maths (bioMérieux) from
-171 public genomes: overlapping loci, loci with frequent invalid calls, tandem
-repeats and multi-copy loci were removed, leaving 17,603 loci (including the
-seven classic MLST loci). On average 4,174 loci (range 3,024–4,536) were found
-per genome. The allele sequences are published on
-[figshare](https://figshare.com/articles/dataset/Smaltophilia_wgMLST_all-alleles_fasta_gz/10005047)
-as a single FASTA, which [`bin/split_alleles.py`](bin/split_alleles.py) splits
-into one file per locus for chewBBACA.
-
-How the paper defined relatedness:
-
-- Distances were counted over **1,275 core loci** (present in 99% of 1,305
-  genomes), not all 17,603.
-- **d10** (≤10 mismatched alleles, single-linkage) defined closely related
-  strains; **d100** (≤100) defined clonal complexes, which often spanned
-  different countries and are too loose to indicate transmission.
-- Thresholds were chosen from the distribution of pairwise differences, not
-  validated against known outbreaks.
-- 270 strains fell into 62 d10 clusters; 13 clusters held isolates from the same
-  hospital in the same year, and three were respiratory isolates from different
-  patients in one hospital within ≤8 weeks. The authors call these potential
-  transmission clusters needing epidemiological confirmation.
-- Lineages made up mainly of environmental strains (Sgn1–4, Sm1, Sm15) never
-  formed d10 clusters and were under-sampled, so the threshold is least tested
-  for sink isolates.
-- Alleles were called in BioNumerics by combining assembly-free (k-mer) and
-  assembly-based (BLAST) calls. chewBBACA calls alleles differently, so counts
-  will not match the paper exactly: treat 10 as a guide.
-
-This repository counts differences over all wgMLST loci called in both isolates
-(the paper's list of 1,275 core loci is in its supplementary data). Over the
-5 days between the Transmission_2 samples, a genuine link should be close to
-0 differences; a count near 10 is borderline and worth checking with SNPs
-(e.g. SKA2).
-
-## Installation
-
-Requirements: Nextflow 25.04 or later, Apptainer/Singularity (or Docker), and
-for the schema setup GNU Make, `wget`, `unzip`, `gzip` and Python 3.
+Set up the schemas and databases once:
 
 ```bash
-git clone git@github.com:ryanjameskennedy/sinklink.git
-cd sinklink
-make print_paths
-```
-
-The pipeline pulls its own containers (the versions pinned by each nf-core
-module). The Makefiles only set up the assets: the containers for schema prep,
-the chewBBACA schemas and the GAMBIT database.
-
-```bash
+git clone git@github.com:ryanjameskennedy/sinklink.git && cd sinklink
 make install ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
 ```
 
-Or step by step:
+Then run every isolate, whatever its species, with one samplesheet and one
+metadata file:
 
 ```bash
-make -C containers all CONTAINERS_DIR=/mnt/cache/singularity
-make databases ASSETS_DIR=/mnt/cache/dbs/vask
-make schemas ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
-make check ASSETS_DIR=/mnt/cache/dbs/vask
+nextflow run ryanjameskennedy/sinklink -r master -profile thedonkey \
+    --input samplesheet.csv \
+    --metadata metadata.csv \
+    --outdir results
 ```
 
-### Schemas
-
-A single organism can be set up on its own with `make <schema>_all`
-(e.g. `make paeruginosa_all`). For each schema the Makefile:
-
-1. downloads the scheme's seed genome from NCBI;
-2. trains Prodigal on it (`assets/prodigal_training_files/<schema>.trn`);
-3. downloads the alleles (cgmlst.org or figshare) and records the download date
-   in `schemas/<schema>/download/SOURCE`;
-4. unpacks them (or splits the single *S. maltophilia* FASTA);
-5. runs `chewie PrepExternalSchema` (chewBBACA 3.5.4) into
-   `schemas/<schema>/alleles_rereffed`.
-
-Pass `<ASSETS_DIR>/schemas` to the pipeline as `--schemas_dir`. `PREP_CPUS`
-(default 4) sets the threads for PrepExternalSchema, and
-`APPTAINER=singularity` switches the container runtime.
-
-If a download fails (the cgmlst.org Serratia link can be slow and figshare may
-block automated downloads), the Makefile prints the path to save a
-browser download to. Save the file there and re-run make.
-
-### Databases
-
-- **GAMBIT** (for gambitcore): `make gambit_db` downloads the RefSeq curated
-  1.0 database into `<assets>/gambit_db`, as JASEN does. On thedonkey the
-  existing `/mnt/cache/dbs/gambit_db` is used.
-- **Kraken2/Bracken**: too large to download here. Point the pipeline at an
-  existing database with `--kraken_db`; on thedonkey this is the JASEN one,
-  `/mnt/cache/dbs/kraken2/standard_2025-06`. Bracken needs the database's
-  `database<length>mers.kmer_distrib` file for `--bracken_read_length`
-  (default 150).
-
-### Software
-
-| Step | Tool | Version (nf-core module container) |
-|---|---|---|
-| Illumina trimming (`--trim`) | Trimmomatic | 0.39 |
-| Nanopore filtering (`--filtlong`) | Filtlong | 0.2.1 |
-| Read QC | FastQC, NanoPlot | 0.12.1, 1.47.0 |
-| Illumina assembly | SKESA (default), SPAdes | 2.5.1, 4.1.0 |
-| Nanopore assembly | Flye, Medaka | 2.9.5, 2.2.2 |
-| Assembly statistics | QUAST | 5.3.0 |
-| Completeness | gambitcore (local module) | 0.0.2 |
-| Read depth | BWA, minimap2, SAMtools | 0.7.19, 2.30, 1.24 |
-| 7-gene MLST | mlst | 2.25.0 |
-| Species check | Kraken2, Bracken | 2.1.6, 3.1 |
-| Allele calling | chewBBACA | 3.5.4 (overrides the module's 3.3.10 to match schema prep) |
-| Report | MultiQC | 1.32 |
-
-The nf-core modules were installed from nf-core/modules with
-`nf-core modules install` and are recorded in `modules.json`; update them with
-`nf-core modules update`.
-
-## Running
-
-Make a samplesheet (CSV) with one row per isolate, using the same IDs as
-`translation_id` in the metadata
-(see [`assets/samplesheet.csv`](assets/samplesheet.csv)):
-
-```
+```text
 sample,platform,fastq_1,fastq_2
 S01,illumina,/data/reads/S01_R1.fastq.gz,/data/reads/S01_R2.fastq.gz
 S02,nanopore,/data/reads/S02.fastq.gz,
 ```
 
-`platform` is `illumina` or `nanopore`. Leave `fastq_2` empty for Nanopore or
-single-end Illumina reads. Then on thedonkey:
+The metadata needs `translation_id`, `transmission` and `growth` columns. See
+[running sinklink](https://sinklink.readthedocs.io/en/latest/usage.html) for
+the formats and [the thedonkey profile](https://sinklink.readthedocs.io/en/latest/setup/thedonkey.html)
+for running elsewhere.
 
-```bash
-nextflow run ryanjameskennedy/sinklink -r master -profile thedonkey \
-    --input samplesheet.csv \
-    --metadata vask_colonisation_hidden.csv \
-    --outdir /media/Lagring/$USER/vask
-```
+## Species and thresholds
 
-The `thedonkey` profile ([`conf/thedonkey.config`](conf/thedonkey.config))
-sets the local executor with the server's caps (15 CPUs and 141 GB, out of 20
-and 188 shared with colleagues), Apptainer with the image cache in
-`/mnt/cache/singularity`, one Kraken2 job at a time, and the database paths:
-`--schemas_dir /mnt/cache/dbs/vask/schemas`, `--kraken_db` and `--gambit_db`.
-Elsewhere, pass those yourself with a container profile:
-
-```bash
-nextflow run ryanjameskennedy/sinklink -profile apptainer \
-    --input samplesheet.csv --metadata metadata.csv \
-    --schemas_dir /path/to/schemas --kraken_db /path/to/kraken2 --gambit_db /path/to/gambit_db \
-    --outdir results
-```
-
-| Parameter | Meaning | Default |
+| Species | Threshold (alleles) | Threshold from |
 |---|---|---|
-| `--input` | Samplesheet (`sample,platform,fastq_1,fastq_2`) | required |
-| `--metadata` | Study metadata (`translation_id`, `transmission`, `growth`, ...) | required |
-| `--outdir` | Output folder | required |
-| `--schemas_dir` | Folder with `<schema>/alleles_rereffed` | required unless `--skip_chewbbaca` |
-| `--kraken_db` | Kraken2/Bracken database; species check skipped without it | none |
-| `--gambit_db` | GAMBIT database for gambitcore | none |
-| `--assembler` | `skesa` or `spades` (Illumina) | `skesa` |
-| `--trim` | Trim Illumina reads with Trimmomatic (`--trimmomatic_args`, default `LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36`) | off |
-| `--filtlong` | Filter Nanopore reads with Filtlong (`--filtlong_args`, default `--min_length 1000 --min_mean_q 90`) | off |
-| `--bracken_read_length` | Bracken k-mer distribution read length | 150 |
-| `--skip_chewbbaca` | Stop after assembly and QC | off |
-| `--schema_table`, `--species_map`, `--qc_thresholds` | Override the tables in `assets/` | `assets/*.tsv` |
+| *Pseudomonas aeruginosa* | ≤12 | cgmlst.org complex type distance |
+| *Klebsiella pneumoniae* species complex | ≤15 | cgmlst.org complex type distance |
+| *Klebsiella oxytoca* species complex | ≤6 (borderline ≤9) | Dabernig-Heinz et al. 2024 |
+| *Serratia marcescens* | ≤12 | cgmlst.org complex type distance |
+| *Citrobacter freundii* | ≤10 | cgmlst.org complex type distance |
+| *Enterobacter hormaechei* | ≤12 | cgmlst.org complex type distance |
+| *Stenotrophomonas maltophilia* complex | ≤10 | Gröschel et al. 2020 (d10) |
 
-Nextflow schedules every step within the caps, keeps intermediate files in the
-work directory and resumes a stopped run with `-resume`. See
-[`docs/usage.md`](docs/usage.md) for the input formats and
-[`docs/output.md`](docs/output.md) for the outputs.
+Each species has its own page, with the scheme, the paper behind it and the
+species the scheme accepts:
+[species and thresholds](https://sinklink.readthedocs.io/en/latest/species/index.html).
 
-A stub test with placeholder inputs checks the pipeline wiring without real
-data (run from the repository root):
+## Data
 
-```bash
-nextflow run . -profile test,docker -stub --outdir results
-```
+The VASK study metadata (`vask_colonisation_hidden.csv`) contains study patient
+identifiers and is not part of this repository; it is git-ignored.
 
-## Pipeline steps
+## Citations
 
-The workflow ([`workflows/sinklink.nf`](workflows/sinklink.nf)) runs five local
-subworkflows built from nf-core modules:
-
-| Subworkflow | Illumina | Nanopore |
-|---|---|---|
-| `READ_PREPARATION` | Trimmomatic (optional), FastQC | Filtlong (optional), NanoPlot |
-| `ASSEMBLY` | SKESA, or SPAdes `--isolate` | Flye `--nano-hq` (`--asm-coverage 50` with the schema's genome size), then `medaka_consensus --bacteria` |
-| `ASSEMBLY_QC` | QUAST, gambitcore, `bwa mem` to the own assembly + `samtools coverage`, mlst | QUAST, gambitcore, `minimap2 -x lr:hq` to the own assembly + `samtools coverage`, mlst |
-| `SPECIES_CHECK` | Kraken2 (`--memory-mapping`) and Bracken (species level) | same |
-| `ALLELE_CALLING` | chewBBACA AlleleCall per schema, `--no-inferred` | same |
-
-Then the local module `SUMMARISE_QC` ([`bin/summarise_qc.py`](bin/summarise_qc.py))
-writes one QC row per isolate, which are combined into `qc_summary.tsv`, and
-`CHECK_DISTANCES` ([`bin/check_distances.py`](bin/check_distances.py))
-compares isolates within each transmission group. MultiQC collects FastQC,
-NanoPlot, QUAST and Kraken2 results into one report.
-
-AlleleCall runs with `--no-inferred`, so schemas are never modified. This makes
-parallel jobs safe and repeat runs reproducible; novel alleles are still
-numbered consistently within a run. Isolates whose `growth` has no schema, or
-whose schema is not set up in `--schemas_dir`, are assembled and QC'd only. If
-Bracken fails, the Kraken2 report is used for the species check instead.
-
-JASEN polishes Flye assemblies with two Medaka rounds; sinklink uses one, as
-the nf-core module does and Medaka's documentation recommends.
-
-## Output
-
-In the output folder:
-
-| Path | Contents |
-|---|---|
-| `fastqc/`, `nanoplot/<sample>/` | Read QC |
-| `trimmomatic/`, `filtlong/` | Filtering logs (when enabled) |
-| `assembly/<sample>.fa` | Final assembly (plus `flye/` or `spades/` logs) |
-| `quast/<sample>.quast/` | QUAST report |
-| `gambitcore/` | Completeness and closest species |
-| `coverage/` | `samtools coverage` of reads mapped back to the assembly |
-| `mlst/` | 7-gene MLST |
-| `kraken2/`, `bracken/` | Kraken2 reports and Bracken species estimates |
-| `chewbbaca/<schema>/` | chewBBACA results (`<schema>_results_alleles.tsv` etc.) |
-| `summary/qc_summary.tsv` | Read and assembly QC per isolate, with flags |
-| `summary/allele_qc.tsv` | Loci called per isolate, with the assembly QC status |
-| `summary/pairwise_distances.tsv` | Every pair within each transmission group |
-| `summary/group_summary.tsv` | One line per transmission group |
-| `multiqc/` | MultiQC report |
-| `pipeline_info/` | Nextflow reports, software versions and parameters |
-
-`pairwise_distances.tsv` columns: transmission group, both isolates, their
-sample types and patients, days apart, schema, loci shared, allele differences,
-threshold, verdict, QC status of the pair and notes. Notes list failed QC
-flags, different 7-gene STs and pairs sequenced on different platforms.
-
-Allele calls are counted only when both isolates have a valid allele at a
-locus. Missing or ambiguous calls (`LNF`, `PLOT3`, `PLOT5`, `ASM`, `ALM`,
-`NIPH`, `NIPHEM`, `LOTSC`, `PAMA`) are ignored rather than counted as
-differences. Novel alleles keep their `*` prefix so they never match a schema
-allele with the same number.
-
-## Quality control
-
-Thresholds live in [`assets/qc_thresholds.tsv`](assets/qc_thresholds.tsv),
-with separate values for Illumina and Nanopore and a severity (`fail` or
-`warn`) per check. Species and genome size expectations per schema are the
-`species_pattern`, `genera`, `genome_size_min_mb` and `genome_size_max_mb`
-columns of [`assets/schemas.tsv`](assets/schemas.tsv).
-
-| Check | Illumina | Nanopore | Severity |
-|---|---|---|---|
-| Mean read depth over the assembly | ≥30× | ≥40× | fail |
-| Contigs ≥500 bp (QUAST) | ≤500 | ≤50 | warn |
-| N50 | ≥15 kb | ≥100 kb | warn |
-| Assembly length inside the schema's expected range | yes | yes | warn |
-| gambitcore completeness | ≥90% | ≥90% | warn |
-| Bracken fraction of reads from species the schema covers | ≥0.8 | ≥0.8 | fail |
-| Largest fraction of reads from a genus outside the schema's genera | ≤0.05 | ≤0.05 | fail |
-
-These are sensible starting points rather than published cut-offs; adjust them
-to your lab's validation. The genome size ranges are approximate.
-
-The species check matters most for the species complexes: an
-`enterobacter_cloacae` isolate that Bracken calls *E. cloacae* or
-*E. asburiae* rather than *E. hormaechei* fails with `species_mismatch`,
-because the cgMLST scheme only covers *E. hormaechei*. Likewise the
-*K. oxytoca* scheme accepts the whole complex (*K. michiganensis*,
-*K. grimontii*, *K. pasteurii*, ...), and the *K. pneumoniae* scheme the
-*K. pneumoniae* species complex.
-
-Each isolate gets `qc_status` `pass`, `warn` or `fail` and a list of flags in
-`qc_summary.tsv`. A pair's `qc` column is `fail` if either isolate failed (or
-had too few loci called), `warn` if either has warnings, and `not_checked` if
-no QC summary was found. Distances are still reported for failed pairs, but
-should not be trusted until the isolate is re-sequenced or re-assembled.
-
-## Interpreting the results
-
-Pair verdicts:
-
-| Verdict | Meaning |
-|---|---|
-| `within_threshold` | At or below the species threshold: same strain |
-| `borderline` | Between the strict and sensitive thresholds (*K. oxytoca* only) |
-| `above_threshold` | Above the threshold: not the same strain |
-| `missing_profile` | One or both isolates have no allele profile |
-| `different_schema` | The two isolates were typed with different schemas |
-
-Allele QC (`allele_qc.tsv`): for cgMLST schemas an isolate fails with
-`low_calls` if fewer than 90% of loci are called. The wgMLST
-*S. maltophilia* scheme has no fraction cut-off, since each genome contains
-only about a quarter of its loci.
-
-Group summaries: `all_pairs_within`, `some_pairs_within`, `no_pairs_within`,
-or `incomplete` when profiles are missing.
-
-A practical reading for each pair:
-
-1. Did both isolates pass QC? If not, fix that first.
-2. Same species and lineage (same 7-gene ST)? If not, no link.
-3. Within the threshold? Then the isolates are **genomically linked**.
-4. Do the dates and room support the sink as the source (sink positive first,
-   patient negative on admission)? Only then call it **probable
-   sink-to-patient transmission**. Same-day samples or a patient positive
-   before the sink fit patient-to-sink spread equally well.
-
-For groups spanning months (Transmission_3, Transmission_4), expect more
-differences than in a short outbreak even from a single persisting source.
-
-## Caveats
-
-- Thresholds are tied to their scheme and software. chewBBACA counts will not
-  exactly match Ridom SeqSphere+ or BioNumerics, so treat cut-offs as guides
-  and check borderline pairs with SNPs.
-- Nanopore assemblies can carry homopolymer and methylation-related errors
-  that show up as extra allele differences, especially in pairs where one
-  isolate is Illumina and the other Nanopore. Nanopore genotyping can match
-  Illumina with recent chemistry and basecalling (Prior et al. 2025), but
-  treat mixed-platform pairs near the threshold with care. These pairs are
-  flagged in the notes.
-- A single colony per sample may not represent a mixed sink population.
-- The *E. hormaechei* scheme only applies once the species is confirmed.
-- The *S. maltophilia* FASTA header format is assumed to be
-  `<locus>_<allele>`; `split_alleles.py` stops if it does not find about
-  17,603 loci, and `--pattern` can be set to match another format.
-- cgmlst.org allele sets grow over time; the download date is recorded in
-  `schemas/<schema>/download/SOURCE`.
-- Tool versions come from the nf-core modules and differ from JASEN's in places
-  (e.g. Flye 2.9.5, QUAST 5.3.0, SPAdes 4.1.0); chewBBACA is pinned to 3.5.4 to
-  match schema prep.
-
-## Repository layout
-
-Standard nf-core pipeline layout, plus the JASEN-style asset Makefiles:
-
-```
-.
-├── main.nf                          # Entry point
-├── nextflow.config                  # Parameters and profiles
-├── nextflow_schema.json             # Parameter schema (nf-schema)
-├── modules.json                     # Installed nf-core modules
-├── workflows/sinklink.nf            # Main workflow
-├── subworkflows/
-│   ├── local/                       # read_preparation, assembly, assembly_qc, species_check,
-│   │                                # allele_calling, utils_nfcore_sinklink_pipeline
-│   └── nf-core/                     # utils_* from the nf-core template
-├── modules/
-│   ├── local/                       # gambitcore, summarise_qc, check_distances
-│   └── nf-core/                     # Installed nf-core modules
-├── conf/
-│   ├── base.config                  # Resource labels
-│   ├── modules.config               # Tool arguments, prefixes and publishing
-│   ├── thedonkey.config             # thedonkey profile
-│   └── test.config                  # Stub test profile
-├── assets/
-│   ├── schemas.tsv                  # Thresholds, expected species and genome size per schema
-│   ├── species_map.tsv              # Lab growth label -> schema
-│   ├── qc_thresholds.tsv            # Read and assembly QC thresholds per platform
-│   ├── schema_input.json            # Samplesheet schema
-│   ├── samplesheet.csv              # Example samplesheet
-│   └── test/                        # Placeholder inputs for the stub test
-├── bin/
-│   ├── summarise_qc.py              # QC summary and flags for one isolate
-│   ├── check_distances.py           # Pairwise distances within transmission groups
-│   └── split_alleles.py             # Splits a single allele FASTA into one file per locus
-├── docs/                            # usage.md and output.md
-├── Makefile                         # Schema and database setup
-└── containers/Makefile              # Containers for schema setup
-```
-
-The study metadata (`vask_colonisation_hidden.csv`) is git-ignored.
-
-## References
-
-- Constantinides B, et al. Genomic surveillance of *Escherichia coli* and *Klebsiella* spp. in hospital sink drains and patients. *Microb Genom* 2020. [PMC7478627](https://pmc.ncbi.nlm.nih.gov/articles/PMC7478627)
-- Dabernig-Heinz J, et al. Core genome multilocus sequence typing (cgMLST) applicable to the monophyletic *Klebsiella oxytoca* species complex. *J Clin Microbiol* 2024;62:e01725-23. [PMC11237601](https://pmc.ncbi.nlm.nih.gov/articles/PMC11237601/)
-- David S, et al. Epidemic of carbapenem-resistant *Klebsiella pneumoniae* in Europe is driven by nosocomial spread. *Nat Microbiol* 2019;4:1919–1929.
-- Duval A, Opatowski L, Brisse S. Defining genomic epidemiology thresholds for common-source bacterial outbreaks: a modelling study. *Lancet Microbe* 2023;4:e349–e357.
-- Gröschel MI, et al. The phylogenetic landscape and nosocomial spread of the multidrug-resistant opportunist *Stenotrophomonas maltophilia*. *Nat Commun* 2020;11:2044. [doi:10.1038/s41467-020-15123-0](https://doi.org/10.1038/s41467-020-15123-0)
-- Hamerlinck H, et al. Sanitary installations and wastewater plumbing as reservoir for the long-term circulation and transmission of carbapenemase producing *Citrobacter freundii* clones in a hospital setting. *Antimicrob Resist Infect Control* 2023;12:58. [PMC10280848](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10280848/)
-- Kampmeier S, et al. Development and evaluation of a core genome multilocus sequencing typing (cgMLST) scheme for *Serratia marcescens* molecular surveillance and outbreak investigations. *J Clin Microbiol* 2022;60:e01196-22.
-- Kieninger B, et al. Development and validation of a core genome multilocus sequence typing scheme for *Citrobacter freundii*. *J Clin Microbiol* 2025;63:e00860-25.
-- Prior K, et al. Accurate and reproducible whole-genome genotyping for bacterial genomic surveillance with Nanopore sequencing data. *J Clin Microbiol* 2025;63:e00369-25.
-- Tönnies H, Prior K, Harmsen D, Mellmann A. Establishment and evaluation of a core genome multilocus sequence typing scheme for whole-genome sequence-based typing of *Pseudomonas aeruginosa*. *J Clin Microbiol* 2021;59:e01987-20. [PMC8106710](https://pmc.ncbi.nlm.nih.gov/articles/PMC8106710/)
-- Ridom cgMLST.org schema list: <https://www.cgmlst.org/ncs>
-- Review of ICU sink studies (sink-to-patient vs patient-to-sink): <https://mdpi.com/2673-947X/2/2/8>
+Tools used by the pipeline are listed in [CITATIONS.md](CITATIONS.md), and the
+literature behind the thresholds in the
+[references](https://sinklink.readthedocs.io/en/latest/reference/references.html).
