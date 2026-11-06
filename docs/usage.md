@@ -72,7 +72,7 @@ How it is used:
 ## Running the pipeline
 
 ```bash
-nextflow run ryanjameskennedy/sinklink -r master \
+nextflow run ryanjameskennedy/sinklink -r v0.1.0 \
     -profile apptainer \
     --input samplesheet.csv \
     --metadata metadata.csv \
@@ -86,7 +86,7 @@ On thedonkey, the [thedonkey profile](setup/thedonkey.md) sets the database
 paths, Apptainer and the resource caps:
 
 ```bash
-nextflow run ryanjameskennedy/sinklink -r master -profile thedonkey \
+nextflow run ryanjameskennedy/sinklink -r v0.1.0 -profile thedonkey \
     --input samplesheet.csv --metadata vask_colonisation_hidden.csv \
     --outdir /media/Lagring/$USER/vask
 ```
