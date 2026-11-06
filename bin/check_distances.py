@@ -179,10 +179,10 @@ def main():
                 "transmission": group,
                 "sample_a": id_a,
                 "sample_b": id_b,
-                "type_a": a["sample"],
-                "type_b": b["sample"],
-                "patient_a": a["studypatientnumber"],
-                "patient_b": b["studypatientnumber"],
+                "type_a": a.get("sample", ""),
+                "type_b": b.get("sample", ""),
+                "patient_a": a.get("studypatientnumber", ""),
+                "patient_b": b.get("studypatientnumber", ""),
                 "days_apart": "",
                 "schema": a["schema"] if a["schema"] == b["schema"] else f"{a['schema']}/{b['schema']}",
                 "shared_loci": "",
@@ -192,7 +192,7 @@ def main():
                 "qc": "",
                 "notes": "",
             }
-            date_a, date_b = parse_date(a["date"]), parse_date(b["date"])
+            date_a, date_b = parse_date(a.get("date", "")), parse_date(b.get("date", ""))
             if date_a and date_b:
                 row["days_apart"] = abs((date_b - date_a).days)
 
