@@ -26,8 +26,9 @@ Any of them can be overridden on the command line.
 **Resource caps.** thedonkey has 20 threads and 188 GB, shared with two
 colleagues, and no scheduler. The profile uses the local executor capped at 15
 CPUs and 141 GB in total, and no single task may ask for more than 15 CPUs,
-141 GB or 48 h. Within those caps Nextflow runs as many tasks as fit: one SKESA
-job (8 CPUs, 32 GB) can run alongside several QUAST or MLST jobs.
+141 GB or 48 h. Within those caps Nextflow runs as many tasks as fit: one Flye
+job (`process_high`: 12 CPUs, 72 GB) can run alongside a few MLST or
+Bracken jobs (`process_low`: 2 CPUs, 12 GB).
 
 **Kraken2 one job at a time.** It reads the large standard database
 memory-mapped, so one job keeps memory predictable.
