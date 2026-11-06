@@ -3,8 +3,9 @@
 
 For every pair of isolates in a group, counts allele differences over the loci
 called in both isolates and compares the count with the species threshold in
-assets/schemas.tsv. Writes sample_qc.tsv, pairwise_distances.tsv and
-group_summary.tsv into the results folder.
+assets/schemas.tsv. Read and assembly QC from qc_summary.tsv (summarise_qc.py)
+is carried into each pair. Writes allele_qc.tsv, pairwise_distances.tsv and
+group_summary.tsv.
 """
 
 import argparse
@@ -89,15 +90,21 @@ def print_table(rows, fields):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--samplesheet", required=True)
-    parser.add_argument("--results", required=True, help="output folder of run_chewbbaca.sh")
+    parser.add_argument("--results", required=True, help="chewbbaca folder of the sinklink output")
+    parser.add_argument("--outdir", help="where to write the tables (default: --results)")
+    parser.add_argument("--qc-summary", help="qc_summary.tsv from summarise_qc.py")
     parser.add_argument("--species-map", required=True)
     parser.add_argument("--schemas", required=True)
     args = parser.parse_args()
 
     results_dir = Path(args.results)
+    out_dir = Path(args.outdir) if args.outdir else results_dir
+    assembly_qc = {}
+    if args.qc_summary and Path(args.qc_summary).is_file():
+        assembly_qc = {r["translation_id"]: r for r in read_tsv(args.qc_summary)}
     species_map = {r["growth"]: r for r in read_tsv(args.species_map)}
     schemas = {r["schema"]: r for r in read_tsv(args.schemas)}
-    with open(args.samplesheet, newline="") as handle:
+    with open(args.samplesheet, newline="", encoding="utf-8-sig") as handle:
         samples = list(csv.DictReader(handle))
 
     profiles, n_loci = {}, {}
@@ -121,7 +128,17 @@ def main():
             qc = "low_calls"
         else:
             qc = "pass"
-        sample_info[sid] = {**sample, "schema": schema, "profile": profile, "qc": qc}
+        aqc = assembly_qc.get(sid, {})
+        sample_info[sid] = {
+            **sample,
+            "schema": schema,
+            "profile": profile,
+            "qc": qc,
+            "assembly_qc": aqc.get("qc_status", ""),
+            "assembly_flags": aqc.get("qc_flags", ""),
+            "platform": aqc.get("platform", ""),
+            "st": aqc.get("st", ""),
+        }
         qc_rows.append({
             "translation_id": sid,
             "transmission": sample["transmission"],
@@ -131,6 +148,8 @@ def main():
             "loci_in_schema": n_loci.get(schema) or "",
             "fraction_called": f"{fraction:.3f}",
             "qc": qc,
+            "assembly_qc": sample_info[sid]["assembly_qc"],
+            "assembly_flags": sample_info[sid]["assembly_flags"],
         })
 
     groups = {}
@@ -155,6 +174,7 @@ def main():
                 "allele_diffs": "",
                 "threshold": "",
                 "verdict": "",
+                "qc": "",
                 "notes": "",
             }
             date_a, date_b = parse_date(a["date"]), parse_date(b["date"])
@@ -166,6 +186,22 @@ def main():
             if a["schema"] == "smaltophilia":
                 notes.add("wgMLST distance over loci shared by both; Groschel used 1275 core loci")
             failed = [f"{s['translation_id']}:{s['qc']}" for s in (a, b) if s["qc"] != "pass"]
+            failed += [f"{s['translation_id']}:assembly {s['assembly_qc']} ({s['assembly_flags']})"
+                       for s in (a, b) if s["assembly_qc"] in ("fail", "warn")]
+            if a["platform"] and b["platform"] and a["platform"] != b["platform"]:
+                notes.add(f"mixed platforms ({a['platform']}/{b['platform']}); "
+                          "sequencing errors can add allele differences")
+            if a["st"] not in ("", "-") and b["st"] not in ("", "-") and a["st"] != b["st"]:
+                notes.add(f"different MLST ST ({a['st']} vs {b['st']})")
+            statuses = {s["assembly_qc"] for s in (a, b)}
+            if any(s["qc"] != "pass" for s in (a, b)) or "fail" in statuses:
+                row["qc"] = "fail"
+            elif "warn" in statuses:
+                row["qc"] = "warn"
+            elif statuses == {"pass"}:
+                row["qc"] = "pass"
+            else:
+                row["qc"] = "not_checked"
 
             if a["schema"] != b["schema"]:
                 row["verdict"] = "different_schema"
@@ -210,21 +246,24 @@ def main():
             "pairs_within": verdicts.count("within_threshold"),
             "pairs_borderline": verdicts.count("borderline"),
             "overall": overall,
+            "qc": next((q for q in ("fail", "warn", "not_checked", "pass")
+                        if q in {r["qc"] for r in rows}), ""),
         })
 
     qc_fields = list(qc_rows[0])
     pair_fields = list(pair_rows[0]) if pair_rows else []
     summary_fields = list(summary_rows[0])
-    write_tsv(results_dir / "sample_qc.tsv", qc_rows, qc_fields)
-    write_tsv(results_dir / "pairwise_distances.tsv", pair_rows, pair_fields)
-    write_tsv(results_dir / "group_summary.tsv", summary_rows, summary_fields)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    write_tsv(out_dir / "allele_qc.tsv", qc_rows, qc_fields)
+    write_tsv(out_dir / "pairwise_distances.tsv", pair_rows, pair_fields)
+    write_tsv(out_dir / "group_summary.tsv", summary_rows, summary_fields)
 
     if pair_rows:
         print_table(pair_rows, ["transmission", "sample_a", "sample_b", "days_apart", "schema",
-                                "shared_loci", "allele_diffs", "threshold", "verdict"])
+                                "shared_loci", "allele_diffs", "threshold", "verdict", "qc"])
         print()
     print_table(summary_rows, summary_fields)
-    print(f"\nWritten to {results_dir}: sample_qc.tsv, pairwise_distances.tsv, group_summary.tsv")
+    print(f"\nWritten to {out_dir}: allele_qc.tsv, pairwise_distances.tsv, group_summary.tsv")
 
     low = [r["translation_id"] for r in qc_rows if r["qc"] != "pass"]
     if low:
