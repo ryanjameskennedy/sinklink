@@ -1,0 +1,56 @@
+name: CI
+# Stub-run the pipeline with the placeholder inputs of the test profile to check
+# that it parses, validates its inputs and wires every process together.
+on:
+  push:
+    branches:
+      - master
+      - dev
+  pull_request:
+  workflow_dispatch:
+
+env:
+  NXF_ANSI_LOG: false
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  stub:
+    name: Stub run (${{ matrix.options.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        options:
+          - name: defaults
+            args: ""
+          - name: all optional steps
+            args: "--trim --filtlong --assembler spades --kraken_db dbs/kraken --gambit_db dbs/gambit"
+    steps:
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+
+      - name: Check out pipeline code
+        uses: actions/checkout@v4
+
+      - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v2
+        with:
+          version: "25.04.0"
+
+      - name: Create placeholder databases
+        run: mkdir -p dbs/kraken dbs/gambit
+
+      - name: Stub run with the test profile
+        run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile test,docker -stub --outdir ./results ${{ matrix.options.args }}
+
+      - name: Check the summary tables were written
+        run: |
+          for f in qc_summary.tsv allele_qc.tsv pairwise_distances.tsv group_summary.tsv; do
+            test -e results/summary/$f || { echo "missing results/summary/$f"; exit 1; }
+          done
