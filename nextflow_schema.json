@@ -10,7 +10,11 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["input", "outdir"],
+            "required": [
+                "input",
+                "metadata",
+                "outdir"
+            ],
             "properties": {
                 "input": {
                     "type": "string",
@@ -20,7 +24,17 @@
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row.",
+                    "help_text": "CSV with a header and the columns sample, platform, fastq_1 and fastq_2. platform is illumina or nanopore; leave fastq_2 empty for Nanopore or single-end Illumina reads. sample must match translation_id in --metadata.",
+                    "fa_icon": "fas fa-file-csv"
+                },
+                "metadata": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "mimetype": "text/csv",
+                    "pattern": "^\\S+\\.csv$",
+                    "description": "Study metadata CSV with translation_id, transmission and growth columns.",
+                    "help_text": "One row per isolate. translation_id matches sample in --input, transmission names the suspected transmission group and growth is the laboratory species label, mapped to a schema through --species_map. Other columns (studypatientnumber, sample, date, comment) are carried into the distance tables.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "outdir": {
@@ -55,7 +69,14 @@
                     "description": "Method used to save pipeline results to output directory.",
                     "help_text": "The Nextflow `publishDir` option specifies which intermediate files should be saved to the output directory. This option tells the pipeline what method should be used to move these files. See [Nextflow docs](https://www.nextflow.io/docs/latest/process.html#publishdir) for details.",
                     "fa_icon": "fas fa-copy",
-                    "enum": ["symlink", "rellink", "link", "copy", "copyNoFollow", "move"],
+                    "enum": [
+                        "symlink",
+                        "rellink",
+                        "link",
+                        "copy",
+                        "copyNoFollow",
+                        "move"
+                    ],
                     "hidden": true
                 },
                 "max_multiqc_email_size": {
@@ -111,7 +132,10 @@
                     "hidden": true
                 },
                 "help": {
-                    "type": ["boolean", "string"],
+                    "type": [
+                        "boolean",
+                        "string"
+                    ],
                     "description": "Display the help message."
                 },
                 "help_full": {
@@ -121,6 +145,123 @@
                 "show_hidden": {
                     "type": "boolean",
                     "description": "Display hidden parameters in the help message (only works when --help or --help_full are provided)."
+                },
+                "config_profile_name": {
+                    "type": "string",
+                    "description": "Name of the config profile in use.",
+                    "hidden": true,
+                    "fa_icon": "fas fa-users-cog"
+                },
+                "config_profile_description": {
+                    "type": "string",
+                    "description": "Description of the config profile in use.",
+                    "hidden": true,
+                    "fa_icon": "fas fa-users-cog"
+                }
+            }
+        },
+        "reference_options": {
+            "title": "Schemas, databases and expectations",
+            "type": "object",
+            "fa_icon": "fas fa-database",
+            "description": "Where to find the chewBBACA schemas and QC databases, and the tables that drive the checks.",
+            "properties": {
+                "schemas_dir": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "Folder holding <schema>/alleles_rereffed, as set up by `make schemas`.",
+                    "help_text": "Required unless --skip_chewbbaca is set. Isolates whose schema is missing here are assembled and QC'd but not allele called.",
+                    "fa_icon": "fas fa-folder-open"
+                },
+                "kraken_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "Kraken2/Bracken database. The read-based species check is skipped without it.",
+                    "fa_icon": "fas fa-database"
+                },
+                "gambit_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "GAMBIT database folder for gambitcore (`make gambit_db`). Completeness is not checked without it.",
+                    "fa_icon": "fas fa-database"
+                },
+                "schema_table": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Thresholds, expected species and genome size per schema. Defaults to assets/schemas.tsv.",
+                    "fa_icon": "fas fa-table",
+                    "hidden": true
+                },
+                "species_map": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Laboratory growth label to schema. Defaults to assets/species_map.tsv.",
+                    "fa_icon": "fas fa-table",
+                    "hidden": true
+                },
+                "qc_thresholds": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Read and assembly QC thresholds per platform. Defaults to assets/qc_thresholds.tsv.",
+                    "fa_icon": "fas fa-table",
+                    "hidden": true
+                }
+            }
+        },
+        "analysis_options": {
+            "title": "Analysis options",
+            "type": "object",
+            "fa_icon": "fas fa-sliders-h",
+            "description": "Read filtering, assembly, species check and allele calling.",
+            "properties": {
+                "trim": {
+                    "type": "boolean",
+                    "description": "Trim Illumina reads with Trimmomatic before assembly.",
+                    "fa_icon": "fas fa-cut"
+                },
+                "trimmomatic_args": {
+                    "type": "string",
+                    "default": "LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36",
+                    "description": "Trimmomatic steps used with --trim.",
+                    "fa_icon": "fas fa-cut"
+                },
+                "filtlong": {
+                    "type": "boolean",
+                    "description": "Filter Nanopore reads with Filtlong before assembly.",
+                    "fa_icon": "fas fa-filter"
+                },
+                "filtlong_args": {
+                    "type": "string",
+                    "default": "--min_length 1000 --min_mean_q 90",
+                    "description": "Filtlong options used with --filtlong.",
+                    "fa_icon": "fas fa-filter"
+                },
+                "assembler": {
+                    "type": "string",
+                    "default": "skesa",
+                    "enum": [
+                        "skesa",
+                        "spades"
+                    ],
+                    "description": "Assembler for Illumina reads. Nanopore reads always use Flye and Medaka.",
+                    "fa_icon": "fas fa-puzzle-piece"
+                },
+                "bracken_read_length": {
+                    "type": "integer",
+                    "default": 150,
+                    "minimum": 1,
+                    "description": "Read length of the Bracken k-mer distribution to use.",
+                    "fa_icon": "fas fa-ruler"
+                },
+                "skip_chewbbaca": {
+                    "type": "boolean",
+                    "description": "Stop after assembly and QC; no allele calling or distances.",
+                    "fa_icon": "fas fa-forward"
                 }
             }
         }
@@ -128,6 +269,12 @@
     "allOf": [
         {
             "$ref": "#/$defs/input_output_options"
+        },
+        {
+            "$ref": "#/$defs/reference_options"
+        },
+        {
+            "$ref": "#/$defs/analysis_options"
         },
         {
             "$ref": "#/$defs/generic_options"
