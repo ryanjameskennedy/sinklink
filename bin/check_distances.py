@@ -42,17 +42,26 @@ def normalise_call(value):
     return value if value.lstrip("*").isdigit() else None
 
 
-def load_profiles(results_dir, schema):
-    files = sorted((results_dir / schema / "allelecall").rglob("results_alleles.tsv"))
-    if not files:
+def schema_of_alleles(path):
+    name = Path(path).name
+    suffix = "_results_alleles.tsv"
+    return name[: -len(suffix)] if name.endswith(suffix) else None
+
+
+def load_profiles(path):
+    if not path:
         return None, {}
-    with open(files[-1], newline="") as handle:
+    with open(path, newline="") as handle:
         reader = csv.reader(handle, delimiter="\t")
         header = next(reader)
         loci = header[1:]
         profiles = {}
         for row in reader:
-            profiles[row[0]] = {
+            sample = row[0]
+            for ext in (".fasta", ".fna", ".fa"):
+                if sample.endswith(ext):
+                    sample = sample[: -len(ext)]
+            profiles[sample] = {
                 locus: allele
                 for locus, allele in zip(loci, (normalise_call(v) for v in row[1:]))
                 if allele is not None
@@ -75,7 +84,7 @@ def verdict(diffs, threshold, borderline):
 
 def write_tsv(path, rows, fields):
     with open(path, "w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields, delimiter="\t")
+        writer = csv.DictWriter(handle, fieldnames=fields, delimiter="\t", lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -90,15 +99,21 @@ def print_table(rows, fields):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--samplesheet", required=True)
-    parser.add_argument("--results", required=True, help="chewbbaca folder of the sinklink output")
-    parser.add_argument("--outdir", help="where to write the tables (default: --results)")
+    parser.add_argument("--alleles", nargs="*", default=[],
+                        help="chewBBACA allele tables named <schema>_results_alleles.tsv")
+    parser.add_argument("--outdir", default=".", help="where to write the tables")
     parser.add_argument("--qc-summary", help="qc_summary.tsv from summarise_qc.py")
     parser.add_argument("--species-map", required=True)
     parser.add_argument("--schemas", required=True)
     args = parser.parse_args()
 
-    results_dir = Path(args.results)
-    out_dir = Path(args.outdir) if args.outdir else results_dir
+    out_dir = Path(args.outdir)
+    allele_files = {}
+    for path in args.alleles:
+        schema = schema_of_alleles(path)
+        if schema is None:
+            sys.exit(f"cannot tell the schema from {path}; expected <schema>_results_alleles.tsv")
+        allele_files[schema] = path
     assembly_qc = {}
     if args.qc_summary and Path(args.qc_summary).is_file():
         assembly_qc = {r["translation_id"]: r for r in read_tsv(args.qc_summary)}
@@ -109,7 +124,7 @@ def main():
 
     profiles, n_loci = {}, {}
     for schema in schemas:
-        n_loci[schema], profiles[schema] = load_profiles(results_dir, schema)
+        n_loci[schema], profiles[schema] = load_profiles(allele_files.get(schema))
 
     qc_rows, sample_info = [], {}
     for sample in samples:

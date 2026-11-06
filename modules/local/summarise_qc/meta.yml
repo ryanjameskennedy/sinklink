@@ -1,0 +1,49 @@
+name: "summarise_qc"
+description: Collect read and assembly QC for one isolate and check it against the thresholds
+keywords:
+  - qc
+  - assembly
+tools:
+  - "summarise_qc.py":
+      description: "sinklink script in bin/"
+input:
+  - - meta:
+        type: map
+        description: Groovy map with id, platform, schema, growth and transmission
+    - assembly:
+        type: file
+        description: Assembly, or [] if it failed
+    - quast:
+        type: file
+        description: QUAST report.tsv
+    - coverage:
+        type: file
+        description: samtools coverage output
+    - gambitcore:
+        type: file
+        description: gambitcore TSV, or []
+    - bracken:
+        type: file
+        description: Bracken species output, or []
+    - kraken_report:
+        type: file
+        description: Kraken2 report, or []
+    - mlst:
+        type: file
+        description: mlst TSV
+  - schema_table:
+      type: file
+      description: assets/schemas.tsv
+  - thresholds:
+      type: file
+      description: assets/qc_thresholds.tsv
+output:
+  tsv:
+    - - meta:
+          type: map
+          description: Groovy map with sample information
+      - "*.qc.tsv":
+          type: file
+          description: One-row QC summary with status and flags
+authors:
+  - "@ryanjameskennedy"

@@ -1,0 +1,32 @@
+name: "gambitcore"
+description: Estimate assembly completeness against the core k-mers of the closest GAMBIT species
+keywords:
+  - completeness
+  - assembly
+  - qc
+tools:
+  - "gambitcore":
+      description: "Assess genome assembly completeness using GAMBIT species core k-mers"
+      homepage: "https://github.com/gambit-suite/gambitcore"
+input:
+  - - meta:
+        type: map
+        description: Groovy map with sample information, e.g. [ id:'sample1' ]
+    - fasta:
+        type: file
+        description: Assembly in FASTA format
+        pattern: "*.{fa,fasta}"
+  - db:
+      type: directory
+      description: Folder with the GAMBIT database (.gdb and .gs files)
+output:
+  tsv:
+    - - meta:
+          type: map
+          description: Groovy map with sample information
+      - "*.gambitcore.tsv":
+          type: file
+          description: Species, completeness and assembly QC colour
+          pattern: "*.gambitcore.tsv"
+authors:
+  - "@ryanjameskennedy"

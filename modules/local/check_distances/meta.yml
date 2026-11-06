@@ -1,0 +1,40 @@
+name: "check_distances"
+description: Compare allele profiles within each transmission group against species thresholds
+keywords:
+  - cgmlst
+  - wgmlst
+  - transmission
+tools:
+  - "check_distances.py":
+      description: "sinklink script in bin/"
+input:
+  - metadata:
+      type: file
+      description: Study metadata CSV
+  - qc_summary:
+      type: file
+      description: qc_summary.tsv from SUMMARISE_QC
+  - alleles:
+      type: file
+      description: chewBBACA allele tables named <schema>_results_alleles.tsv
+  - schema_table:
+      type: file
+      description: assets/schemas.tsv
+  - species_map:
+      type: file
+      description: assets/species_map.tsv
+output:
+  allele_qc:
+    - allele_qc.tsv:
+        type: file
+        description: Loci called per isolate with assembly QC status
+  pairwise:
+    - pairwise_distances.tsv:
+        type: file
+        description: Every pair within each transmission group with verdict, QC and notes
+  summary:
+    - group_summary.tsv:
+        type: file
+        description: One line per transmission group
+authors:
+  - "@ryanjameskennedy"
