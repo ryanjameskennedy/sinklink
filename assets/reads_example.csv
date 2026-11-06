@@ -1,3 +1,0 @@
-id,platform,read1,read2
-S01,illumina,/data/reads/S01_R1.fastq.gz,/data/reads/S01_R2.fastq.gz
-S02,nanopore,/data/reads/S02.fastq.gz,
