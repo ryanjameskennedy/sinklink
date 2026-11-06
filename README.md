@@ -4,13 +4,23 @@ Tools for testing whether bacteria isolated from a hospital sink (or other
 environmental site) and from a patient belong to the same strain, i.e.
 whether the patient's infection or colonisation could have come from the sink.
 
-The repository sets up species-specific cgMLST/wgMLST schemas for
-[chewBBACA](https://github.com/B-UMMI/chewBBACA), calls alleles for every
-isolate in parallel on a single server (no job scheduler needed), and compares
-every pair of isolates within each suspected transmission group against
-published, species-specific allele-difference thresholds.
+Starting from Illumina or Nanopore reads, sinklink:
 
-The layout and Makefiles follow [JASEN](https://github.com/genomic-medicine-sweden/JASEN).
+1. QCs the reads (FastQC or NanoPlot, optional Trimmomatic or Filtlong);
+2. assembles each isolate (SKESA or SPAdes for Illumina, Flye + Medaka for
+   Nanopore);
+3. QCs the assembly (QUAST, gambitcore completeness, read depth, 7-gene MLST)
+   and confirms the species from the reads (Kraken2/Bracken);
+4. calls alleles with [chewBBACA](https://github.com/B-UMMI/chewBBACA) against
+   species-specific cgMLST/wgMLST schemas;
+5. compares every pair of isolates within each suspected transmission group
+   against published, species-specific allele-difference thresholds, flagging
+   pairs where either isolate failed QC.
+
+Everything runs on a single server with no job scheduler. Tools, versions,
+arguments and the layout of the Makefiles follow
+[JASEN](https://github.com/genomic-medicine-sweden/JASEN), so JASEN's
+containers and databases can be reused.
 
 - [Background](#background)
 - [The dataset](#the-dataset)
@@ -19,7 +29,9 @@ The layout and Makefiles follow [JASEN](https://github.com/genomic-medicine-swed
 - [Stenotrophomonas maltophilia wgMLST](#stenotrophomonas-maltophilia-wgmlst)
 - [Installation](#installation)
 - [Running](#running)
+- [Pipeline steps](#pipeline-steps)
 - [Output](#output)
+- [Quality control](#quality-control)
 - [Interpreting the results](#interpreting-the-results)
 - [Caveats](#caveats)
 - [Repository layout](#repository-layout)
@@ -43,11 +55,11 @@ epidemiology (dates, rooms, admission screening).
 `vask_colonisation_hidden.csv` lists 26 isolates (13 environmental, 13 airway)
 in 9 suspected transmission groups. It is not included in this repository
 because it contains study patient identifiers; place it in the repository root
-(the default samplesheet path) or pass your own with `-s`. Columns:
+(the default samplesheet path) or pass your own with `--samplesheet`. Columns:
 
 | Column | Meaning |
 |---|---|
-| `translation_id` | Isolate ID; assemblies must be named `<translation_id>.fasta` |
+| `translation_id` | Isolate ID; must match `id` in the reads sheet |
 | `transmission` | Suspected transmission group |
 | `studypatientnumber` | Study patient (for environmental samples, the patient linked to that site) |
 | `sample` | `environment` or `airway` |
@@ -190,8 +202,7 @@ cd sinklink
 make print_paths
 ```
 
-Download the containers (`chewbbaca.sif` 3.5.4 and `prodigal.sif` 2.6.3, the
-same versions as JASEN) and set up all schemas:
+Download the containers, the GAMBIT database and set up all schemas:
 
 ```bash
 make install ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
@@ -201,9 +212,49 @@ Or step by step:
 
 ```bash
 make -C containers all CONTAINERS_DIR=/mnt/cache/singularity
+make databases ASSETS_DIR=/mnt/cache/dbs/vask
 make schemas ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
 make check ASSETS_DIR=/mnt/cache/dbs/vask
 ```
+
+### Containers
+
+All container URLs and versions are the same as in JASEN, so on thedonkey
+`CONTAINERS_DIR=/mnt/cache/singularity` already holds most of them and make
+only fetches what is missing.
+
+| Container | Version | Used for |
+|---|---|---|
+| `trimmomatic.sif` | 0.40 | Illumina trimming (`--trim`) |
+| `fastqc.sif` | 0.12.1 | Illumina read QC |
+| `filtlong.sif` | 0.3.1 | Nanopore read filtering (`--filtlong`) |
+| `nanoplot.sif` | 1.46.2 | Nanopore read QC |
+| `skesa.sif` | 2.5.1 | Illumina assembly (default) |
+| `spades.sif` | 3.15.5 | Illumina assembly (`--assembler spades`) |
+| `flye.sif` | 2.9.6 | Nanopore assembly |
+| `medaka.sif` | ontresearch/medaka (JASEN pin) | Nanopore polishing; built from Docker |
+| `quast.sif` | 5.2.0 | Assembly statistics |
+| `gambitcore.sif` | 0.0.2 | Assembly completeness; built from Docker |
+| `bwakit.sif` | 0.7.17 | Mapping Illumina reads back to the assembly |
+| `minimap2.sif` | 2.30 | Mapping Nanopore reads back to the assembly |
+| `samtools.sif` | 1.17 | Sorting and depth |
+| `mlst.sif` | 2.23.0 | 7-gene MLST |
+| `kraken2.sif`, `bracken.sif` | Kraken2 (JASEN's mulled image), Bracken 2.8 | Read-based species check |
+| `chewbbaca.sif` | 3.5.4 | Allele calling and schema prep |
+| `prodigal.sif` | 2.6.3 | Prodigal training files |
+
+### Databases
+
+- **GAMBIT** (for gambitcore): `make gambit_db` downloads the RefSeq curated
+  1.0 database into `<assets>/gambit_db`, as JASEN does. On thedonkey use the
+  existing `/mnt/cache/dbs/gambit_db`.
+- **Kraken2/Bracken**: too large to download here. Point the pipeline at an
+  existing database with `--kraken-db`; on thedonkey this is
+  `/mnt/cache/dbs/kraken2/standard_2025-06` (the JASEN one). Bracken needs the
+  database's `database<length>mers.kmer_distrib` file for `--bracken-read-length`
+  (default 150).
+
+### Schemas
 
 A single organism can be set up on its own with `make <schema>_all`
 (e.g. `make paeruginosa_all`). For each schema the Makefile:
@@ -224,71 +275,169 @@ browser download to. Save the file there and re-run make.
 
 ## Running
 
+Make a reads sheet (CSV) with one row per isolate, using the same IDs as
+`translation_id` in the samplesheet
+(see [`assets/reads_example.csv`](assets/reads_example.csv)):
+
+```
+id,platform,read1,read2
+S01,illumina,/data/reads/S01_R1.fastq.gz,/data/reads/S01_R2.fastq.gz
+S02,nanopore,/data/reads/S02.fastq.gz,
+```
+
+`platform` is `illumina` or `nanopore`. Leave `read2` empty for Nanopore or
+single-end Illumina reads. Then on thedonkey:
+
 ```bash
-bin/run_chewbbaca.sh \
-    -a /path/to/assemblies \
-    -o /media/Lagring/$USER/vask \
-    -d /mnt/cache/dbs/vask \
-    -c /mnt/cache/singularity
+bin/sinklink.sh \
+    --reads reads.csv \
+    --outdir /media/Lagring/$USER/vask \
+    --assets /mnt/cache/dbs/vask \
+    --containers /mnt/cache/singularity \
+    --kraken-db /mnt/cache/dbs/kraken2/standard_2025-06 \
+    --gambit-db /mnt/cache/dbs/gambit_db
 ```
 
 | Option | Meaning | Default |
 |---|---|---|
-| `-a DIR` | Assemblies named `<translation_id>.{fasta,fa,fna}[.gz]` | required |
-| `-o DIR` | Output folder | required |
-| `-s FILE` | Samplesheet | `vask_colonisation_hidden.csv` |
-| `-d DIR` | Assets folder containing `schemas/` | `assets/` |
-| `-c DIR` | Folder with `chewbbaca.sif` | `containers/` |
-| `-t INT` | Total threads | 15 |
-| `-f` | Re-run AlleleCall even if results exist | off |
-| `-n` | Dry run: stage inputs and print commands | off |
+| `--reads FILE` | Reads sheet (`id,platform,read1,read2`) | required |
+| `--outdir DIR` | Output folder | required |
+| `--samplesheet FILE` | Study samplesheet | `vask_colonisation_hidden.csv` |
+| `--assets DIR` | Assets folder containing `schemas/` | `assets/` |
+| `--containers DIR` | Folder with the `.sif` images | `containers/` |
+| `--kraken-db DIR` | Kraken2/Bracken database; species check skipped without it | none |
+| `--gambit-db DIR` | GAMBIT database for gambitcore | `<assets>/gambit_db` if present |
+| `--threads INT` | Total threads | 15 |
+| `--memory INT` | Total memory (GB) | 141 |
+| `--sample-threads INT` | Threads per isolate during assembly and QC | 5 |
+| `--assembler NAME` | `skesa` or `spades` (Illumina) | `skesa` |
+| `--trim` | Trim Illumina reads with Trimmomatic (`LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36`) | off |
+| `--filtlong` | Filter Nanopore reads with Filtlong (`--min_length 1000 --min_mean_q 90`) | off |
+| `--bracken-read-length INT` | Bracken k-mer distribution read length | 150 |
+| `--skip-chewbbaca` | Stop after assembly and QC | off |
+| `-f`, `--force` | Re-run steps even if their output exists | off |
+| `-n`, `--dry-run` | Print the commands without running them | off |
 
-What it does:
+The defaults of 15 threads and 141 GB match the caps set for thedonkey
+(20 threads and 188 GB, shared with colleagues). Each step writes its output
+under a temporary name and moves it into place when it succeeds, so re-running
+the same command resumes where it stopped; use `--force` to redo everything.
+A failed isolate does not stop the others.
 
-1. Maps each isolate's `growth` label to a schema via
-   [`assets/species_map.tsv`](assets/species_map.tsv) and copies its assembly
-   into `<outdir>/<schema>/genomes/` (decompressing `.gz`).
-2. Runs one `chewie AlleleCall` job per schema at the same time with `xargs -P`,
-   splitting the threads evenly. There is no scheduler involved, so it runs on
-   any multi-core server. The default of 15 threads matches the cap set for
-   thedonkey (20 threads, shared with colleagues).
-3. Runs AlleleCall with `--no-inferred`, so schemas are never modified. This
-   makes parallel jobs safe and repeat runs reproducible; novel alleles are
-   still numbered consistently within a run.
-4. Runs [`bin/check_distances.py`](bin/check_distances.py) on the results.
-
-The distance check can also be run on its own:
+The QC summary and distance check can also be run on their own:
 
 ```bash
+python3 bin/summarise_qc.py --reads reads.csv \
+    --samplesheet vask_colonisation_hidden.csv --results /media/Lagring/$USER/vask \
+    --species-map assets/species_map.tsv --schemas assets/schemas.tsv \
+    --thresholds assets/qc_thresholds.tsv
+
 python3 bin/check_distances.py \
     --samplesheet vask_colonisation_hidden.csv \
-    --results /media/Lagring/$USER/vask \
-    --species-map assets/species_map.tsv \
-    --schemas assets/schemas.tsv
+    --results /media/Lagring/$USER/vask/chewbbaca --outdir /media/Lagring/$USER/vask \
+    --species-map assets/species_map.tsv --schemas assets/schemas.tsv \
+    --qc-summary /media/Lagring/$USER/vask/qc_summary.tsv
 ```
+
+## Pipeline steps
+
+**Stage 1, per isolate** (`bin/process_sample.sh`). Several isolates run at
+once with `xargs -P`: `--threads / --sample-threads` of them (3 by default),
+each with an equal share of `--memory`.
+
+| Step | Illumina | Nanopore |
+|---|---|---|
+| Read filtering (optional) | Trimmomatic | Filtlong |
+| Read QC | FastQC | NanoPlot |
+| Assembly | SKESA (`--cores --memory`) or SPAdes (`--isolate`) | Flye (`--nano-hq`, `--asm-coverage 50` with the schema's genome size), then two rounds of `medaka_consensus --bacteria` as in JASEN |
+| Assembly statistics | QUAST | QUAST |
+| Completeness | gambitcore | gambitcore |
+| Read depth | `bwa mem` to the isolate's own assembly, `samtools coverage` | `minimap2 -x lr:hq` to the isolate's own assembly, `samtools coverage` |
+| 7-gene MLST | `mlst` (scheme detected automatically) | `mlst` |
+
+**Stage 2, species check.** Kraken2 (`--memory-mapping`) and Bracken (species
+level) on the reads that went into the assembly, one isolate at a time with all
+threads, since the standard database needs most of the machine's memory. If
+Bracken fails, the Kraken2 report is used instead.
+
+**Stage 3, allele calling.** Each assembly with a schema is linked into
+`chewbbaca/<schema>/genomes/`, and one `chewie AlleleCall` job per schema runs
+at the same time with `xargs -P`, splitting the threads evenly. AlleleCall uses
+`--no-inferred`, so schemas are never modified; this makes parallel jobs safe
+and repeat runs reproducible, and novel alleles are still numbered
+consistently within a run. Isolates whose `growth` has no schema are assembled
+and QC'd only.
+
+**Stage 4, summaries.** [`bin/summarise_qc.py`](bin/summarise_qc.py) writes
+`qc_summary.tsv`, and [`bin/check_distances.py`](bin/check_distances.py)
+compares isolates within each transmission group.
 
 ## Output
 
 In the output folder:
 
-| File | Contents |
+| Path | Contents |
 |---|---|
-| `<schema>/genomes/` | Staged assemblies |
-| `<schema>/allelecall/` | chewBBACA results (`results_alleles.tsv` etc.) |
-| `<schema>/allelecall.log` | AlleleCall log |
-| `sample_qc.tsv` | Loci called per isolate and QC status |
+| `samples/<id>/trimmomatic/`, `filtlong/` | Filtered reads (when enabled) |
+| `samples/<id>/fastqc/`, `nanoplot/` | Read QC |
+| `samples/<id>/assembly/<id>.fasta` | Final assembly (plus `flye/`, `medaka_round*/` or `spades/`) |
+| `samples/<id>/quast/` | QUAST report (`transposed_report.tsv`) |
+| `samples/<id>/gambitcore/<id>.tsv` | Completeness and closest species |
+| `samples/<id>/mapping/` | Reads mapped back to the assembly and `samtools coverage` |
+| `samples/<id>/mlst/` | 7-gene MLST (`.tsv` and `.json`) |
+| `samples/<id>/kraken/` | Kraken2 report and Bracken species estimates |
+| `samples/<id>/logs/` | One log per step |
+| `chewbbaca/<schema>/allelecall/` | chewBBACA results (`results_alleles.tsv` etc.) |
+| `qc_summary.tsv` | Read and assembly QC per isolate, with flags |
+| `allele_qc.tsv` | Loci called per isolate, with the assembly QC status |
 | `pairwise_distances.tsv` | Every pair within each transmission group |
 | `group_summary.tsv` | One line per transmission group |
 
 `pairwise_distances.tsv` columns: transmission group, both isolates, their
 sample types and patients, days apart, schema, loci shared, allele differences,
-threshold, verdict and notes.
+threshold, verdict, QC status of the pair and notes. Notes list failed QC
+flags, different 7-gene STs and pairs sequenced on different platforms.
 
 Allele calls are counted only when both isolates have a valid allele at a
 locus. Missing or ambiguous calls (`LNF`, `PLOT3`, `PLOT5`, `ASM`, `ALM`,
 `NIPH`, `NIPHEM`, `LOTSC`, `PAMA`) are ignored rather than counted as
 differences. Novel alleles keep their `*` prefix so they never match a schema
 allele with the same number.
+
+## Quality control
+
+Thresholds live in [`assets/qc_thresholds.tsv`](assets/qc_thresholds.tsv),
+with separate values for Illumina and Nanopore and a severity (`fail` or
+`warn`) per check. Species and genome size expectations per schema are the
+`species_pattern`, `genera`, `genome_size_min_mb` and `genome_size_max_mb`
+columns of [`assets/schemas.tsv`](assets/schemas.tsv).
+
+| Check | Illumina | Nanopore | Severity |
+|---|---|---|---|
+| Mean read depth over the assembly | ≥30× | ≥40× | fail |
+| Contigs ≥500 bp (QUAST) | ≤500 | ≤50 | warn |
+| N50 | ≥15 kb | ≥100 kb | warn |
+| Assembly length inside the schema's expected range | yes | yes | warn |
+| gambitcore completeness | ≥90% | ≥90% | warn |
+| Bracken fraction of reads from species the schema covers | ≥0.8 | ≥0.8 | fail |
+| Largest fraction of reads from a genus outside the schema's genera | ≤0.05 | ≤0.05 | fail |
+
+These are sensible starting points rather than published cut-offs; adjust them
+to your lab's validation. The genome size ranges are approximate.
+
+The species check matters most for the species complexes: an
+`enterobacter_cloacae` isolate that Bracken calls *E. cloacae* or
+*E. asburiae* rather than *E. hormaechei* fails with `species_mismatch`,
+because the cgMLST scheme only covers *E. hormaechei*. Likewise the
+*K. oxytoca* scheme accepts the whole complex (*K. michiganensis*,
+*K. grimontii*, *K. pasteurii*, ...), and the *K. pneumoniae* scheme the
+*K. pneumoniae* species complex.
+
+Each isolate gets `qc_status` `pass`, `warn` or `fail` and a list of flags in
+`qc_summary.tsv`. A pair's `qc` column is `fail` if either isolate failed (or
+had too few loci called), `warn` if either has warnings, and `not_checked` if
+no QC summary was found. Distances are still reported for failed pairs, but
+should not be trusted until the isolate is re-sequenced or re-assembled.
 
 ## Interpreting the results
 
@@ -302,7 +451,7 @@ Pair verdicts:
 | `missing_profile` | One or both isolates have no allele profile |
 | `different_schema` | The two isolates were typed with different schemas |
 
-Sample QC (`sample_qc.tsv`): for cgMLST schemas an isolate fails with
+Allele QC (`allele_qc.tsv`): for cgMLST schemas an isolate fails with
 `low_calls` if fewer than 90% of loci are called. The wgMLST
 *S. maltophilia* scheme has no fraction cut-off, since each genome contains
 only about a quarter of its loci.
@@ -312,9 +461,10 @@ or `incomplete` when profiles are missing.
 
 A practical reading for each pair:
 
-1. Same species and lineage? If not, no link.
-2. Within the threshold? Then the isolates are **genomically linked**.
-3. Do the dates and room support the sink as the source (sink positive first,
+1. Did both isolates pass QC? If not, fix that first.
+2. Same species and lineage (same 7-gene ST)? If not, no link.
+3. Within the threshold? Then the isolates are **genomically linked**.
+4. Do the dates and room support the sink as the source (sink positive first,
    patient negative on admission)? Only then call it **probable
    sink-to-patient transmission**. Same-day samples or a patient positive
    before the sink fit patient-to-sink spread equally well.
@@ -327,6 +477,12 @@ differences than in a short outbreak even from a single persisting source.
 - Thresholds are tied to their scheme and software. chewBBACA counts will not
   exactly match Ridom SeqSphere+ or BioNumerics, so treat cut-offs as guides
   and check borderline pairs with SNPs.
+- Nanopore assemblies can carry homopolymer and methylation-related errors
+  that show up as extra allele differences, especially in pairs where one
+  isolate is Illumina and the other Nanopore. Nanopore genotyping can match
+  Illumina with recent chemistry and basecalling (Prior et al. 2025), but
+  treat mixed-platform pairs near the threshold with care. These pairs are
+  flagged in the notes.
 - A single colony per sample may not represent a mixed sink population.
 - The *E. hormaechei* scheme only applies once the species is confirmed.
 - The *S. maltophilia* FASTA header format is assumed to be
@@ -334,18 +490,24 @@ differences than in a short outbreak even from a single persisting source.
   17,603 loci, and `--pattern` can be set to match another format.
 - cgmlst.org allele sets grow over time; the download date is recorded in
   `schemas/<schema>/download/SOURCE`.
+- Re-running without `--force` keeps existing chewBBACA results, even if
+  assemblies were added or changed; use `--force` after re-assembling.
 
 ## Repository layout
 
 ```
 .
-├── Makefile                    # Schema setup (seed genome, Prodigal training, download, prep)
-├── containers/Makefile         # Container downloads
+├── Makefile                    # Schema and database setup (seed genome, Prodigal training, download, prep)
+├── containers/Makefile         # Container downloads (same URLs as JASEN)
 ├── assets/
-│   ├── schemas.tsv             # Thresholds and sources per schema
-│   └── species_map.tsv         # Lab growth label -> schema
+│   ├── schemas.tsv             # Thresholds, expected species and genome size per schema
+│   ├── species_map.tsv         # Lab growth label -> schema
+│   ├── qc_thresholds.tsv       # Read and assembly QC thresholds per platform
+│   └── reads_example.csv       # Example reads sheet
 └── bin/
-    ├── run_chewbbaca.sh        # Parallel AlleleCall and distance check
+    ├── sinklink.sh             # Runs everything: assembly and QC, species check, AlleleCall, summaries
+    ├── process_sample.sh       # Read QC, assembly and assembly QC for one isolate
+    ├── summarise_qc.py         # QC summary and flags per isolate
     ├── check_distances.py      # Pairwise distances within transmission groups
     └── split_alleles.py        # Splits a single allele FASTA into one file per locus
 ```
