@@ -19,6 +19,9 @@ CONTAINERS_SRC_DIR := $(SCRIPT_DIR)/containers
 SCHEMAS_DIR := $(ASSETS_DIR)/schemas
 GENOMES_DIR := $(ASSETS_DIR)/genomes
 PRODIGAL_TRAINING_DIR := $(ASSETS_DIR)/prodigal_training_files
+GAMBIT_DIR := $(ASSETS_DIR)/gambit_db
+GAMBIT_URL := https://storage.googleapis.com/jlumpe-gambit/public/databases/refseq-curated/1.0
+GAMBIT_FILES := gambit-refseq-curated-1.0.gdb gambit-refseq-curated-1.0.gs
 
 APPTAINER ?= apptainer
 PREP_CPUS ?= 4
@@ -90,16 +93,19 @@ NCBI_EFETCH := https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucc
 # ==============================================================================
 # Main rules
 # ==============================================================================
-.PHONY: print_paths install download_or_build_containers schemas check check_schemas
+.PHONY: print_paths install download_or_build_containers schemas databases gambit_db \
+	check check_schemas check_databases
 
 print_paths:
 	@echo "SCRIPT_DIR:" $(SCRIPT_DIR)
 	@echo "ASSETS_DIR:" $(ASSETS_DIR)
 	@echo "CONTAINERS_DIR:" $(CONTAINERS_DIR)
 	@echo "SCHEMAS_DIR:" $(SCHEMAS_DIR)
+	@echo "GAMBIT_DIR:" $(GAMBIT_DIR)
 	@echo "BIND_ROOTS:" $(BIND_ROOTS)
 
 install: download_or_build_containers \
+	databases \
 	schemas
 
 download_or_build_containers:
@@ -108,7 +114,31 @@ download_or_build_containers:
 
 schemas: $(addsuffix _all,$(SCHEMAS))
 
-check: check_schemas
+databases: gambit_db
+
+# The Kraken2 database is too large to download here; point the pipeline at an
+# existing one (e.g. the JASEN one on thedonkey) with --kraken-db.
+gambit_db: $(addprefix $(GAMBIT_DIR)/,$(GAMBIT_FILES))
+
+$(GAMBIT_DIR)/%:
+	$(call log_message,"Downloading GAMBIT database file $* ...")
+	mkdir -p $(GAMBIT_DIR) \
+	&& wget "$(GAMBIT_URL)/$*" -O $@.tmp --no-verbose |& tee -a $(INSTALL_LOG) \
+	&& [[ -s $@.tmp ]] \
+	&& mv $@.tmp $@
+
+check: check_databases check_schemas
+
+check_databases:
+	@status=0; \
+	for file in $(GAMBIT_FILES); do \
+		if [[ -s $(GAMBIT_DIR)/$$file ]]; then \
+			echo "[✓] gambit: $(GAMBIT_DIR)/$$file"; \
+		else \
+			echo "[!] gambit: missing $(GAMBIT_DIR)/$$file"; status=1; \
+		fi; \
+	done; \
+	exit $$status
 
 check_schemas:
 	@status=0; \
