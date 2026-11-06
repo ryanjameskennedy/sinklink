@@ -1,0 +1,8 @@
+schema	organism	scheme	loci	threshold	borderline	min_called_fraction	source
+paeruginosa	Pseudomonas aeruginosa	cgmlst.org Paeruginosa cgMLST	3867	12		0.9	cgmlst.org complex type distance; Tonnies et al. J Clin Microbiol 2021
+kpneumoniae	Klebsiella pneumoniae sensu lato	cgmlst.org Kpneumoniae_complex cgMLST	2358	15		0.9	cgmlst.org complex type distance
+koxytoca	Klebsiella oxytoca species complex	cgmlst.org Koxytoca_complex cgMLST	2536	6	9	0.9	Dabernig-Heinz et al. J Clin Microbiol 2024 (6 strict, 9 sensitive)
+smarcescens	Serratia marcescens	cgmlst.org Smarcescens cgMLST	2692	12		0.9	cgmlst.org complex type distance; Kampmeier et al. J Clin Microbiol 2022
+cfreundii	Citrobacter freundii	cgmlst.org Cfreundii cgMLST	3250	10		0.9	cgmlst.org complex type distance; Kieninger et al. J Clin Microbiol 2025
+ehormaechei	Enterobacter hormaechei	cgmlst.org Ehormaechei cgMLST	2178	12		0.9	cgmlst.org complex type distance; Prior et al. J Clin Microbiol 2025
+smaltophilia	Stenotrophomonas maltophilia complex	Groschel 2020 wgMLST (figshare 10005047)	17603	10			Groschel et al. Nat Commun 2020 (d10, over 1275 core loci)

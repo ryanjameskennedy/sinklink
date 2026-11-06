@@ -1,0 +1,10 @@
+growth	schema	note
+pseudomonas_aeruginosa	paeruginosa
+klebsiella_pneumoniae	kpneumoniae
+klebsiella_oxytoca	koxytoca
+klebsiella_oxytoca_group	koxytoca
+serratia_marcescens	smarcescens
+citrobacter_freundii	cfreundii
+enterobacter_cloacae	ehormaechei	scheme covers E. hormaechei only; confirm species from the genome
+enterobacter_cloacae_complex	ehormaechei	scheme covers E. hormaechei only; confirm species from the genome
+stenotrophomonas_maltophilia	smaltophilia
