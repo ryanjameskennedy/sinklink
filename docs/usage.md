@@ -82,11 +82,12 @@ nextflow run ryanjameskennedy/sinklink -r v0.1.0 \
     --outdir results
 ```
 
-On thedonkey, the [thedonkey profile](setup/thedonkey.md) sets the database
-paths, Apptainer and the resource caps:
+On a server, put the database paths in a parameters file and the resources in
+a config (see [running on a server](setup/servers.md)):
 
 ```bash
-nextflow run ryanjameskennedy/sinklink -r v0.1.0 -profile thedonkey \
+nextflow run ryanjameskennedy/sinklink -r v0.1.0 -profile apptainer \
+    -c thedonkey.config -params-file thedonkey.yaml \
     --input samplesheet.csv --metadata vask_colonisation_hidden.csv \
     --outdir /media/Lagring/$USER/vask
 ```
@@ -176,9 +177,7 @@ Specify the path to a specific config file (this is a core Nextflow command). Se
 
 ### Resource requests
 
-Whilst the default requirements set within the pipeline will hopefully work for most people and with most input data, you may find that you want to customise the compute resources that the pipeline requests. Each step in the pipeline has a default set of requirements for number of CPUs, memory and time. For most of the pipeline steps, if the job exits with any of the error codes specified [here](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/conf/base.config#L18) it will automatically be resubmitted with higher resources request (2 x original, then 3 x original). If it still fails after the third attempt then the pipeline execution is stopped.
-
-To change the resource requests, please see the [max resources](https://nf-co.re/docs/usage/configuration#max-resources) and [tuning workflow resources](https://nf-co.re/docs/usage/configuration#tuning-workflow-resources) section of the nf-core website.
+Each step requests CPUs, memory and time through its nf-core label. A step that runs out of memory or time is retried once with double the memory and time. To change the requests, or cap them at what your machine has, use a `-c` config; [running on a server](setup/servers.md) lists every tool with its label and the thedonkey settings.
 
 ### Custom Containers
 

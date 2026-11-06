@@ -117,7 +117,7 @@ schemas: $(addsuffix _all,$(SCHEMAS))
 databases: gambit_db
 
 # The Kraken2 database is too large to download here; point the pipeline at an
-# existing one (e.g. the JASEN one on thedonkey) with --kraken-db.
+# existing one (e.g. the JASEN one) with --kraken-db.
 gambit_db: $(addprefix $(GAMBIT_DIR)/,$(GAMBIT_FILES))
 
 $(GAMBIT_DIR)/%:

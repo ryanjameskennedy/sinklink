@@ -21,8 +21,8 @@ server without a job scheduler.
 - **Which threshold applies to my species, and where does it come from?** See
   [species and thresholds](species/index.md).
 - **Running it for the first time?** Follow [installation](setup/install.md),
-  then [running sinklink](usage.md). On thedonkey, see the
-  [thedonkey profile](setup/thedonkey.md).
+  then [running sinklink](usage.md). On a server, see
+  [running on a server](setup/servers.md).
 - **Reading the results?** See [output](output.md) and
   [interpreting the results](results/interpreting.md).
 
@@ -52,7 +52,7 @@ species/index
 setup/install
 setup/schemas
 setup/databases
-setup/thedonkey
+setup/servers
 ```
 
 ```{toctree}

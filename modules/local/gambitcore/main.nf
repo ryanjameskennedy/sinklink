@@ -1,6 +1,6 @@
 process GAMBITCORE {
     tag "$meta.id"
-    label 'process_low'
+    label 'process_medium'
 
     container "docker.io/clinicalgenomicslund/gambitcore:0.0.2"
 

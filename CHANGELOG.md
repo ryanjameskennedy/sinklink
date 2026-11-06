@@ -3,6 +3,18 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased]
+
+### `Added`
+
+- Documentation on running on a server, with each tool's label and its nf-core, JASEN and thedonkey resources
+
+### `Changed`
+
+- SKESA and chewBBACA use their nf-core label resources instead of custom ones
+- Labels follow the JASEN resources: SKESA and chewBBACA `process_high`, NanoPlot, gambitcore and minimap2 `process_medium` (nf-core module patches)
+- Removed the `thedonkey` profile: pass the server config with `-c` and the database paths with `-params-file` (see ryanjameskennedy/configs)
+
 ## v0.1.0 - 2026-11-06
 
 First release of sinklink, created with the [nf-core](https://nf-co.re/) template.

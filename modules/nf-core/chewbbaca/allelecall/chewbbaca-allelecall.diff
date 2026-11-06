@@ -1,0 +1,19 @@
+Changes in component 'nf-core/chewbbaca/allelecall'
+'modules/nf-core/chewbbaca/allelecall/environment.yml' is unchanged
+'modules/nf-core/chewbbaca/allelecall/meta.yml' is unchanged
+Changes in 'chewbbaca/allelecall/main.nf':
+--- modules/nf-core/chewbbaca/allelecall/main.nf
++++ modules/nf-core/chewbbaca/allelecall/main.nf
+@@ -1,6 +1,6 @@
+ process CHEWBBACA_ALLELECALL {
+     tag "$meta.id"
+-    label 'process_low'
++    label 'process_high'
+ 
+     conda "${moduleDir}/environment.yml"
+     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+
+'modules/nf-core/chewbbaca/allelecall/tests/main.nf.test.snap' is unchanged
+'modules/nf-core/chewbbaca/allelecall/tests/tags.yml' is unchanged
+'modules/nf-core/chewbbaca/allelecall/tests/main.nf.test' is unchanged
+************************************************************
