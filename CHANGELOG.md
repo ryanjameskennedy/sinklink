@@ -3,9 +3,10 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v1.0.0dev - [unreleased]
+## v0.1.0 - 2026-11-06
 
-Initial release of sinklink, created with the [nf-core](https://nf-co.re/) template.
+First release of sinklink, created with the [nf-core](https://nf-co.re/) template.
+Tested with stub runs only; not yet validated on real data.
 
 ### `Added`
 
@@ -16,6 +17,8 @@ Initial release of sinklink, created with the [nf-core](https://nf-co.re/) templ
 - chewBBACA AlleleCall per schema and pairwise distances within transmission groups, flagged by QC
 - Makefile for schema setup (seed genome, Prodigal training, download, PrepExternalSchema) and the GAMBIT database
 - `thedonkey` profile and a stub `test` profile
+- Documentation on Read the Docs, with one page per species and the source of each threshold
+- GitHub Actions: stub runs on Nextflow 25.04.0 and a strict docs build
 
 ### `Fixed`
 
