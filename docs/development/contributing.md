@@ -9,7 +9,7 @@ subworkflows/local/         read_preparation, assembly, assembly_qc,
                             species_check, allele_calling, utils_nfcore_sinklink_pipeline
 modules/nf-core/            installed nf-core modules (modules.json)
 modules/local/              gambitcore, summarise_qc, check_distances
-conf/                       base, modules, thedonkey and test configs
+conf/                       base, modules and test configs
 assets/                     schemas.tsv, species_map.tsv, qc_thresholds.tsv, samplesheet schema, test inputs
 bin/                        summarise_qc.py, check_distances.py, split_alleles.py
 docs/                       this documentation (Sphinx + MyST)
