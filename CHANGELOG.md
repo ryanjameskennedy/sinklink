@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Changed`
 
 - SKESA and chewBBACA use their nf-core label resources instead of custom ones
+- Labels follow the JASEN resources: SKESA and chewBBACA `process_high`, NanoPlot, gambitcore and minimap2 `process_medium` (nf-core module patches)
 - Removed the `thedonkey` profile: pass the server config with `-c` and the database paths with `-params-file` (see ryanjameskennedy/configs)
 
 ## v0.1.0 - 2026-11-06
