@@ -6,28 +6,97 @@ This document describes the output produced by the pipeline. Most of the plots a
 
 The directories listed below will be created in the results directory after the pipeline has finished. All paths are relative to the top-level results directory.
 
-<!-- TODO nf-core: Write this documentation describing your workflow's output -->
-
 ## Pipeline overview
 
 The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
 
-- [FastQC](#fastqc) - Raw read QC
+- [Read preparation](#read-preparation) - Optional Trimmomatic or Filtlong, then FastQC or NanoPlot
+- [Assembly](#assembly) - SKESA or SPAdes (Illumina), Flye and Medaka (Nanopore)
+- [Assembly QC](#assembly-qc) - QUAST, gambitcore, read depth and 7-gene MLST
+- [Species check](#species-check) - Kraken2 and Bracken on the reads
+- [Allele calling](#allele-calling) - chewBBACA AlleleCall per schema
+- [Summary](#summary) - QC summary and distances within transmission groups
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
-### FastQC
+### Read preparation
 
 <details markdown="1">
 <summary>Output files</summary>
 
-- `fastqc/`
-  - `*_fastqc.html`: FastQC report containing quality metrics.
-  - `*_fastqc.zip`: Zip archive containing the FastQC report, tab-delimited data file and plot images.
+- `trimmomatic/`: `*.summary` and `*_out.log` per isolate (with `--trim`).
+- `filtlong/`: `*.log` per isolate (with `--filtlong`).
+- `fastqc/`: `*.html` and `*.zip` per Illumina isolate.
+- `nanoplot/<sample>/`: NanoPlot report and `NanoStats.txt` per Nanopore isolate.
 
 </details>
 
-[FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/) gives general quality metrics about your sequenced reads. It provides information about the quality score distribution across your reads, per base sequence content (%A/T/G/C), adapter contamination and overrepresented sequences. For further reading and documentation see the [FastQC help pages](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/).
+FastQC and NanoPlot summarise read quality and length. Filtered reads are not published; they stay in the work directory.
+
+### Assembly
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `assembly/<sample>.fa`: the final assembly used for QC and allele calling.
+- `assembly/flye/`: Flye assembly graph, info and log (Nanopore).
+- `assembly/spades/`: SPAdes logs (with `--assembler spades`).
+
+</details>
+
+Illumina reads are assembled with SKESA (default) or SPAdes `--isolate`. Nanopore reads are assembled with Flye `--nano-hq` (with `--asm-coverage 50` and the schema's expected genome size) and polished once with `medaka_consensus --bacteria`.
+
+### Assembly QC
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `quast/<sample>.quast/`: QUAST report (`report.tsv`, `report.html`, ...).
+- `gambitcore/<sample>.gambitcore.tsv`: closest species, completeness and a green/amber/red call (with `--gambit_db`).
+- `coverage/<sample>.coverage.txt`: `samtools coverage` of the reads mapped back to the isolate's own assembly.
+- `mlst/<sample>.mlst.tsv`: 7-gene MLST scheme and sequence type.
+
+</details>
+
+Reads are mapped with `bwa mem` (Illumina) or `minimap2 -x lr:hq` (Nanopore); the mean depth weighted by contig length goes into the QC summary.
+
+### Species check
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `kraken2/<sample>.kraken2.report.txt`: Kraken2 report.
+- `bracken/<sample>.bracken.tsv`: Bracken species-level estimates.
+
+</details>
+
+Runs only with `--kraken_db`. If Bracken fails (for example when the database has no k-mer distribution for `--bracken_read_length`), the Kraken2 report is used for the species check instead.
+
+### Allele calling
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `chewbbaca/<schema>/<schema>_results_alleles.tsv`: allele profiles of every isolate typed with that schema.
+- `chewbbaca/<schema>/<schema>_results_statistics.tsv`, `*_results_contigsInfo.tsv`, ...: chewBBACA statistics and logs.
+
+</details>
+
+One AlleleCall job per schema, run with `--no-inferred` so the schemas are never modified.
+
+### Summary
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `summary/qc_summary.tsv`: read and assembly QC per isolate with `qc_status` (`pass`, `warn` or `fail`) and `qc_flags`.
+- `summary/allele_qc.tsv`: loci called per isolate and its assembly QC status.
+- `summary/pairwise_distances.tsv`: every pair within each transmission group: days apart, schema, loci shared, allele differences, threshold, verdict, pair QC and notes.
+- `summary/group_summary.tsv`: one line per transmission group.
+
+</details>
+
+See the README for the QC thresholds, the verdicts and how to read a pair.
 
 ### MultiQC
 

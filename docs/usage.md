@@ -4,58 +4,108 @@
 
 ## Introduction
 
-<!-- TODO nf-core: Add documentation about anything specific to running your pipeline. For general topics, please point to (and add to) the main nf-core website. -->
+sinklink assembles and QCs bacterial isolates from Illumina or Nanopore reads,
+calls cgMLST/wgMLST alleles with chewBBACA and compares isolates within each
+suspected transmission group (for example a sink and a patient) against
+species-specific allele-difference thresholds. See the [README](../README.md)
+for the background, the thresholds and how to read the results.
+
+Before the first run, set up the chewBBACA schemas (and, optionally, the GAMBIT
+database) with the Makefile in the repository root:
+
+```bash
+make -C containers all CONTAINERS_DIR=/mnt/cache/singularity
+make schemas databases ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
+```
 
 ## Samplesheet input
 
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
+The samplesheet lists the reads for each isolate. It is a comma-separated file
+with a header row and 4 columns:
 
 ```bash
 --input '[path to samplesheet file]'
 ```
 
-### Multiple runs of the same sample
-
-The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will concatenate the raw reads before performing any downstream analysis. Below is an example for the same sample sequenced across 3 lanes:
-
 ```csv title="samplesheet.csv"
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L003_R1_001.fastq.gz,AEG588A1_S1_L003_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001.fastq.gz
+sample,platform,fastq_1,fastq_2
+S01,illumina,/data/reads/S01_R1.fastq.gz,/data/reads/S01_R2.fastq.gz
+S02,illumina,/data/reads/S02_R1.fastq.gz,
+S03,nanopore,/data/reads/S03.fastq.gz,
 ```
 
-### Full samplesheet
+| Column     | Description                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------- |
+| `sample`   | Isolate ID. Must match `translation_id` in the metadata. Letters, digits, `.`, `_` and `-` only. |
+| `platform` | `illumina` or `nanopore`.                                                                         |
+| `fastq_1`  | Gzipped FastQ file (`.fastq.gz` or `.fq.gz`): read 1, single-end reads or Nanopore reads.         |
+| `fastq_2`  | Gzipped FastQ file for Illumina read 2. Leave empty for single-end and Nanopore reads.            |
 
-The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet. The samplesheet can have as many columns as you desire, however, there is a strict requirement for the first 3 columns to match those defined in the table below.
+One row per isolate; concatenate reads from several runs beforehand. An
+[example samplesheet](../assets/samplesheet.csv) is provided with the pipeline.
 
-A final samplesheet file consisting of both single- and paired-end data may look something like the one below. This is for 6 samples, where `TREATMENT_REP3` has been sequenced twice.
+## Metadata input
 
-```csv title="samplesheet.csv"
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP2,AEG588A2_S2_L002_R1_001.fastq.gz,AEG588A2_S2_L002_R2_001.fastq.gz
-CONTROL_REP3,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
-TREATMENT_REP1,AEG588A4_S4_L003_R1_001.fastq.gz,
-TREATMENT_REP2,AEG588A5_S5_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L004_R1_001.fastq.gz,
+The metadata file describes the study design. It is a comma-separated file with
+at least `translation_id`, `transmission` and `growth`:
+
+```bash
+--metadata '[path to metadata file]'
 ```
 
-| Column    | Description                                                                                                                                                                            |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sample`  | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. Spaces in sample names are automatically converted to underscores (`_`). |
-| `fastq_1` | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
-| `fastq_2` | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
+| Column               | Description                                                                         |
+| -------------------- | ----------------------------------------------------------------------------------- |
+| `translation_id`     | Isolate ID, matching `sample` in the samplesheet                                    |
+| `transmission`       | Suspected transmission group; isolates in the same group are compared pairwise     |
+| `growth`             | Species reported by the laboratory, mapped to a schema by `assets/species_map.tsv` |
+| `studypatientnumber` | Study patient (optional, shown in the pair table)                                   |
+| `sample`             | Sample type, e.g. `environment` or `airway` (optional)                              |
+| `date`               | Sampling date, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM` (optional, gives `days_apart`)    |
 
-An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
+Isolates in the samplesheet but not in the metadata, or whose `growth` has no
+schema, are assembled and QC'd but not allele called.
 
 ## Running the pipeline
 
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run ryanjameskennedy/sinklink --input ./samplesheet.csv --outdir ./results  -profile docker
+nextflow run ryanjameskennedy/sinklink \
+    -profile apptainer \
+    --input ./samplesheet.csv \
+    --metadata ./metadata.csv \
+    --schemas_dir /path/to/schemas \
+    --kraken_db /path/to/kraken2_db \
+    --gambit_db /path/to/gambit_db \
+    --outdir ./results
+```
+
+On thedonkey, the `thedonkey` profile sets the database paths, Apptainer and
+the resource caps (15 CPUs, 141 GB):
+
+```bash
+nextflow run ryanjameskennedy/sinklink -profile thedonkey \
+    --input samplesheet.csv --metadata metadata.csv --outdir /media/Lagring/$USER/vask
+```
+
+Useful options:
+
+| Parameter                 | Default    | Meaning                                                              |
+| ------------------------- | ---------- | -------------------------------------------------------------------- |
+| `--assembler`             | `skesa`    | `skesa` or `spades` for Illumina reads                               |
+| `--trim`                  | off        | Trim Illumina reads with Trimmomatic (`--trimmomatic_args`)          |
+| `--filtlong`              | off        | Filter Nanopore reads with Filtlong (`--filtlong_args`)              |
+| `--kraken_db`             | none       | Kraken2/Bracken database; the species check is skipped without it    |
+| `--gambit_db`             | none       | GAMBIT database for gambitcore; completeness is skipped without it   |
+| `--bracken_read_length`   | 150        | Bracken k-mer distribution read length                               |
+| `--skip_chewbbaca`        | off        | Stop after assembly and QC                                           |
+| `--schema_table`, `--species_map`, `--qc_thresholds` | `assets/` | Override the tables that drive the checks |
+
+A stub test with placeholder inputs checks the wiring without real data
+(run from the repository root):
+
+```bash
+nextflow run . -profile test,docker -stub --outdir results
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.

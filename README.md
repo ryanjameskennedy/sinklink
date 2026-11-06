@@ -17,10 +17,11 @@ Starting from Illumina or Nanopore reads, sinklink:
    against published, species-specific allele-difference thresholds, flagging
    pairs where either isolate failed QC.
 
-Everything runs on a single server with no job scheduler. Tools, versions,
-arguments and the layout of the Makefiles follow
-[JASEN](https://github.com/genomic-medicine-sweden/JASEN), so JASEN's
-containers and databases can be reused.
+It is a Nextflow pipeline built on the [nf-core](https://nf-co.re) template
+and nf-core modules, with tool choices, arguments and the asset Makefiles
+modelled on [JASEN](https://github.com/genomic-medicine-sweden/JASEN). It runs
+on a single server with the local executor, so no job scheduler is needed; the
+`thedonkey` profile sets the caps and database paths for that server.
 
 - [Background](#background)
 - [The dataset](#the-dataset)
@@ -54,12 +55,12 @@ epidemiology (dates, rooms, admission screening).
 
 `vask_colonisation_hidden.csv` lists 26 isolates (13 environmental, 13 airway)
 in 9 suspected transmission groups. It is not included in this repository
-because it contains study patient identifiers; place it in the repository root
-(the default samplesheet path) or pass your own with `--samplesheet`. Columns:
+because it contains study patient identifiers; keep it outside version control
+and pass it to the pipeline with `--metadata`. Columns:
 
 | Column | Meaning |
 |---|---|
-| `translation_id` | Isolate ID; must match `id` in the reads sheet |
+| `translation_id` | Isolate ID; must match `sample` in the samplesheet |
 | `transmission` | Suspected transmission group |
 | `studypatientnumber` | Study patient (for environmental samples, the patient linked to that site) |
 | `sample` | `environment` or `airway` |
@@ -193,8 +194,8 @@ This repository counts differences over all wgMLST loci called in both isolates
 
 ## Installation
 
-Requirements: GNU Make, bash, Python 3 (standard library only), `wget`,
-`unzip`, `gzip`, and Apptainer or Singularity.
+Requirements: Nextflow 25.04 or later, Apptainer/Singularity (or Docker), and
+for the schema setup GNU Make, `wget`, `unzip`, `gzip` and Python 3.
 
 ```bash
 git clone git@github.com:ryanjameskennedy/sinklink.git
@@ -202,7 +203,9 @@ cd sinklink
 make print_paths
 ```
 
-Download the containers, the GAMBIT database and set up all schemas:
+The pipeline pulls its own containers (the versions pinned by each nf-core
+module). The Makefiles only set up the assets: the containers for schema prep,
+the chewBBACA schemas and the GAMBIT database.
 
 ```bash
 make install ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
@@ -217,43 +220,6 @@ make schemas ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularit
 make check ASSETS_DIR=/mnt/cache/dbs/vask
 ```
 
-### Containers
-
-All container URLs and versions are the same as in JASEN, so on thedonkey
-`CONTAINERS_DIR=/mnt/cache/singularity` already holds most of them and make
-only fetches what is missing.
-
-| Container | Version | Used for |
-|---|---|---|
-| `trimmomatic.sif` | 0.40 | Illumina trimming (`--trim`) |
-| `fastqc.sif` | 0.12.1 | Illumina read QC |
-| `filtlong.sif` | 0.3.1 | Nanopore read filtering (`--filtlong`) |
-| `nanoplot.sif` | 1.46.2 | Nanopore read QC |
-| `skesa.sif` | 2.5.1 | Illumina assembly (default) |
-| `spades.sif` | 3.15.5 | Illumina assembly (`--assembler spades`) |
-| `flye.sif` | 2.9.6 | Nanopore assembly |
-| `medaka.sif` | ontresearch/medaka (JASEN pin) | Nanopore polishing; built from Docker |
-| `quast.sif` | 5.2.0 | Assembly statistics |
-| `gambitcore.sif` | 0.0.2 | Assembly completeness; built from Docker |
-| `bwakit.sif` | 0.7.17 | Mapping Illumina reads back to the assembly |
-| `minimap2.sif` | 2.30 | Mapping Nanopore reads back to the assembly |
-| `samtools.sif` | 1.17 | Sorting and depth |
-| `mlst.sif` | 2.23.0 | 7-gene MLST |
-| `kraken2.sif`, `bracken.sif` | Kraken2 (JASEN's mulled image), Bracken 2.8 | Read-based species check |
-| `chewbbaca.sif` | 3.5.4 | Allele calling and schema prep |
-| `prodigal.sif` | 2.6.3 | Prodigal training files |
-
-### Databases
-
-- **GAMBIT** (for gambitcore): `make gambit_db` downloads the RefSeq curated
-  1.0 database into `<assets>/gambit_db`, as JASEN does. On thedonkey use the
-  existing `/mnt/cache/dbs/gambit_db`.
-- **Kraken2/Bracken**: too large to download here. Point the pipeline at an
-  existing database with `--kraken-db`; on thedonkey this is
-  `/mnt/cache/dbs/kraken2/standard_2025-06` (the JASEN one). Bracken needs the
-  database's `database<length>mers.kmer_distrib` file for `--bracken-read-length`
-  (default 150).
-
 ### Schemas
 
 A single organism can be set up on its own with `make <schema>_all`
@@ -264,113 +230,139 @@ A single organism can be set up on its own with `make <schema>_all`
 3. downloads the alleles (cgmlst.org or figshare) and records the download date
    in `schemas/<schema>/download/SOURCE`;
 4. unpacks them (or splits the single *S. maltophilia* FASTA);
-5. runs `chewie PrepExternalSchema` into `schemas/<schema>/alleles_rereffed`.
+5. runs `chewie PrepExternalSchema` (chewBBACA 3.5.4) into
+   `schemas/<schema>/alleles_rereffed`.
 
-`PREP_CPUS` (default 4) sets the threads for PrepExternalSchema, and
+Pass `<ASSETS_DIR>/schemas` to the pipeline as `--schemas_dir`. `PREP_CPUS`
+(default 4) sets the threads for PrepExternalSchema, and
 `APPTAINER=singularity` switches the container runtime.
 
 If a download fails (the cgmlst.org Serratia link can be slow and figshare may
 block automated downloads), the Makefile prints the path to save a
 browser download to. Save the file there and re-run make.
 
+### Databases
+
+- **GAMBIT** (for gambitcore): `make gambit_db` downloads the RefSeq curated
+  1.0 database into `<assets>/gambit_db`, as JASEN does. On thedonkey the
+  existing `/mnt/cache/dbs/gambit_db` is used.
+- **Kraken2/Bracken**: too large to download here. Point the pipeline at an
+  existing database with `--kraken_db`; on thedonkey this is the JASEN one,
+  `/mnt/cache/dbs/kraken2/standard_2025-06`. Bracken needs the database's
+  `database<length>mers.kmer_distrib` file for `--bracken_read_length`
+  (default 150).
+
+### Software
+
+| Step | Tool | Version (nf-core module container) |
+|---|---|---|
+| Illumina trimming (`--trim`) | Trimmomatic | 0.39 |
+| Nanopore filtering (`--filtlong`) | Filtlong | 0.2.1 |
+| Read QC | FastQC, NanoPlot | 0.12.1, 1.47.0 |
+| Illumina assembly | SKESA (default), SPAdes | 2.5.1, 4.1.0 |
+| Nanopore assembly | Flye, Medaka | 2.9.5, 2.2.2 |
+| Assembly statistics | QUAST | 5.3.0 |
+| Completeness | gambitcore (local module) | 0.0.2 |
+| Read depth | BWA, minimap2, SAMtools | 0.7.19, 2.30, 1.24 |
+| 7-gene MLST | mlst | 2.25.0 |
+| Species check | Kraken2, Bracken | 2.1.6, 3.1 |
+| Allele calling | chewBBACA | 3.5.4 (overrides the module's 3.3.10 to match schema prep) |
+| Report | MultiQC | 1.32 |
+
+The nf-core modules were installed from nf-core/modules with
+`nf-core modules install` and are recorded in `modules.json`; update them with
+`nf-core modules update`.
+
 ## Running
 
-Make a reads sheet (CSV) with one row per isolate, using the same IDs as
-`translation_id` in the samplesheet
-(see [`assets/reads_example.csv`](assets/reads_example.csv)):
+Make a samplesheet (CSV) with one row per isolate, using the same IDs as
+`translation_id` in the metadata
+(see [`assets/samplesheet.csv`](assets/samplesheet.csv)):
 
 ```
-id,platform,read1,read2
+sample,platform,fastq_1,fastq_2
 S01,illumina,/data/reads/S01_R1.fastq.gz,/data/reads/S01_R2.fastq.gz
 S02,nanopore,/data/reads/S02.fastq.gz,
 ```
 
-`platform` is `illumina` or `nanopore`. Leave `read2` empty for Nanopore or
+`platform` is `illumina` or `nanopore`. Leave `fastq_2` empty for Nanopore or
 single-end Illumina reads. Then on thedonkey:
 
 ```bash
-bin/sinklink.sh \
-    --reads reads.csv \
-    --outdir /media/Lagring/$USER/vask \
-    --assets /mnt/cache/dbs/vask \
-    --containers /mnt/cache/singularity \
-    --kraken-db /mnt/cache/dbs/kraken2/standard_2025-06 \
-    --gambit-db /mnt/cache/dbs/gambit_db
+nextflow run ryanjameskennedy/sinklink -r master -profile thedonkey \
+    --input samplesheet.csv \
+    --metadata vask_colonisation_hidden.csv \
+    --outdir /media/Lagring/$USER/vask
 ```
 
-| Option | Meaning | Default |
-|---|---|---|
-| `--reads FILE` | Reads sheet (`id,platform,read1,read2`) | required |
-| `--outdir DIR` | Output folder | required |
-| `--samplesheet FILE` | Study samplesheet | `vask_colonisation_hidden.csv` |
-| `--assets DIR` | Assets folder containing `schemas/` | `assets/` |
-| `--containers DIR` | Folder with the `.sif` images | `containers/` |
-| `--kraken-db DIR` | Kraken2/Bracken database; species check skipped without it | none |
-| `--gambit-db DIR` | GAMBIT database for gambitcore | `<assets>/gambit_db` if present |
-| `--threads INT` | Total threads | 15 |
-| `--memory INT` | Total memory (GB) | 141 |
-| `--sample-threads INT` | Threads per isolate during assembly and QC | 5 |
-| `--assembler NAME` | `skesa` or `spades` (Illumina) | `skesa` |
-| `--trim` | Trim Illumina reads with Trimmomatic (`LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36`) | off |
-| `--filtlong` | Filter Nanopore reads with Filtlong (`--min_length 1000 --min_mean_q 90`) | off |
-| `--bracken-read-length INT` | Bracken k-mer distribution read length | 150 |
-| `--skip-chewbbaca` | Stop after assembly and QC | off |
-| `-f`, `--force` | Re-run steps even if their output exists | off |
-| `-n`, `--dry-run` | Print the commands without running them | off |
-
-The defaults of 15 threads and 141 GB match the caps set for thedonkey
-(20 threads and 188 GB, shared with colleagues). Each step writes its output
-under a temporary name and moves it into place when it succeeds, so re-running
-the same command resumes where it stopped; use `--force` to redo everything.
-A failed isolate does not stop the others.
-
-The QC summary and distance check can also be run on their own:
+The `thedonkey` profile ([`conf/thedonkey.config`](conf/thedonkey.config))
+sets the local executor with the server's caps (15 CPUs and 141 GB, out of 20
+and 188 shared with colleagues), Apptainer with the image cache in
+`/mnt/cache/singularity`, one Kraken2 job at a time, and the database paths:
+`--schemas_dir /mnt/cache/dbs/vask/schemas`, `--kraken_db` and `--gambit_db`.
+Elsewhere, pass those yourself with a container profile:
 
 ```bash
-python3 bin/summarise_qc.py --reads reads.csv \
-    --samplesheet vask_colonisation_hidden.csv --results /media/Lagring/$USER/vask \
-    --species-map assets/species_map.tsv --schemas assets/schemas.tsv \
-    --thresholds assets/qc_thresholds.tsv
+nextflow run ryanjameskennedy/sinklink -profile apptainer \
+    --input samplesheet.csv --metadata metadata.csv \
+    --schemas_dir /path/to/schemas --kraken_db /path/to/kraken2 --gambit_db /path/to/gambit_db \
+    --outdir results
+```
 
-python3 bin/check_distances.py \
-    --samplesheet vask_colonisation_hidden.csv \
-    --results /media/Lagring/$USER/vask/chewbbaca --outdir /media/Lagring/$USER/vask \
-    --species-map assets/species_map.tsv --schemas assets/schemas.tsv \
-    --qc-summary /media/Lagring/$USER/vask/qc_summary.tsv
+| Parameter | Meaning | Default |
+|---|---|---|
+| `--input` | Samplesheet (`sample,platform,fastq_1,fastq_2`) | required |
+| `--metadata` | Study metadata (`translation_id`, `transmission`, `growth`, ...) | required |
+| `--outdir` | Output folder | required |
+| `--schemas_dir` | Folder with `<schema>/alleles_rereffed` | required unless `--skip_chewbbaca` |
+| `--kraken_db` | Kraken2/Bracken database; species check skipped without it | none |
+| `--gambit_db` | GAMBIT database for gambitcore | none |
+| `--assembler` | `skesa` or `spades` (Illumina) | `skesa` |
+| `--trim` | Trim Illumina reads with Trimmomatic (`--trimmomatic_args`, default `LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36`) | off |
+| `--filtlong` | Filter Nanopore reads with Filtlong (`--filtlong_args`, default `--min_length 1000 --min_mean_q 90`) | off |
+| `--bracken_read_length` | Bracken k-mer distribution read length | 150 |
+| `--skip_chewbbaca` | Stop after assembly and QC | off |
+| `--schema_table`, `--species_map`, `--qc_thresholds` | Override the tables in `assets/` | `assets/*.tsv` |
+
+Nextflow schedules every step within the caps, keeps intermediate files in the
+work directory and resumes a stopped run with `-resume`. See
+[`docs/usage.md`](docs/usage.md) for the input formats and
+[`docs/output.md`](docs/output.md) for the outputs.
+
+A stub test with placeholder inputs checks the pipeline wiring without real
+data (run from the repository root):
+
+```bash
+nextflow run . -profile test,docker -stub --outdir results
 ```
 
 ## Pipeline steps
 
-**Stage 1, per isolate** (`bin/process_sample.sh`). Several isolates run at
-once with `xargs -P`: `--threads / --sample-threads` of them (3 by default),
-each with an equal share of `--memory`.
+The workflow ([`workflows/sinklink.nf`](workflows/sinklink.nf)) runs five local
+subworkflows built from nf-core modules:
 
-| Step | Illumina | Nanopore |
+| Subworkflow | Illumina | Nanopore |
 |---|---|---|
-| Read filtering (optional) | Trimmomatic | Filtlong |
-| Read QC | FastQC | NanoPlot |
-| Assembly | SKESA (`--cores --memory`) or SPAdes (`--isolate`) | Flye (`--nano-hq`, `--asm-coverage 50` with the schema's genome size), then two rounds of `medaka_consensus --bacteria` as in JASEN |
-| Assembly statistics | QUAST | QUAST |
-| Completeness | gambitcore | gambitcore |
-| Read depth | `bwa mem` to the isolate's own assembly, `samtools coverage` | `minimap2 -x lr:hq` to the isolate's own assembly, `samtools coverage` |
-| 7-gene MLST | `mlst` (scheme detected automatically) | `mlst` |
+| `READ_PREPARATION` | Trimmomatic (optional), FastQC | Filtlong (optional), NanoPlot |
+| `ASSEMBLY` | SKESA, or SPAdes `--isolate` | Flye `--nano-hq` (`--asm-coverage 50` with the schema's genome size), then `medaka_consensus --bacteria` |
+| `ASSEMBLY_QC` | QUAST, gambitcore, `bwa mem` to the own assembly + `samtools coverage`, mlst | QUAST, gambitcore, `minimap2 -x lr:hq` to the own assembly + `samtools coverage`, mlst |
+| `SPECIES_CHECK` | Kraken2 (`--memory-mapping`) and Bracken (species level) | same |
+| `ALLELE_CALLING` | chewBBACA AlleleCall per schema, `--no-inferred` | same |
 
-**Stage 2, species check.** Kraken2 (`--memory-mapping`) and Bracken (species
-level) on the reads that went into the assembly, one isolate at a time with all
-threads, since the standard database needs most of the machine's memory. If
-Bracken fails, the Kraken2 report is used instead.
+Then the local module `SUMMARISE_QC` ([`bin/summarise_qc.py`](bin/summarise_qc.py))
+writes one QC row per isolate, which are combined into `qc_summary.tsv`, and
+`CHECK_DISTANCES` ([`bin/check_distances.py`](bin/check_distances.py))
+compares isolates within each transmission group. MultiQC collects FastQC,
+NanoPlot, QUAST and Kraken2 results into one report.
 
-**Stage 3, allele calling.** Each assembly with a schema is linked into
-`chewbbaca/<schema>/genomes/`, and one `chewie AlleleCall` job per schema runs
-at the same time with `xargs -P`, splitting the threads evenly. AlleleCall uses
-`--no-inferred`, so schemas are never modified; this makes parallel jobs safe
-and repeat runs reproducible, and novel alleles are still numbered
-consistently within a run. Isolates whose `growth` has no schema are assembled
-and QC'd only.
+AlleleCall runs with `--no-inferred`, so schemas are never modified. This makes
+parallel jobs safe and repeat runs reproducible; novel alleles are still
+numbered consistently within a run. Isolates whose `growth` has no schema, or
+whose schema is not set up in `--schemas_dir`, are assembled and QC'd only. If
+Bracken fails, the Kraken2 report is used for the species check instead.
 
-**Stage 4, summaries.** [`bin/summarise_qc.py`](bin/summarise_qc.py) writes
-`qc_summary.tsv`, and [`bin/check_distances.py`](bin/check_distances.py)
-compares isolates within each transmission group.
+JASEN polishes Flye assemblies with two Medaka rounds; sinklink uses one, as
+the nf-core module does and Medaka's documentation recommends.
 
 ## Output
 
@@ -378,20 +370,21 @@ In the output folder:
 
 | Path | Contents |
 |---|---|
-| `samples/<id>/trimmomatic/`, `filtlong/` | Filtered reads (when enabled) |
-| `samples/<id>/fastqc/`, `nanoplot/` | Read QC |
-| `samples/<id>/assembly/<id>.fasta` | Final assembly (plus `flye/`, `medaka_round*/` or `spades/`) |
-| `samples/<id>/quast/` | QUAST report (`transposed_report.tsv`) |
-| `samples/<id>/gambitcore/<id>.tsv` | Completeness and closest species |
-| `samples/<id>/mapping/` | Reads mapped back to the assembly and `samtools coverage` |
-| `samples/<id>/mlst/` | 7-gene MLST (`.tsv` and `.json`) |
-| `samples/<id>/kraken/` | Kraken2 report and Bracken species estimates |
-| `samples/<id>/logs/` | One log per step |
-| `chewbbaca/<schema>/allelecall/` | chewBBACA results (`results_alleles.tsv` etc.) |
-| `qc_summary.tsv` | Read and assembly QC per isolate, with flags |
-| `allele_qc.tsv` | Loci called per isolate, with the assembly QC status |
-| `pairwise_distances.tsv` | Every pair within each transmission group |
-| `group_summary.tsv` | One line per transmission group |
+| `fastqc/`, `nanoplot/<sample>/` | Read QC |
+| `trimmomatic/`, `filtlong/` | Filtering logs (when enabled) |
+| `assembly/<sample>.fa` | Final assembly (plus `flye/` or `spades/` logs) |
+| `quast/<sample>.quast/` | QUAST report |
+| `gambitcore/` | Completeness and closest species |
+| `coverage/` | `samtools coverage` of reads mapped back to the assembly |
+| `mlst/` | 7-gene MLST |
+| `kraken2/`, `bracken/` | Kraken2 reports and Bracken species estimates |
+| `chewbbaca/<schema>/` | chewBBACA results (`<schema>_results_alleles.tsv` etc.) |
+| `summary/qc_summary.tsv` | Read and assembly QC per isolate, with flags |
+| `summary/allele_qc.tsv` | Loci called per isolate, with the assembly QC status |
+| `summary/pairwise_distances.tsv` | Every pair within each transmission group |
+| `summary/group_summary.tsv` | One line per transmission group |
+| `multiqc/` | MultiQC report |
+| `pipeline_info/` | Nextflow reports, software versions and parameters |
 
 `pairwise_distances.tsv` columns: transmission group, both isolates, their
 sample types and patients, days apart, schema, loci shared, allele differences,
@@ -490,29 +483,50 @@ differences than in a short outbreak even from a single persisting source.
   17,603 loci, and `--pattern` can be set to match another format.
 - cgmlst.org allele sets grow over time; the download date is recorded in
   `schemas/<schema>/download/SOURCE`.
-- Re-running without `--force` keeps existing chewBBACA results, even if
-  assemblies were added or changed; use `--force` after re-assembling.
+- Tool versions come from the nf-core modules and differ from JASEN's in places
+  (e.g. Flye 2.9.5, QUAST 5.3.0, SPAdes 4.1.0); chewBBACA is pinned to 3.5.4 to
+  match schema prep.
 
 ## Repository layout
 
+Standard nf-core pipeline layout, plus the JASEN-style asset Makefiles:
+
 ```
 .
-├── Makefile                    # Schema and database setup (seed genome, Prodigal training, download, prep)
-├── containers/Makefile         # Container downloads (same URLs as JASEN)
+├── main.nf                          # Entry point
+├── nextflow.config                  # Parameters and profiles
+├── nextflow_schema.json             # Parameter schema (nf-schema)
+├── modules.json                     # Installed nf-core modules
+├── workflows/sinklink.nf            # Main workflow
+├── subworkflows/
+│   ├── local/                       # read_preparation, assembly, assembly_qc, species_check,
+│   │                                # allele_calling, utils_nfcore_sinklink_pipeline
+│   └── nf-core/                     # utils_* from the nf-core template
+├── modules/
+│   ├── local/                       # gambitcore, summarise_qc, check_distances
+│   └── nf-core/                     # Installed nf-core modules
+├── conf/
+│   ├── base.config                  # Resource labels
+│   ├── modules.config               # Tool arguments, prefixes and publishing
+│   ├── thedonkey.config             # thedonkey profile
+│   └── test.config                  # Stub test profile
 ├── assets/
-│   ├── schemas.tsv             # Thresholds, expected species and genome size per schema
-│   ├── species_map.tsv         # Lab growth label -> schema
-│   ├── qc_thresholds.tsv       # Read and assembly QC thresholds per platform
-│   └── reads_example.csv       # Example reads sheet
-└── bin/
-    ├── sinklink.sh             # Runs everything: assembly and QC, species check, AlleleCall, summaries
-    ├── process_sample.sh       # Read QC, assembly and assembly QC for one isolate
-    ├── summarise_qc.py         # QC summary and flags per isolate
-    ├── check_distances.py      # Pairwise distances within transmission groups
-    └── split_alleles.py        # Splits a single allele FASTA into one file per locus
+│   ├── schemas.tsv                  # Thresholds, expected species and genome size per schema
+│   ├── species_map.tsv              # Lab growth label -> schema
+│   ├── qc_thresholds.tsv            # Read and assembly QC thresholds per platform
+│   ├── schema_input.json            # Samplesheet schema
+│   ├── samplesheet.csv              # Example samplesheet
+│   └── test/                        # Placeholder inputs for the stub test
+├── bin/
+│   ├── summarise_qc.py              # QC summary and flags for one isolate
+│   ├── check_distances.py           # Pairwise distances within transmission groups
+│   └── split_alleles.py             # Splits a single allele FASTA into one file per locus
+├── docs/                            # usage.md and output.md
+├── Makefile                         # Schema and database setup
+└── containers/Makefile              # Containers for schema setup
 ```
 
-The samplesheet (`vask_colonisation_hidden.csv`) is git-ignored.
+The study metadata (`vask_colonisation_hidden.csv`) is git-ignored.
 
 ## References
 

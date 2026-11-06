@@ -10,13 +10,77 @@
 
 ## Pipeline tools
 
+- [Bracken](https://doi.org/10.7717/peerj-cs.104)
+
+  > Lu J, Breitwieser FP, Thielen P, Salzberg SL. Bracken: estimating species abundance in metagenomics data. PeerJ Comput Sci. 2017;3:e104. doi: 10.7717/peerj-cs.104.
+
+- [BWA](https://arxiv.org/abs/1303.3997)
+
+  > Li H. Aligning sequence reads, clone sequences and assembly contigs with BWA-MEM. arXiv:1303.3997. 2013.
+
+- [chewBBACA](https://doi.org/10.1099/mgen.0.000166)
+
+  > Silva M, Machado MP, Silva DN, Rossi M, Moran-Gilad J, Santos S, Ramirez M, Carriço JA. chewBBACA: A complete suite for gene-by-gene schema creation and strain identification. Microb Genom. 2018;4(3):e000166. doi: 10.1099/mgen.0.000166.
+
 - [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 
-> Andrews, S. (2010). FastQC: A Quality Control Tool for High Throughput Sequence Data [Online].
+  > Andrews, S. (2010). FastQC: A Quality Control Tool for High Throughput Sequence Data [Online].
+
+- [Filtlong](https://github.com/rrwick/Filtlong)
+
+  > Wick R. Filtlong. https://github.com/rrwick/Filtlong
+
+- [Flye](https://doi.org/10.1038/s41587-019-0072-8)
+
+  > Kolmogorov M, Yuan J, Lin Y, Pevzner PA. Assembly of long, error-prone reads using repeat graphs. Nat Biotechnol. 2019;37:540-546. doi: 10.1038/s41587-019-0072-8.
+
+- [GAMBIT](https://doi.org/10.1371/journal.pone.0277575) and [gambitcore](https://github.com/gambit-suite/gambitcore)
+
+  > Lumpe J, et al. GAMBIT (Genomic Approximation Method for Bacterial Identification and Tracking): A methodology to rapidly leverage whole genome sequencing of bacterial isolates for clinical identification. PLoS One. 2023;18(2):e0277575. doi: 10.1371/journal.pone.0277575.
+
+- [Kraken2](https://doi.org/10.1186/s13059-019-1891-0)
+
+  > Wood DE, Lu J, Langmead B. Improved metagenomic analysis with Kraken 2. Genome Biol. 2019;20:257. doi: 10.1186/s13059-019-1891-0.
+
+- [Medaka](https://github.com/nanoporetech/medaka)
+
+  > Oxford Nanopore Technologies. Medaka. https://github.com/nanoporetech/medaka
+
+- [minimap2](https://doi.org/10.1093/bioinformatics/bty191)
+
+  > Li H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics. 2018;34(18):3094-3100. doi: 10.1093/bioinformatics/bty191.
+
+- [mlst](https://github.com/tseemann/mlst)
+
+  > Seemann T. mlst. https://github.com/tseemann/mlst. This publication made use of the PubMLST website (https://pubmlst.org/) developed by Keith Jolley (Jolley, Bray & Maiden 2018, Wellcome Open Res 3:124).
+
+- [NanoPlot](https://doi.org/10.1093/bioinformatics/bty149)
+
+  > De Coster W, D'Hert S, Schultz DT, Cruts M, Van Broeckhoven C. NanoPack: visualizing and processing long-read sequencing data. Bioinformatics. 2018;34(15):2666-2669. doi: 10.1093/bioinformatics/bty149.
+
+- [QUAST](https://doi.org/10.1093/bioinformatics/btt086)
+
+  > Gurevich A, Saveliev V, Vyahhi N, Tesler G. QUAST: quality assessment tool for genome assemblies. Bioinformatics. 2013;29(8):1072-1075. doi: 10.1093/bioinformatics/btt086.
+
+- [SAMtools](https://doi.org/10.1093/gigascience/giab008)
+
+  > Danecek P, Bonfield JK, Liddle J, Marshall J, Ohan V, Pollard MO, Whitwham A, Keane T, McCarthy SA, Davies RM, Li H. Twelve years of SAMtools and BCFtools. GigaScience. 2021;10(2):giab008. doi: 10.1093/gigascience/giab008.
+
+- [SKESA](https://doi.org/10.1186/s13059-018-1540-z)
+
+  > Souvorov A, Agarwala R, Lipman DJ. SKESA: strategic k-mer extension for scrupulous assemblies. Genome Biol. 2018;19:153. doi: 10.1186/s13059-018-1540-z.
+
+- [SPAdes](https://doi.org/10.1002/cpbi.102)
+
+  > Prjibelski A, Antipov D, Meleshko D, Lapidus A, Korobeynikov A. Using SPAdes de novo assembler. Curr Protoc Bioinformatics. 2020;70(1):e102. doi: 10.1002/cpbi.102.
+
+- [Trimmomatic](https://doi.org/10.1093/bioinformatics/btu170)
+
+  > Bolger AM, Lohse M, Usadel B. Trimmomatic: a flexible trimmer for Illumina sequence data. Bioinformatics. 2014;30(15):2114-2120. doi: 10.1093/bioinformatics/btu170.
 
 - [MultiQC](https://pubmed.ncbi.nlm.nih.gov/27312411/)
 
-> Ewels P, Magnusson M, Lundin S, Käller M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics. 2016 Oct 1;32(19):3047-8. doi: 10.1093/bioinformatics/btw354. Epub 2016 Jun 16. PubMed PMID: 27312411; PubMed Central PMCID: PMC5039924.
+  > Ewels P, Magnusson M, Lundin S, Käller M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics. 2016 Oct 1;32(19):3047-8. doi: 10.1093/bioinformatics/btw354. Epub 2016 Jun 16. PubMed PMID: 27312411; PubMed Central PMCID: PMC5039924.
 
 ## Software packaging/containerisation tools
 
