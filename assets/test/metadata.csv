@@ -1,0 +1,4 @@
+translation_id,transmission,studypatientnumber,sample,date,growth,comment
+S01,Transmission_1,P1,environment,2024-01-01 00:00,pseudomonas_aeruginosa,
+S02,Transmission_1,P1,airway,2024-01-20 00:00,pseudomonas_aeruginosa,
+S03,Transmission_1,P2,airway,2024-02-03 00:00,pseudomonas_aeruginosa,"made-up test row"
