@@ -12,6 +12,15 @@ Changes in 'chewbbaca/allelecall/main.nf':
  
      conda "${moduleDir}/environment.yml"
      container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+@@ -21,7 +21,7 @@
+     tuple val(meta), path("*_cds_coordinates.tsv")     , emit: cds_coordinates    , optional:true
+     tuple val(meta), path("*_invalid_cds.txt")         , emit: invalid_cds        , optional:true
+     tuple val(meta), path("*_loci_summary_stats.tsv")  , emit: loci_summary_stats , optional:true
+-    tuple val("${task.process}"), val("chewbbaca"), eval("chewie --version 2>&1 | sed 's/chewBBACA version: //'"), topic: versions, emit: versions_chewbbaca
++    tuple val("${task.process}"), val("chewbbaca"), eval("chewie --version 2>&1 | sed -n 's/^chewBBACA version: //p'"), topic: versions, emit: versions_chewbbaca
+ 
+     when:
+     task.ext.when == null || task.ext.when
 
 'modules/nf-core/chewbbaca/allelecall/tests/main.nf.test.snap' is unchanged
 'modules/nf-core/chewbbaca/allelecall/tests/tags.yml' is unchanged
