@@ -91,7 +91,7 @@ One AlleleCall job per schema, run with `--no-inferred` so the schemas are never
 
 - `summary/qc_summary.tsv`: read and assembly QC per isolate with `qc_status` (`pass`, `warn` or `fail`) and `qc_flags`.
 - `summary/allele_qc.tsv`: loci called per isolate and its assembly QC status.
-- `summary/pairwise_distances.tsv`: every pair within each transmission group: days apart, schema, loci shared, allele differences, threshold, verdict, pair QC and notes.
+- `summary/pairwise_distances.tsv`: every pair within each transmission group: sample IDs, LIMS IDs, sample types and patients, days apart, schema, loci shared, allele differences, threshold, verdict, pair QC and notes.
 - `summary/group_summary.tsv`: one line per transmission group.
 
 </details>

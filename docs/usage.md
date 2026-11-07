@@ -23,7 +23,7 @@ S03,nanopore,/data/reads/S03.fastq.gz,
 
 | Column     | Description |
 | ---------- | ----------- |
-| `sample`   | Isolate ID, matching `translation_id` in the metadata. Letters, digits, `.`, `_` and `-` only; each sample once. |
+| `sample`   | Isolate ID, matching `sample` in the metadata. Letters, digits, `.`, `_` and `-` only; each sample once. |
 | `platform` | `illumina` or `nanopore`. |
 | `fastq_1`  | Gzipped FastQ (`.fastq.gz` or `.fq.gz`): read 1, single-end reads or Nanopore reads. |
 | `fastq_2`  | Gzipped FastQ for Illumina read 2. Leave empty for single-end and Nanopore reads. |
@@ -42,16 +42,25 @@ is provided.
 The metadata (`--metadata`) describes the study: a CSV with one row per
 isolate.
 
+```text
+transmission,sample,lims_id,studypatientnumber,sample_type,date,growth,comment
+Transmission_1,S01,LIMS-0001,P1,environment,2024-01-01,pseudomonas_aeruginosa,
+Transmission_1,S02,LIMS-0002,P1,airway,2024-01-20,pseudomonas_aeruginosa,
+```
+
 | Column               | Required | Description |
 | -------------------- | -------- | ----------- |
-| `translation_id`     | yes      | Isolate ID, matching `sample` in the samplesheet |
 | `transmission`       | yes      | Suspected transmission group; isolates in the same group are compared pairwise |
-| `growth`             | yes      | Species reported by the laboratory, mapped to a schema by `assets/species_map.tsv` (exact match) |
+| `sample`             | yes      | Isolate ID, matching `sample` in the samplesheet |
+| `lims_id`            | no       | Laboratory (LIMS) ID, shown in the allele QC and pair tables |
 | `studypatientnumber` | no       | Study patient, shown in the pair table |
-| `sample`             | no       | Sample type, e.g. `environment` or `airway`, shown in the pair table |
+| `sample_type`        | no       | Sample type, e.g. `environment` or `airway`, shown in the pair table |
 | `date`               | no       | Sampling date, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM`, used for `days_apart` |
+| `growth`             | yes      | Species reported by the laboratory, mapped to a schema by `assets/species_map.tsv` (exact match) |
+| `comment`            | no       | Free text; not used by the pipeline |
 
-Other columns (such as `comment`) are ignored; quoted commas are fine.
+Column order does not matter, other columns are ignored and quoted commas are
+fine.
 
 How it is used:
 
@@ -138,6 +147,8 @@ Several generic profiles are bundled with the pipeline which instruct the pipeli
 > [!IMPORTANT]
 > We highly recommend the use of Docker or Singularity containers for full pipeline reproducibility, however when this is not possible, Conda is also supported.
 
+The pipeline also dynamically loads configurations from [https://github.com/nf-core/configs](https://github.com/nf-core/configs) when it runs, making multiple config profiles for various institutional clusters available at run time. For more information and to check if your system is supported, please see the [nf-core/configs documentation](https://github.com/nf-core/configs#documentation).
+
 Note that multiple profiles can be loaded, for example: `-profile test,docker` - the order of arguments is important!
 They are loaded in sequence, so later profiles can overwrite earlier profiles.
 
@@ -147,8 +158,6 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
   - A profile with a complete configuration for automated testing
   - Includes links to test data so needs no other parameters
 - `docker`
-The pipeline also dynamically loads configurations from [https://github.com/nf-core/configs](https://github.com/nf-core/configs) when it runs, making multiple config profiles for various institutional clusters available at run time. For more information and to check if your system is supported, please see the [nf-core/configs documentation](https://github.com/nf-core/configs#documentation).
-
   - A generic configuration profile to be used with [Docker](https://docker.com/)
 - `singularity`
   - A generic configuration profile to be used with [Singularity](https://sylabs.io/docs/)
@@ -191,15 +200,6 @@ To use a different container from the default container or conda environment spe
 
 A pipeline might not always support every possible argument or option of a particular tool used in pipeline. Fortunately, nf-core pipelines provide some freedom to users to insert additional parameters that the pipeline does not include by default.
 
-## Running in the background
-
-Nextflow handles job submissions and supervises the running jobs. The Nextflow process must run until the pipeline is finished.
-
-The Nextflow `-bg` flag launches Nextflow in the background, detached from your terminal so that the workflow does not stop if you log out of your session. The logs are saved to a file.
-
-Alternatively, you can use `screen` / `tmux` or similar tool to create a detached session which you can log back into at a later time.
-Some HPC setups also allow you to run nextflow within a cluster job submitted your job scheduler (from where it submits more jobs).
-
 To learn how to provide additional arguments to a particular tool of the pipeline, please see the [customising tool arguments](https://nf-co.re/docs/usage/configuration#customising-tool-arguments) section of the nf-core website.
 
 ### nf-core/configs
@@ -209,6 +209,15 @@ In most cases, you will only need to create a custom config as a one-off but if 
 See the main [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more information about creating your own configuration files.
 
 If you have any questions or issues please send us a message on [Slack](https://nf-co.re/join/slack) on the [`#configs` channel](https://nfcore.slack.com/channels/configs).
+
+## Running in the background
+
+Nextflow handles job submissions and supervises the running jobs. The Nextflow process must run until the pipeline is finished.
+
+The Nextflow `-bg` flag launches Nextflow in the background, detached from your terminal so that the workflow does not stop if you log out of your session. The logs are saved to a file.
+
+Alternatively, you can use `screen` / `tmux` or similar tool to create a detached session which you can log back into at a later time.
+Some HPC setups also allow you to run nextflow within a cluster job submitted your job scheduler (from where it submits more jobs).
 
 ## Nextflow memory requirements
 

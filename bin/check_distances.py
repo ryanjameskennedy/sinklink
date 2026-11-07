@@ -116,7 +116,7 @@ def main():
         allele_files[schema] = path
     assembly_qc = {}
     if args.qc_summary and Path(args.qc_summary).is_file():
-        assembly_qc = {r["translation_id"]: r for r in read_tsv(args.qc_summary)}
+        assembly_qc = {r["sample"]: r for r in read_tsv(args.qc_summary)}
     species_map = {r["growth"]: r for r in read_tsv(args.species_map)}
     schemas = {r["schema"]: r for r in read_tsv(args.schemas)}
     with open(args.samplesheet, newline="", encoding="utf-8-sig") as handle:
@@ -128,7 +128,7 @@ def main():
 
     qc_rows, sample_info = [], {}
     for sample in samples:
-        sid = sample["translation_id"]
+        sid = sample["sample"]
         mapping = species_map.get(sample["growth"])
         schema = mapping["schema"] if mapping else ""
         profile = profiles.get(schema, {}).get(sid)
@@ -155,7 +155,8 @@ def main():
             "st": aqc.get("st", ""),
         }
         qc_rows.append({
-            "translation_id": sid,
+            "sample": sid,
+            "lims_id": sample.get("lims_id", ""),
             "transmission": sample["transmission"],
             "growth": sample["growth"],
             "schema": schema,
@@ -169,7 +170,7 @@ def main():
 
     groups = {}
     for sample in samples:
-        groups.setdefault(sample["transmission"], []).append(sample["translation_id"])
+        groups.setdefault(sample["transmission"], []).append(sample["sample"])
 
     pair_rows = []
     for group, ids in groups.items():
@@ -179,8 +180,10 @@ def main():
                 "transmission": group,
                 "sample_a": id_a,
                 "sample_b": id_b,
-                "type_a": a.get("sample", ""),
-                "type_b": b.get("sample", ""),
+                "lims_a": a.get("lims_id", ""),
+                "lims_b": b.get("lims_id", ""),
+                "type_a": a.get("sample_type", ""),
+                "type_b": b.get("sample_type", ""),
                 "patient_a": a.get("studypatientnumber", ""),
                 "patient_b": b.get("studypatientnumber", ""),
                 "days_apart": "",
@@ -200,8 +203,8 @@ def main():
                      if s["growth"] in species_map and species_map[s["growth"]]["note"]}
             if a["schema"] == "smaltophilia":
                 notes.add("wgMLST distance over loci shared by both; Groschel used 1275 core loci")
-            failed = [f"{s['translation_id']}:{s['qc']}" for s in (a, b) if s["qc"] != "pass"]
-            failed += [f"{s['translation_id']}:assembly {s['assembly_qc']} ({s['assembly_flags']})"
+            failed = [f"{s['sample']}:{s['qc']}" for s in (a, b) if s["qc"] != "pass"]
+            failed += [f"{s['sample']}:assembly {s['assembly_qc']} ({s['assembly_flags']})"
                        for s in (a, b) if s["assembly_qc"] in ("fail", "warn")]
             if a["platform"] and b["platform"] and a["platform"] != b["platform"]:
                 notes.add(f"mixed platforms ({a['platform']}/{b['platform']}); "
@@ -280,7 +283,7 @@ def main():
     print_table(summary_rows, summary_fields)
     print(f"\nWritten to {out_dir}: allele_qc.tsv, pairwise_distances.tsv, group_summary.tsv")
 
-    low = [r["translation_id"] for r in qc_rows if r["qc"] != "pass"]
+    low = [r["sample"] for r in qc_rows if r["qc"] != "pass"]
     if low:
         print(f"Isolates failing QC or missing profiles: {', '.join(low)}", file=sys.stderr)
 

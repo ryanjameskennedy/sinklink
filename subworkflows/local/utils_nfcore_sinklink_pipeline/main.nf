@@ -179,15 +179,15 @@ def readTsv(path) {
 }
 
 //
-// Read the study metadata (translation_id, transmission, growth, ...) keyed by translation_id
+// Read the study metadata (sample, transmission, growth, ...) keyed by sample
 //
 def readMetadata(path) {
     def rows = file(path, checkIfExists: true).splitCsv(header: true)
-    def missing = [ 'translation_id', 'transmission', 'growth' ].findAll { column -> !rows || !rows[0].containsKey(column) }
+    def missing = [ 'sample', 'transmission', 'growth' ].findAll { column -> !rows || !rows[0].containsKey(column) }
     if (missing) {
         error("Please check the metadata file -> missing column(s): ${missing.join(', ')}")
     }
-    return rows.collectEntries { row -> [ row.translation_id, row ] }
+    return rows.collectEntries { row -> [ row.sample, row ] }
 }
 
 //

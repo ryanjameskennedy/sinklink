@@ -9,7 +9,7 @@ The full schema, with types and validation, is
 | Parameter | Meaning | Default |
 |---|---|---|
 | `--input` | Samplesheet (`sample,platform,fastq_1,fastq_2`) | required |
-| `--metadata` | Study metadata (`translation_id`, `transmission`, `growth`, ...) | required |
+| `--metadata` | Study metadata (`sample`, `transmission`, `growth`, ...) | required |
 | `--outdir` | Output folder | required |
 
 ## Schemas and databases

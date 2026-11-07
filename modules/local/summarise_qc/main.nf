@@ -45,6 +45,6 @@ process SUMMARISE_QC {
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    printf 'translation_id\\tqc_status\\n${meta.id}\\tpass\\n' > ${prefix}.qc.tsv
+    printf 'sample\\tqc_status\\n${meta.id}\\tpass\\n' > ${prefix}.qc.tsv
     """
 }

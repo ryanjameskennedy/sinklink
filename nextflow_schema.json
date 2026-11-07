@@ -24,7 +24,7 @@
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "CSV with a header and the columns sample, platform, fastq_1 and fastq_2. platform is illumina or nanopore; leave fastq_2 empty for Nanopore or single-end Illumina reads. sample must match translation_id in --metadata.",
+                    "help_text": "CSV with a header and the columns sample, platform, fastq_1 and fastq_2. platform is illumina or nanopore; leave fastq_2 empty for Nanopore or single-end Illumina reads. sample must match sample in --metadata.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "metadata": {
@@ -33,8 +33,8 @@
                     "exists": true,
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
-                    "description": "Study metadata CSV with translation_id, transmission and growth columns.",
-                    "help_text": "One row per isolate. translation_id matches sample in --input, transmission names the suspected transmission group and growth is the laboratory species label, mapped to a schema through --species_map. Other columns (studypatientnumber, sample, date, comment) are carried into the distance tables.",
+                    "description": "Study metadata CSV with sample, transmission and growth columns.",
+                    "help_text": "One row per isolate. sample matches sample in --input, transmission names the suspected transmission group and growth is the laboratory species label, mapped to a schema through --species_map. Other columns (studypatientnumber, sample, date, comment) are carried into the distance tables.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "outdir": {

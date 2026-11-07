@@ -14,7 +14,7 @@ import sys
 
 
 FIELDS = [
-    "translation_id", "transmission", "growth", "schema", "platform",
+    "sample", "transmission", "growth", "schema", "platform",
     "assembly_length", "contigs", "n50", "gc", "mean_depth",
     "gambit_species", "completeness", "gambit_qc",
     "species_source", "top_species", "top_species_fraction",
@@ -217,7 +217,7 @@ def main():
     status = "fail" if "fail" in severities else "warn" if "warn" in severities else "pass"
 
     row = {
-        "translation_id": args.id,
+        "sample": args.id,
         "transmission": args.transmission,
         "growth": args.growth,
         "schema": args.schema,

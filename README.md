@@ -51,7 +51,7 @@ S01,illumina,/data/reads/S01_R1.fastq.gz,/data/reads/S01_R2.fastq.gz
 S02,nanopore,/data/reads/S02.fastq.gz,
 ```
 
-The metadata needs `translation_id`, `transmission` and `growth` columns. See
+The metadata needs `sample`, `transmission` and `growth` columns. See
 [running sinklink](https://sinklink.readthedocs.io/en/latest/usage.html) for
 the formats and [running on a server](https://sinklink.readthedocs.io/en/latest/setup/servers.html)
 for the `-c` config and parameters file.
