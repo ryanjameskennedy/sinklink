@@ -8,12 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Added`
 
 - Documentation on running on a server, with each tool's label and its nf-core, JASEN and thedonkey resources
+- nf-core template features: nf-test tests with snapshots, the template CI (linting, nf-test, branch protection), RO-Crate metadata, nf-core/configs profiles, and email, Slack and Teams notifications
+- `lims_id` metadata column, shown in the allele QC and pair tables
 
 ### `Changed`
 
 - SKESA and chewBBACA use their nf-core label resources instead of custom ones
 - Labels follow the JASEN resources: SKESA and chewBBACA `process_high`, NanoPlot, gambitcore and minimap2 `process_medium` (nf-core module patches)
 - Removed the `thedonkey` profile: pass the server config with `-c` and the database paths with `-params-file` (see ryanjameskennedy/configs)
+- Metadata columns: `translation_id` is now `sample` and `sample` (the sample type) is now `sample_type`; the QC tables use `sample` too
+- The stub CI workflow `ci.yml` is replaced by nf-test
+- The test samplesheet points at the test reads on GitHub, so tests run from any folder
 
 ## v0.1.0 - 2026-11-06
 
