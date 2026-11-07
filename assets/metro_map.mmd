@@ -1,0 +1,81 @@
+%%metro title: sinklink
+%%metro style: nfcore
+%%metro file: reads_in | FASTQ
+%%metro file: distances_out | TSV
+%%metro file: report_out | HTML
+%%metro line: species | Species check (--kraken_db) | #e63946 | dashed
+%%metro line: illumina_skesa | Illumina: SKESA (default) | #2db572
+%%metro line: illumina_spades | Illumina: SPAdes (--assembler spades) | #0570b0
+%%metro line: nanopore | Nanopore: Flye + Medaka | #f5a623
+%%metro marker: trimmomatic | square, open
+%%metro marker: filtlong | square, open
+%%metro marker: gambitcore | square, open
+%%metro marker_legend: square, open | Optional step
+%%metro legend: bl
+
+graph LR
+    %% Read preparation
+    reads_in[ ]
+    fastqc[FastQC]
+    trimmomatic[Trimmomatic]
+    nanoplot[NanoPlot]
+    filtlong[Filtlong]
+
+    reads_in -->|illumina_skesa,illumina_spades| fastqc
+    fastqc -->|illumina_skesa,illumina_spades| trimmomatic
+    reads_in -->|nanopore| nanoplot
+    nanoplot -->|nanopore| filtlong
+
+    %% Species check
+    kraken2[Kraken2]
+    bracken[Bracken]
+
+    kraken2 -->|species| bracken
+
+    %% Assembly
+    skesa[SKESA]
+    spades[SPAdes]
+    flye[Flye]
+    medaka[Medaka]
+
+    flye -->|nanopore| medaka
+
+    %% Assembly QC
+    quast[QUAST]
+    gambitcore[gambitcore]
+    bwa[BWA-MEM]
+    minimap2[minimap2]
+    coverage[SAMtools coverage]
+    mlst[mlst]
+    qc_summary[QC summary]
+
+    quast -->|illumina_skesa,illumina_spades,nanopore| gambitcore
+    gambitcore -->|illumina_skesa,illumina_spades| bwa
+    gambitcore -->|nanopore| minimap2
+    bwa -->|illumina_skesa,illumina_spades| coverage
+    minimap2 -->|nanopore| coverage
+    coverage -->|illumina_skesa,illumina_spades,nanopore| mlst
+    mlst -->|illumina_skesa,illumina_spades,nanopore| qc_summary
+
+    %% Allele calling and transmission check
+    chewbbaca[chewBBACA]
+    distances[Pairwise distances]
+    distances_out[ ]
+    multiqc[MultiQC]
+    report_out[ ]
+
+    chewbbaca -->|illumina_skesa,illumina_spades,nanopore| distances
+    distances -->|illumina_skesa,illumina_spades,nanopore| distances_out
+    distances -->|illumina_skesa,illumina_spades,nanopore| multiqc
+    multiqc -->|illumina_skesa,illumina_spades,nanopore| report_out
+
+    %% Between groups
+    reads_in -->|species| kraken2
+    trimmomatic -->|illumina_skesa| skesa
+    trimmomatic -->|illumina_spades| spades
+    filtlong -->|nanopore| flye
+    skesa -->|illumina_skesa| quast
+    spades -->|illumina_spades| quast
+    medaka -->|nanopore| quast
+    bracken -->|species| qc_summary
+    qc_summary -->|illumina_skesa,illumina_spades,nanopore| chewbbaca
