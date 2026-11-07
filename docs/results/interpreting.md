@@ -7,9 +7,9 @@ transmission group.
 
 | Verdict | Meaning |
 |---|---|
-| `within_threshold` | At or below the species threshold: same strain |
+| `within_threshold` | At or below the species threshold ([cut-offs](../species/index.md)): same strain, consistent with the same colonisation |
 | `borderline` | Between the strict and sensitive thresholds (*K. oxytoca* only) |
-| `above_threshold` | Above the threshold: not the same strain |
+| `above_threshold` | Above the threshold: different strains, not the same colonisation |
 | `missing_profile` | One or both isolates have no allele profile |
 | `different_schema` | The two isolates were typed with different schemas |
 

@@ -1,8 +1,19 @@
 # Species and thresholds
 
 Each species is typed with its own scheme and compared against its own
-allele-difference threshold. A pair is `within_threshold` when its allele
-differences are at or below the threshold. The values live in
+allele-difference threshold. The allele difference of a pair is the number of
+loci where both isolates have a valid chewBBACA call and the calls differ;
+loci missing in either isolate are not counted.
+
+- **At or below the threshold** (`within_threshold`): the two isolates are
+  classed as the same strain, the genomic requirement for calling them the same
+  colonisation. The sampling dates and patient history then decide whether the
+  link is plausible (see [interpreting the results](../results/interpreting.md)).
+- **Above the threshold** (`above_threshold`): different strains, so not the
+  same colonisation.
+- **_K. oxytoca_ only**: 7–9 differences are `borderline`; check these with SNPs.
+
+The values live in
 [`assets/schemas.tsv`](https://github.com/ryanjameskennedy/sinklink/blob/master/assets/schemas.tsv).
 
 ## Where each threshold comes from
