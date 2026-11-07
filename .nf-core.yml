@@ -7,45 +7,24 @@ lint:
     - LICENSE
     - .github/ISSUE_TEMPLATE/feature_request.yml
     - .github/CONTRIBUTING.md
-    - .prettierignore
-    - .prettierignore
     - CODE_OF_CONDUCT.md
     - assets/nf-core-sinklink_logo_light.png
     - docs/images/nf-core-sinklink_logo_light.png
     - docs/images/nf-core-sinklink_logo_dark.png
     - .github/ISSUE_TEMPLATE/bug_report.yml
-    - .github/CONTRIBUTING.md
     - .github/PULL_REQUEST_TEMPLATE.md
     - assets/email_template.txt
     - docs/README.md
-    - .prettierignore
-    - .prettierignore
+    - .gitignore
   nextflow_config:
     - manifest.name
     - manifest.homePage
-    - process.cpus
-    - process.memory
-    - process.time
-    - custom_config
-    - params.custom_config_version
-    - params.custom_config_base
-  nf_test_content: false
   multiqc_config:
     - report_comment
   files_exist:
     - conf/test_full.config
-    - ro-crate-metadata.json
-    - .github/workflows/nf-test.yml
-    - .github/actions/get-shards/action.yml
-    - .github/actions/nf-test/action.yml
-    - nf-test.config
-    - tests/default.nf.test
-    - .github/workflows/branch.yml
-    - .github/workflows/nf-test.yml
-    - .github/actions/get-shards/action.yml
-    - .github/actions/nf-test/action.yml
-    - .github/workflows/linting_comment.yml
-    - .github/workflows/linting.yml
+    - conf/igenomes.config
+    - conf/igenomes_ignored.config
     - CODE_OF_CONDUCT.md
     - assets/nf-core-sinklink_logo_light.png
     - docs/images/nf-core-sinklink_logo_light.png
@@ -53,16 +32,9 @@ lint:
     - .github/ISSUE_TEMPLATE/config.yml
     - .github/workflows/awstest.yml
     - .github/workflows/awsfulltest.yml
-    - conf/igenomes.config
-    - conf/igenomes.config
-    - conf/igenomes_ignored.config
-    - assets/email_template.html
-    - assets/sendmail_template.txt
-    - assets/email_template.txt
   readme:
     - nextflow_badge
     - nfcore_template_badge
-  included_configs: false
 
 template:
   org: ryanjameskennedy
@@ -78,13 +50,6 @@ template:
     - gpu
     - codespaces
     - seqera_platform
-    - rocrate
-    - adaptivecard
-    - slackreport
-    - email
-    - nf_core_configs
     - vscode
-    - ci
-    - nf-test
     - github_badges
   is_nfcore: false
