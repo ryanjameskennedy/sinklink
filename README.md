@@ -1,6 +1,6 @@
 # sinklink
 
-[![CI](https://github.com/ryanjameskennedy/sinklink/actions/workflows/ci.yml/badge.svg)](https://github.com/ryanjameskennedy/sinklink/actions/workflows/ci.yml)
+[![nf-test](https://github.com/ryanjameskennedy/sinklink/actions/workflows/nf-test.yml/badge.svg)](https://github.com/ryanjameskennedy/sinklink/actions/workflows/nf-test.yml)
 [![Docs](https://readthedocs.org/projects/sinklink/badge/?version=latest)](https://sinklink.readthedocs.io)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A525.04.0-23aa62.svg)](https://www.nextflow.io/)
 

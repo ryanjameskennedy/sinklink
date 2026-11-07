@@ -14,3 +14,5 @@ work/
 /results/
 null/
 docs/_build/
+.nf-test/
+.nf-test.log

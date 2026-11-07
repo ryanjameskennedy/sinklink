@@ -21,13 +21,26 @@ Makefile, containers/       schema and database setup
 Before opening a pull request:
 
 ```bash
+pre-commit run --all-files
 nf-core pipelines lint
-nextflow run . -profile test,docker -stub --outdir results
+nf-test test --profile +docker
 pip install -r docs/requirements.txt && sphinx-build -W -b html docs docs/_build/html
 ```
 
-GitHub Actions runs the stub test and builds the docs on every push and pull
-request.
+The nf-test tests in `tests/default.nf.test` stub-run the `test` profile, once
+with the defaults and once with every optional step, and compare the output file
+names and contents with the snapshot in `tests/default.nf.test.snap` (tool
+versions are left out). After an intended change in the outputs, update it with
+`nf-test test --profile +docker --update-snapshot`.
+
+GitHub Actions on pull requests (the nf-core template workflows):
+
+- `linting.yml`: pre-commit (prettier, whitespace) and `nf-core pipelines lint`;
+- `nf-test.yml`: the nf-test tests with Docker, and with Singularity on pull
+  requests to `master`, on Nextflow 25.04.0;
+- `branch.yml`: pull requests to `master` must come from `dev` (or a branch
+  named `patch`);
+- `docs.yml`: the strict docs build.
 
 ## Modules
 
