@@ -1,6 +1,6 @@
 # sinklink
 
-*Did the sink infect the patient?*
+_Did the sink infect the patient?_
 
 sinklink tests whether bacteria isolated from a hospital sink (or another
 environmental site) and from a patient belong to the same strain. Starting from

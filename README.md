@@ -4,7 +4,7 @@
 [![Docs](https://readthedocs.org/projects/sinklink/badge/?version=latest)](https://sinklink.readthedocs.io)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A525.04.0-23aa62.svg)](https://www.nextflow.io/)
 
-*Did the sink infect the patient?*
+_Did the sink infect the patient?_
 
 sinklink tests whether bacteria isolated from a hospital sink (or another
 environmental site) and from a patient belong to the same strain. Starting from
@@ -58,15 +58,15 @@ for the `-c` config and parameters file.
 
 ## Species and thresholds
 
-| Species | Threshold (alleles) | Threshold from |
-|---|---|---|
-| *Pseudomonas aeruginosa* | ≤12 | cgmlst.org complex type distance |
-| *Klebsiella pneumoniae* species complex | ≤15 | cgmlst.org complex type distance |
-| *Klebsiella oxytoca* species complex | ≤6 (borderline ≤9) | Dabernig-Heinz et al. 2024 |
-| *Serratia marcescens* | ≤12 | cgmlst.org complex type distance |
-| *Citrobacter freundii* | ≤10 | cgmlst.org complex type distance |
-| *Enterobacter hormaechei* | ≤12 | cgmlst.org complex type distance |
-| *Stenotrophomonas maltophilia* complex | ≤10 | Gröschel et al. 2020 (d10) |
+| Species                                 | Threshold (alleles) | Threshold from                   |
+| --------------------------------------- | ------------------- | -------------------------------- |
+| _Pseudomonas aeruginosa_                | ≤12                 | cgmlst.org complex type distance |
+| _Klebsiella pneumoniae_ species complex | ≤15                 | cgmlst.org complex type distance |
+| _Klebsiella oxytoca_ species complex    | ≤6 (borderline ≤9)  | Dabernig-Heinz et al. 2024       |
+| _Serratia marcescens_                   | ≤12                 | cgmlst.org complex type distance |
+| _Citrobacter freundii_                  | ≤10                 | cgmlst.org complex type distance |
+| _Enterobacter hormaechei_               | ≤12                 | cgmlst.org complex type distance |
+| _Stenotrophomonas maltophilia_ complex  | ≤10                 | Gröschel et al. 2020 (d10)       |
 
 Each species has its own page, with the scheme, the paper behind it and the
 species the scheme accepts:

@@ -1,8 +1,8 @@
 # Why sinks?
 
 Hospital sinks and drains are a recognised reservoir for Gram-negative
-opportunists such as *Pseudomonas*, *Klebsiella*, *Enterobacter*,
-*Citrobacter*, *Serratia* and *Stenotrophomonas*. Biofilms in the drain trap can
+opportunists such as _Pseudomonas_, _Klebsiella_, _Enterobacter_,
+_Citrobacter_, _Serratia_ and _Stenotrophomonas_. Biofilms in the drain trap can
 grow up towards the strainer and be splashed onto hands, equipment and
 patients. When the same species turns up in a sink and in a patient, two
 questions follow:

@@ -21,12 +21,12 @@ S02,illumina,/data/reads/S02.fastq.gz,
 S03,nanopore,/data/reads/S03.fastq.gz,
 ```
 
-| Column     | Description |
-| ---------- | ----------- |
+| Column     | Description                                                                                              |
+| ---------- | -------------------------------------------------------------------------------------------------------- |
 | `sample`   | Isolate ID, matching `sample` in the metadata. Letters, digits, `.`, `_` and `-` only; each sample once. |
-| `platform` | `illumina` or `nanopore`. |
-| `fastq_1`  | Gzipped FastQ (`.fastq.gz` or `.fq.gz`): read 1, single-end reads or Nanopore reads. |
-| `fastq_2`  | Gzipped FastQ for Illumina read 2. Leave empty for single-end and Nanopore reads. |
+| `platform` | `illumina` or `nanopore`.                                                                                |
+| `fastq_1`  | Gzipped FastQ (`.fastq.gz` or `.fq.gz`): read 1, single-end reads or Nanopore reads.                     |
+| `fastq_2`  | Gzipped FastQ for Illumina read 2. Leave empty for single-end and Nanopore reads.                        |
 
 The samplesheet is checked against
 [`assets/schema_input.json`](https://github.com/ryanjameskennedy/sinklink/blob/master/assets/schema_input.json)
@@ -48,16 +48,16 @@ Transmission_1,S01,LIMS-0001,P1,environment,2024-01-01,pseudomonas_aeruginosa,
 Transmission_1,S02,LIMS-0002,P1,airway,2024-01-20,pseudomonas_aeruginosa,
 ```
 
-| Column               | Required | Description |
-| -------------------- | -------- | ----------- |
-| `transmission`       | yes      | Suspected transmission group; isolates in the same group are compared pairwise |
-| `sample`             | yes      | Isolate ID, matching `sample` in the samplesheet |
-| `lims_id`            | no       | Laboratory (LIMS) ID, shown in the allele QC and pair tables |
-| `studypatientnumber` | no       | Study patient, shown in the pair table |
-| `sample_type`        | no       | Sample type, e.g. `environment` or `airway`, shown in the pair table |
-| `date`               | no       | Sampling date, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM`, used for `days_apart` |
+| Column               | Required | Description                                                                                      |
+| -------------------- | -------- | ------------------------------------------------------------------------------------------------ |
+| `transmission`       | yes      | Suspected transmission group; isolates in the same group are compared pairwise                   |
+| `sample`             | yes      | Isolate ID, matching `sample` in the samplesheet                                                 |
+| `lims_id`            | no       | Laboratory (LIMS) ID, shown in the allele QC and pair tables                                     |
+| `studypatientnumber` | no       | Study patient, shown in the pair table                                                           |
+| `sample_type`        | no       | Sample type, e.g. `environment` or `airway`, shown in the pair table                             |
+| `date`               | no       | Sampling date, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM`, used for `days_apart`                         |
 | `growth`             | yes      | Species reported by the laboratory, mapped to a schema by `assets/species_map.tsv` (exact match) |
-| `comment`            | no       | Free text; not used by the pipeline |
+| `comment`            | no       | Free text; not used by the pipeline                                                              |
 
 Column order does not matter, other columns are ignored and quoted commas are
 fine.
@@ -67,7 +67,7 @@ How it is used:
 1. **At start-up**, each samplesheet row is matched to its metadata row.
    `growth` gives the schema, and the schema's genome size range in
    `assets/schemas.tsv` gives the expected genome size passed to Flye (for
-   *P. aeruginosa*, 5.5–7.8 Mb becomes `6.7m`). The run stops if a required
+   _P. aeruginosa_, 5.5–7.8 Mb becomes `6.7m`). The run stops if a required
    column is missing.
 2. An isolate missing from the metadata, or whose `growth` has no schema, gets a
    warning and is assembled and QC'd but not allele called. The same goes for

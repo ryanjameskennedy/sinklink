@@ -1,13 +1,13 @@
-# *Pseudomonas aeruginosa*
+# _Pseudomonas aeruginosa_
 
-| | |
-|---|---|
-| Schema | `paeruginosa` |
-| Scheme | cgmlst.org [Paeruginosa](https://www.cgmlst.org/ncs/schema/Paeruginosa/) |
-| Loci | 3,867 |
-| Seed genome | NC_002516.2 (PAO1) (used to train Prodigal) |
-| Threshold | ≤12 alleles |
-| Lab labels | `pseudomonas_aeruginosa` |
+|             |                                                                          |
+| ----------- | ------------------------------------------------------------------------ |
+| Schema      | `paeruginosa`                                                            |
+| Scheme      | cgmlst.org [Paeruginosa](https://www.cgmlst.org/ncs/schema/Paeruginosa/) |
+| Loci        | 3,867                                                                    |
+| Seed genome | NC_002516.2 (PAO1) (used to train Prodigal)                              |
+| Threshold   | ≤12 alleles                                                              |
+| Lab labels  | `pseudomonas_aeruginosa`                                                 |
 
 ## Threshold
 
@@ -17,13 +17,13 @@ does not itself state a cut-off.
 
 ## Species check
 
-The schema accepts *P. aeruginosa*.
+The schema accepts _P. aeruginosa_.
 
-| Setting in `assets/schemas.tsv` | Value |
-|---|---|
-| `species_pattern` | `^Pseudomonas aeruginosa$` |
-| `genera` | Pseudomonas |
-| Expected genome size | 5.5–7.8 Mb |
+| Setting in `assets/schemas.tsv` | Value                      |
+| ------------------------------- | -------------------------- |
+| `species_pattern`               | `^Pseudomonas aeruginosa$` |
+| `genera`                        | Pseudomonas                |
+| Expected genome size            | 5.5–7.8 Mb                 |
 
 ## In the VASK study
 

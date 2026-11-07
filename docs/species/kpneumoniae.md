@@ -1,13 +1,13 @@
-# *Klebsiella pneumoniae* species complex
+# _Klebsiella pneumoniae_ species complex
 
-| | |
-|---|---|
-| Schema | `kpneumoniae` |
-| Scheme | cgmlst.org [Kpneumoniae_complex](https://www.cgmlst.org/ncs/schema/Kpneumoniae_complex/) |
-| Loci | 2,358 |
-| Seed genome | NC_012731.1 (used to train Prodigal) |
-| Threshold | ≤15 alleles |
-| Lab labels | `klebsiella_pneumoniae` |
+|             |                                                                                          |
+| ----------- | ---------------------------------------------------------------------------------------- |
+| Schema      | `kpneumoniae`                                                                            |
+| Scheme      | cgmlst.org [Kpneumoniae_complex](https://www.cgmlst.org/ncs/schema/Kpneumoniae_complex/) |
+| Loci        | 2,358                                                                                    |
+| Seed genome | NC_012731.1 (used to train Prodigal)                                                     |
+| Threshold   | ≤15 alleles                                                                              |
+| Lab labels  | `klebsiella_pneumoniae`                                                                  |
 
 ## Threshold
 
@@ -17,13 +17,13 @@ typing, ≤21 SNPs has been used to define nosocomial transmission in Europe
 
 ## Species check
 
-The schema accepts *K. pneumoniae*, *K. quasipneumoniae*, *K. variicola*, *K. quasivariicola* and *K. africana*.
+The schema accepts _K. pneumoniae_, _K. quasipneumoniae_, _K. variicola_, _K. quasivariicola_ and _K. africana_.
 
-| Setting in `assets/schemas.tsv` | Value |
-|---|---|
-| `species_pattern` | `^Klebsiella (pneumoniae|quasipneumoniae|variicola|quasivariicola|africana)$` |
-| `genera` | Klebsiella |
-| Expected genome size | 5.0–6.5 Mb |
+| Setting in `assets/schemas.tsv` | Value                    |
+| ------------------------------- | ------------------------ | --------------- | --------- | -------------- | ----------- |
+| `species_pattern`               | `^Klebsiella (pneumoniae | quasipneumoniae | variicola | quasivariicola | africana)$` |
+| `genera`                        | Klebsiella               |
+| Expected genome size            | 5.0–6.5 Mb               |
 
 ## In the VASK study
 
