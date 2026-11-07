@@ -19,6 +19,10 @@ Illumina or Nanopore reads, it:
    against a published, species-specific allele-difference threshold, flagging
    pairs where either isolate failed QC.
 
+![sinklink metro map](docs/images/metro_map.svg)
+
+If the map above does not load, see the [static version](docs/images/metro_map_light.png).
+
 It is a Nextflow pipeline built on the [nf-core](https://nf-co.re) template,
 modelled on [JASEN](https://github.com/genomic-medicine-sweden/JASEN), and runs
 on a single server without a job scheduler.

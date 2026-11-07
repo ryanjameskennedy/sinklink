@@ -42,6 +42,18 @@ GitHub Actions on pull requests (the nf-core template workflows):
   named `patch`);
 - `docs.yml`: the strict docs build.
 
+## Pipeline diagram
+
+The metro map in the README and these docs is drawn with
+[nf-metro](https://github.com/seqeralabs/nf-metro) from `assets/metro_map.mmd`.
+After a change to the steps, update that file and redraw both images:
+
+```bash
+pip install nf-metro
+nf-metro render assets/metro_map.mmd -o docs/images/metro_map.svg
+nf-metro render assets/metro_map.mmd --mode light -o docs/images/metro_map_light.png
+```
+
 ## Modules
 
 Install or update nf-core modules with `nf-core modules install <tool>` and

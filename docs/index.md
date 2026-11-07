@@ -9,6 +9,8 @@ species, calls cgMLST/wgMLST alleles with chewBBACA and compares every pair of
 isolates within each suspected transmission group against a published,
 species-specific allele-difference threshold.
 
+![sinklink metro map](images/metro_map.svg)
+
 It is a Nextflow pipeline built on the [nf-core](https://nf-co.re) template
 and nf-core modules, with tool choices and the asset Makefiles modelled on
 [JASEN](https://github.com/genomic-medicine-sweden/JASEN). It runs on a single

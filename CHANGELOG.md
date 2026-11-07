@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation on running on a server, with each tool's label and its nf-core, JASEN and thedonkey resources
 - nf-core template features: nf-test tests with snapshots, the template CI (linting, nf-test, branch protection), RO-Crate metadata, nf-core/configs profiles, and email, Slack and Teams notifications
 - `lims_id` metadata column, shown in the allele QC and pair tables
+- Metro map of the pipeline (`assets/metro_map.mmd`, drawn with nf-metro) in the README and docs
 
 ### `Changed`
 
