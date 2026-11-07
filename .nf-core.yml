@@ -35,6 +35,7 @@ lint:
   readme:
     - nextflow_badge
     - nfcore_template_badge
+  included_configs: false
 
 template:
   org: ryanjameskennedy
