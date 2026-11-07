@@ -44,20 +44,20 @@ isolate.
 
 ```text
 transmission,sample,lims_id,studypatientnumber,sample_type,date,growth,comment
-Transmission_1,S01,LIMS-0001,P1,environment,2024-01-01,pseudomonas_aeruginosa,
-Transmission_1,S02,LIMS-0002,P1,airway,2024-01-20,pseudomonas_aeruginosa,
+Transmission_1,S01,LIMS-0001,P1,environment,2024-01-01T09:30:00,pseudomonas_aeruginosa,
+Transmission_1,S02,LIMS-0002,P1,airway,2024-01-20T14:06:00,pseudomonas_aeruginosa,
 ```
 
-| Column               | Required | Description                                                                                      |
-| -------------------- | -------- | ------------------------------------------------------------------------------------------------ |
-| `transmission`       | yes      | Suspected transmission group; isolates in the same group are compared pairwise                   |
-| `sample`             | yes      | Isolate ID, matching `sample` in the samplesheet                                                 |
-| `lims_id`            | no       | Laboratory (LIMS) ID, shown in the allele QC and pair tables                                     |
-| `studypatientnumber` | no       | Study patient, shown in the pair table                                                           |
-| `sample_type`        | no       | Sample type, e.g. `environment` or `airway`, shown in the pair table                             |
-| `date`               | no       | Sampling date, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM`, used for `days_apart`                         |
-| `growth`             | yes      | Species reported by the laboratory, mapped to a schema by `assets/species_map.tsv` (exact match) |
-| `comment`            | no       | Free text; not used by the pipeline                                                              |
+| Column               | Required | Description                                                                                                                            |
+| -------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `transmission`       | yes      | Suspected transmission group; isolates in the same group are compared pairwise                                                         |
+| `sample`             | yes      | Isolate ID, matching `sample` in the samplesheet                                                                                       |
+| `lims_id`            | no       | Laboratory (LIMS) ID, shown in the allele QC and pair tables                                                                           |
+| `studypatientnumber` | no       | Study patient, shown in the pair table                                                                                                 |
+| `sample_type`        | no       | Sample type, e.g. `environment` or `airway`, shown in the pair table                                                                   |
+| `date`               | no       | Sampling date and time in ISO 8601 (`YYYY-MM-DDTHH:MM:SS`, e.g. `2024-01-20T14:06:00`; `YYYY-MM-DD` also works), used for `days_apart` |
+| `growth`             | yes      | Species reported by the laboratory, mapped to a schema by `assets/species_map.tsv` (exact match)                                       |
+| `comment`            | no       | Free text; not used by the pipeline                                                                                                    |
 
 Column order does not matter, other columns are ignored and quoted commas are
 fine.

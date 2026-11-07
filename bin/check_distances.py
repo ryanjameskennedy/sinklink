@@ -22,12 +22,10 @@ def read_tsv(path):
 
 
 def parse_date(value):
-    for fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%d"):
-        try:
-            return datetime.strptime(value.strip(), fmt)
-        except ValueError:
-            pass
-    return None
+    try:
+        return datetime.fromisoformat(value.strip())
+    except ValueError:
+        return None
 
 
 def normalise_call(value):
