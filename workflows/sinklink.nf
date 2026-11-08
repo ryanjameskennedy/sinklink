@@ -11,6 +11,7 @@ include { ASSEMBLY               } from '../subworkflows/local/assembly'
 include { ASSEMBLY_QC            } from '../subworkflows/local/assembly_qc'
 include { SPECIES_CHECK          } from '../subworkflows/local/species_check'
 include { ALLELE_CALLING         } from '../subworkflows/local/allele_calling'
+include { VARIANT_CALLING        } from '../subworkflows/local/variant_calling'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -78,6 +79,13 @@ workflow SINKLINK {
     ch_kraken_report = SPECIES_CHECK.out.kraken_report
     ch_bracken       = SPECIES_CHECK.out.bracken
     ch_multiqc_files = ch_multiqc_files.mix(SPECIES_CHECK.out.multiqc_files)
+
+    //
+    // SUBWORKFLOW: Variant calling against the schema's reference genome
+    //
+    if (!params.skip_variant_calling) {
+        VARIANT_CALLING ( ch_reads, ch_reference, params.clair3_model )
+    }
 
     //
     // MODULE: Read and assembly QC summary per isolate, then one table for all

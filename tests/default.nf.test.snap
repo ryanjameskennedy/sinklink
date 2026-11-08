@@ -18,6 +18,9 @@
                 "CHEWBBACA_ALLELECALL": [
                     "chewbbaca"
                 ],
+                "CLAIR3": [
+                    "clair3"
+                ],
                 "DEACON_FILTER": [
                     "deacon"
                 ],
@@ -37,6 +40,9 @@
                     "kraken2",
                     "pigz"
                 ],
+                "MAKE_PSEUDOGENOME": [
+                    "python"
+                ],
                 "MASH_DIST": [
                     "mash"
                 ],
@@ -44,6 +50,9 @@
                     "medaka"
                 ],
                 "MINIMAP2_ALIGN": [
+                    "minimap2"
+                ],
+                "MINIMAP2_REFERENCE": [
                     "minimap2"
                 ],
                 "MLST": [
@@ -58,11 +67,17 @@
                 "SAMTOOLS_COVERAGE": [
                     "samtools"
                 ],
+                "SAMTOOLS_DEPTH": [
+                    "samtools"
+                ],
                 "SAMTOOLS_INDEX": [
                     "samtools"
                 ],
                 "SKESA": [
                     "skesa"
+                ],
+                "SNIPPY_RUN": [
+                    "snippy"
                 ],
                 "SUMMARISE_QC": [
                     "python"
@@ -304,7 +319,20 @@
                 "summary/allele_qc.tsv",
                 "summary/group_summary.tsv",
                 "summary/pairwise_distances.tsv",
-                "summary/qc_summary.tsv"
+                "summary/qc_summary.tsv",
+                "variants",
+                "variants/S01.pseudogenome.fa",
+                "variants/S01.pseudogenome.tsv",
+                "variants/S01.vcf.gz",
+                "variants/S01.vcf.gz.csi",
+                "variants/S02.pseudogenome.fa",
+                "variants/S02.pseudogenome.tsv",
+                "variants/S02.vcf.gz",
+                "variants/S02.vcf.gz.csi",
+                "variants/S03.pseudogenome.fa",
+                "variants/S03.pseudogenome.tsv",
+                "variants/S03.vcf.gz",
+                "variants/S03.vcf.gz.tbi"
             ],
             [
                 "S01.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -500,10 +528,22 @@
                 "allele_qc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "group_summary.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "pairwise_distances.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
-                "qc_summary.tsv:md5,2c23545bd1a084360ee7d94a9f45bd16"
+                "qc_summary.tsv:md5,2c23545bd1a084360ee7d94a9f45bd16",
+                "S01.pseudogenome.fa:md5,023c8c6b5c60a9bd98fe85304ef799e9",
+                "S01.pseudogenome.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S01.vcf.gz:md5,68b329da9893e34099c7d8ad5cb9c940",
+                "S01.vcf.gz.csi:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.pseudogenome.fa:md5,2a5d5fbdca1e80c1d0549df241d4d96b",
+                "S02.pseudogenome.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.vcf.gz:md5,68b329da9893e34099c7d8ad5cb9c940",
+                "S02.vcf.gz.csi:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.pseudogenome.fa:md5,fee6aefb8d664ec55378edeece618627",
+                "S03.pseudogenome.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.vcf.gz:md5,68b329da9893e34099c7d8ad5cb9c940",
+                "S03.vcf.gz.tbi:md5,d41d8cd98f00b204e9800998ecf8427e"
             ]
         ],
-        "timestamp": "2026-11-08T13:12:19.216009",
+        "timestamp": "2026-11-08T13:15:46.307351",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"
@@ -527,6 +567,9 @@
                 ],
                 "CHEWBBACA_ALLELECALL": [
                     "chewbbaca"
+                ],
+                "CLAIR3": [
+                    "clair3"
                 ],
                 "DEACON_FILTER": [
                     "deacon"
@@ -553,6 +596,9 @@
                     "kraken2",
                     "pigz"
                 ],
+                "MAKE_PSEUDOGENOME": [
+                    "python"
+                ],
                 "MASH_DIST": [
                     "mash"
                 ],
@@ -560,6 +606,9 @@
                     "medaka"
                 ],
                 "MINIMAP2_ALIGN": [
+                    "minimap2"
+                ],
+                "MINIMAP2_REFERENCE": [
                     "minimap2"
                 ],
                 "MLST": [
@@ -574,11 +623,17 @@
                 "SAMTOOLS_COVERAGE": [
                     "samtools"
                 ],
+                "SAMTOOLS_DEPTH": [
+                    "samtools"
+                ],
                 "SAMTOOLS_INDEX": [
                     "samtools"
                 ],
                 "SKESA": [
                     "skesa"
+                ],
+                "SNIPPY_RUN": [
+                    "snippy"
                 ],
                 "SUMMARISE_QC": [
                     "python"
@@ -834,7 +889,20 @@
                 "trimmomatic/S01.summary",
                 "trimmomatic/S01_out.log",
                 "trimmomatic/S02.summary",
-                "trimmomatic/S02_out.log"
+                "trimmomatic/S02_out.log",
+                "variants",
+                "variants/S01.pseudogenome.fa",
+                "variants/S01.pseudogenome.tsv",
+                "variants/S01.vcf.gz",
+                "variants/S01.vcf.gz.csi",
+                "variants/S02.pseudogenome.fa",
+                "variants/S02.pseudogenome.tsv",
+                "variants/S02.vcf.gz",
+                "variants/S02.vcf.gz.csi",
+                "variants/S03.pseudogenome.fa",
+                "variants/S03.pseudogenome.tsv",
+                "variants/S03.vcf.gz",
+                "variants/S03.vcf.gz.tbi"
             ],
             [
                 "S01.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -1038,10 +1106,22 @@
                 "S01.summary:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01_out.log:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.summary:md5,d41d8cd98f00b204e9800998ecf8427e",
-                "S02_out.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+                "S02_out.log:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S01.pseudogenome.fa:md5,023c8c6b5c60a9bd98fe85304ef799e9",
+                "S01.pseudogenome.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S01.vcf.gz:md5,68b329da9893e34099c7d8ad5cb9c940",
+                "S01.vcf.gz.csi:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.pseudogenome.fa:md5,2a5d5fbdca1e80c1d0549df241d4d96b",
+                "S02.pseudogenome.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.vcf.gz:md5,68b329da9893e34099c7d8ad5cb9c940",
+                "S02.vcf.gz.csi:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.pseudogenome.fa:md5,fee6aefb8d664ec55378edeece618627",
+                "S03.pseudogenome.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.vcf.gz:md5,68b329da9893e34099c7d8ad5cb9c940",
+                "S03.vcf.gz.tbi:md5,d41d8cd98f00b204e9800998ecf8427e"
             ]
         ],
-        "timestamp": "2026-11-08T13:12:38.911378",
+        "timestamp": "2026-11-08T13:16:10.970436",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"

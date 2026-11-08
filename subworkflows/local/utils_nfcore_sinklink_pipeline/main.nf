@@ -260,6 +260,8 @@ def toolCitationText() {
             "SAMtools (Danecek et al. 2021),",
             "mlst (Seemann),",
             "Kraken2 (Wood et al. 2019), Bracken (Lu et al. 2017),",
+            params.references_dir ? "Mash (Ondov et al. 2016)," : "",
+            params.skip_variant_calling ? "" : "Snippy (Seemann 2015) with FreeBayes (Garrison and Marth 2012), Clair3 (Zheng et al. 2022),",
             params.skip_chewbbaca ? "" : "chewBBACA (Silva et al. 2018),",
             "MultiQC (Ewels et al. 2016)",
             "."
@@ -282,6 +284,10 @@ def toolBibliographyText() {
             "<li>Danecek P, et al. (2021) Twelve years of SAMtools and BCFtools. GigaScience 10(2):giab008. doi: 10.1093/gigascience/giab008</li>",
             "<li>Wood DE, Lu J, Langmead B. (2019) Improved metagenomic analysis with Kraken 2. Genome Biol 20:257. doi: 10.1186/s13059-019-1891-0</li>",
             "<li>Lu J, et al. (2017) Bracken: estimating species abundance in metagenomics data. PeerJ Comput Sci 3:e104. doi: 10.7717/peerj-cs.104</li>",
+            params.references_dir ? "<li>Ondov BD, et al. (2016) Mash: fast genome and metagenome distance estimation using MinHash. Genome Biol 17:132. doi: 10.1186/s13059-016-0997-x</li>" : "",
+            params.skip_variant_calling ? "" : "<li>Seemann T. (2015) Snippy: fast bacterial variant calling from NGS reads, URL: https://github.com/tseemann/snippy</li>",
+            params.skip_variant_calling ? "" : "<li>Garrison E, Marth G. (2012) Haplotype-based variant detection from short-read sequencing. arXiv:1207.3907</li>",
+            params.skip_variant_calling ? "" : "<li>Zheng Z, et al. (2022) Symphonizing pileup and full-alignment for deep learning-based long-read variant calling. Nat Comput Sci 2:797-803. doi: 10.1038/s43588-022-00387-x</li>",
             params.skip_chewbbaca ? "" : "<li>Silva M, et al. (2018) chewBBACA: A complete suite for gene-by-gene schema creation and strain identification. Microb Genom 4(3):e000166. doi: 10.1099/mgen.0.000166</li>",
             "<li>Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics , 32(19), 3047–3048. doi: /10.1093/bioinformatics/btw354</li>"
         ].join(' ').trim()

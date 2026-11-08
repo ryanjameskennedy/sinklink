@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: "variant_calling"
+description: "Variant calling against the reference genome (Snippy for Illumina, minimap2 and Clair3 for Nanopore) and a masked pseudogenome per isolate"
+keywords:
+  - bacteria
+  - variant calling
+  - snp
+components:
+  - snippy/run
+  - minimap2/align
+  - clair3
+  - samtools/depth
+  - make_pseudogenome
+input:
+  - ch_reads:
+      type: channel
+      description: "Reads per sample: [ val(meta), [ fastq ] ]"
+  - ch_reference:
+      type: channel
+      description: "Reference genome per sample: [ val(meta), [ fasta, fai, gff ] ]"
+  - clair3_model:
+      type: string
+      description: "Name of a Clair3 model bundled in its container"
+output:
+  - vcf:
+      type: channel
+      description: "Variant calls: [ val(meta), path(vcf.gz) ]"
+  - pseudogenome:
+      type: channel
+      description: "Reference-length sequence with substitutions applied and low-depth positions masked: [ val(meta), path(fasta) ]"
+  - stats:
+      type: channel
+      description: "Substitutions and masked positions per isolate: [ val(meta), path(tsv) ]"
+authors:
+  - "@ryanjameskennedy"

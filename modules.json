@@ -29,7 +29,8 @@
                     "clair3": {
                         "branch": "master",
                         "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
-                        "installed_by": ["modules"]
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/clair3/clair3.diff"
                     },
                     "deacon/filter": {
                         "branch": "master",
@@ -122,7 +123,8 @@
                     "snippy/run": {
                         "branch": "master",
                         "git_sha": "2a0a771d78bb58205c784dea56f2e4db251a63ec",
-                        "installed_by": ["modules"]
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/snippy/run/snippy-run.diff"
                     },
                     "trimmomatic": {
                         "branch": "master",

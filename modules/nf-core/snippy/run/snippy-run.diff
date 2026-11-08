@@ -1,0 +1,18 @@
+Changes in component 'nf-core/snippy/run'
+'modules/nf-core/snippy/run/environment.yml' is unchanged
+'modules/nf-core/snippy/run/meta.yml' is unchanged
+Changes in 'snippy/run/main.nf':
+--- modules/nf-core/snippy/run/main.nf
++++ modules/nf-core/snippy/run/main.nf
+@@ -1,6 +1,6 @@
+ process SNIPPY_RUN {
+     tag "$meta.id"
+-    label 'process_low'
++    label 'process_high'
+ 
+     conda "${moduleDir}/environment.yml"
+     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+
+'modules/nf-core/snippy/run/tests/main.nf.test.snap' is unchanged
+'modules/nf-core/snippy/run/tests/main.nf.test' is unchanged
+************************************************************

@@ -330,6 +330,20 @@
                     "description": "Skip mapping reads to the schema's reference genome and calling variants.",
                     "fa_icon": "fas fa-forward"
                 },
+                "clair3_model": {
+                    "type": "string",
+                    "default": "r1041_e82_400bps_sup_v430_bacteria_finetuned",
+                    "description": "Clair3 model for Nanopore variant calling, one of those bundled in the Clair3 container.",
+                    "help_text": "The default is fine-tuned on bacterial R10.4.1 SUP data (Hall et al. 2024). Use the model that matches the flow cell and basecaller, e.g. r1041_e82_400bps_sup_v500 for Dorado v5 SUP.",
+                    "fa_icon": "fas fa-brain"
+                },
+                "snp_min_depth": {
+                    "type": "integer",
+                    "default": 10,
+                    "minimum": 1,
+                    "description": "Read depth below which a reference position is masked as N in the pseudogenome and left out of SNP distances (also Snippy's --mincov).",
+                    "fa_icon": "fas fa-layer-group"
+                },
                 "skip_chewbbaca": {
                     "type": "boolean",
                     "description": "Stop after assembly and QC; no allele calling or distances.",
