@@ -3,7 +3,7 @@
 # Makefile.
 #
 #   make print_paths
-#   make install ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
+#   make install ASSETS_DIR=/mnt/cache/dbs CONTAINERS_DIR=/mnt/cache/singularity
 #
 # Single organisms can be set up on their own, e.g. `make paeruginosa_all`.
 # ==============================================================================

@@ -29,10 +29,10 @@ stopped run.
 
 | Setting                                          | File            | thedonkey                                                     |
 | ------------------------------------------------ | --------------- | ------------------------------------------------------------- |
-| `--schemas_dir`                                  | parameters file | `/mnt/cache/dbs/vask/schemas`                                 |
+| `--schemas_dir`                                  | parameters file | `/mnt/cache/dbs/schemas`                                      |
 | `--kraken_db`                                    | parameters file | `/mnt/cache/dbs/kraken2/standard_16gb_20260626` (Standard-16) |
-| `--deacon_index`                                 | parameters file | `/mnt/cache/dbs/vask/deacon/panhuman-1.k31w15.idx`            |
-| `--references_dir`                               | parameters file | `/mnt/cache/dbs/vask/references`                              |
+| `--deacon_index`                                 | parameters file | `/mnt/cache/dbs/deacon/panhuman-1.k31w15.idx`                 |
+| `--references_dir`                               | parameters file | `/mnt/cache/dbs/references`                                   |
 | `--gambit_db`                                    | parameters file | `/mnt/cache/dbs/gambit_db`                                    |
 | Work directory                                   | config          | `/media/shortterm/$USER/work`                                 |
 | Total CPUs and memory in use (`executor.$local`) | config          | 15 CPUs, 141 GB, at most 8 tasks                              |

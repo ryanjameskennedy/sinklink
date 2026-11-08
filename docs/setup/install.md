@@ -37,17 +37,17 @@ same folder for `CONTAINERS_DIR` as `apptainer.cacheDir` in your server config
 instead of downloading them again; it pulls the rest itself on its first run.
 
 ```bash
-make install ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
+make install ASSETS_DIR=/mnt/cache/dbs CONTAINERS_DIR=/mnt/cache/singularity
 ```
 
 or step by step:
 
 ```bash
 make -C containers all CONTAINERS_DIR=/mnt/cache/singularity
-make databases ASSETS_DIR=/mnt/cache/dbs/vask
-make references ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
-make schemas ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
-make check ASSETS_DIR=/mnt/cache/dbs/vask
+make databases ASSETS_DIR=/mnt/cache/dbs
+make references ASSETS_DIR=/mnt/cache/dbs CONTAINERS_DIR=/mnt/cache/singularity
+make schemas ASSETS_DIR=/mnt/cache/dbs CONTAINERS_DIR=/mnt/cache/singularity
+make check ASSETS_DIR=/mnt/cache/dbs
 ```
 
 - [Schemas](schemas.md): what `make schemas` does and what to do when a

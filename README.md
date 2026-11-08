@@ -39,7 +39,7 @@ Set up the schemas, reference genomes and databases once:
 
 ```bash
 git clone git@github.com:ryanjameskennedy/sinklink.git && cd sinklink
-make install ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
+make install ASSETS_DIR=/mnt/cache/dbs CONTAINERS_DIR=/mnt/cache/singularity
 ```
 
 Then run every isolate, whatever its species, with one samplesheet and one
