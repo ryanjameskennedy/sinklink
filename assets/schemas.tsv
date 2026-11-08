@@ -1,8 +1,8 @@
-schema	organism	scheme	loci	threshold	borderline	min_called_fraction	species_pattern	genera	genome_size_min_mb	genome_size_max_mb	source
-paeruginosa	Pseudomonas aeruginosa	cgmlst.org Paeruginosa cgMLST	3867	12		0.9	^Pseudomonas aeruginosa$	Pseudomonas	5.5	7.8	cgmlst.org complex type distance; Tonnies et al. J Clin Microbiol 2021
-kpneumoniae	Klebsiella pneumoniae sensu lato	cgmlst.org Kpneumoniae_complex cgMLST	2358	15		0.9	^Klebsiella (pneumoniae|quasipneumoniae|variicola|quasivariicola|africana)$	Klebsiella	5.0	6.5	cgmlst.org complex type distance
-koxytoca	Klebsiella oxytoca species complex	cgmlst.org Koxytoca_complex cgMLST	2536	6	9	0.9	^Klebsiella (oxytoca|michiganensis|grimontii|pasteurii|huaxiensis|spallanzanii)$	Klebsiella,Raoultella	5.5	6.8	Dabernig-Heinz et al. J Clin Microbiol 2024 (6 strict, 9 sensitive)
-smarcescens	Serratia marcescens	cgmlst.org Smarcescens cgMLST	2692	12		0.9	^Serratia (marcescens|nematodiphila)$	Serratia	4.8	5.8	cgmlst.org complex type distance; Kampmeier et al. J Clin Microbiol 2022
-cfreundii	Citrobacter freundii	cgmlst.org Cfreundii cgMLST	3250	10		0.9	^Citrobacter freundii$	Citrobacter	4.7	5.9	cgmlst.org complex type distance; Kieninger et al. J Clin Microbiol 2025
-ehormaechei	Enterobacter hormaechei	cgmlst.org Ehormaechei cgMLST	2178	12		0.9	^Enterobacter hormaechei$	Enterobacter	4.4	5.4	cgmlst.org complex type distance; Prior et al. J Clin Microbiol 2025
-smaltophilia	Stenotrophomonas maltophilia complex	Groschel 2020 wgMLST (figshare 10005047)	17603	10			^Stenotrophomonas	Stenotrophomonas	4.1	5.4	Groschel et al. Nat Commun 2020 (d10, over 1275 core loci)
+schema	organism	scheme	loci	threshold	borderline	min_called_fraction	species_pattern	genera	genome_size_min_mb	genome_size_max_mb	reference	source
+paeruginosa	Pseudomonas aeruginosa	cgmlst.org Paeruginosa cgMLST	3867	12		0.9	^Pseudomonas aeruginosa$	Pseudomonas	5.5	7.8	GCF_000006765.1	cgmlst.org complex type distance; Tonnies et al. J Clin Microbiol 2021
+kpneumoniae	Klebsiella pneumoniae sensu lato	cgmlst.org Kpneumoniae_complex cgMLST	2358	15		0.9	^Klebsiella (pneumoniae|quasipneumoniae|variicola|quasivariicola|africana)$	Klebsiella	5.0	6.5	GCF_000240185.1	cgmlst.org complex type distance
+koxytoca	Klebsiella oxytoca species complex	cgmlst.org Koxytoca_complex cgMLST	2536	6	9	0.9	^Klebsiella (oxytoca|michiganensis|grimontii|pasteurii|huaxiensis|spallanzanii)$	Klebsiella,Raoultella	5.5	6.8	GCF_900636985.1	Dabernig-Heinz et al. J Clin Microbiol 2024 (6 strict, 9 sensitive)
+smarcescens	Serratia marcescens	cgmlst.org Smarcescens cgMLST	2692	12		0.9	^Serratia (marcescens|nematodiphila)$	Serratia	4.8	5.8	GCF_030291735.1	cgmlst.org complex type distance; Kampmeier et al. J Clin Microbiol 2022
+cfreundii	Citrobacter freundii	cgmlst.org Cfreundii cgMLST	3250	10		0.9	^Citrobacter freundii$	Citrobacter	4.7	5.9	GCF_904859905.1	cgmlst.org complex type distance; Kieninger et al. J Clin Microbiol 2025
+ehormaechei	Enterobacter hormaechei	cgmlst.org Ehormaechei cgMLST	2178	12		0.9	^Enterobacter hormaechei$	Enterobacter	4.4	5.4	GCF_019048245.1	cgmlst.org complex type distance; Prior et al. J Clin Microbiol 2025
+smaltophilia	Stenotrophomonas maltophilia complex	Groschel 2020 wgMLST (figshare 10005047)	17603	10			^Stenotrophomonas	Stenotrophomonas	4.1	5.4	GCF_020641395.2	Groschel et al. Nat Commun 2020 (d10, over 1275 core loci)

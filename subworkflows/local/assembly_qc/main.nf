@@ -1,6 +1,7 @@
 //
-// Assembly QC: QUAST statistics, gambitcore completeness, read depth over the
-// isolate's own assembly and 7-gene MLST
+// Assembly QC: QUAST statistics (against the schema's reference genome when there
+// is one), gambitcore completeness, read depth over the isolate's own assembly
+// and 7-gene MLST
 //
 
 include { QUAST             } from '../../../modules/nf-core/quast/main'
@@ -15,12 +16,22 @@ include { MLST              } from '../../../modules/nf-core/mlst/main'
 workflow ASSEMBLY_QC {
 
     take:
-    ch_assembly // channel: [ val(meta), path(fasta) ]
-    ch_reads    // channel: [ val(meta), [ fastq ] ]
-    gambit_db   // path: GAMBIT database folder, or [] to skip gambitcore
+    ch_assembly  // channel: [ val(meta), path(fasta) ]
+    ch_reads     // channel: [ val(meta), [ fastq ] ]
+    ch_reference // channel: [ val(meta), [ fasta, fai, gff ] ]
+    gambit_db    // path: GAMBIT database folder, or [] to skip gambitcore
 
     main:
-    QUAST ( ch_assembly, [ [:], [] ], [ [:], [] ] )
+    ch_assembly
+        .join(ch_reference, remainder: true)
+        .filter { _meta, fasta, _reference -> fasta != null }
+        .multiMap { meta, fasta, reference ->
+            assembly : [ meta, fasta ]
+            reference: [ meta, reference ? reference[0] : [] ]
+            gff      : [ meta, reference ? reference[2] : [] ]
+        }
+        .set { ch_quast }
+    QUAST ( ch_quast.assembly, ch_quast.reference, ch_quast.gff )
     MLST ( ch_assembly )
 
     ch_gambitcore = channel.empty()

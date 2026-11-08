@@ -1,5 +1,6 @@
-# Sets up the chewBBACA schemas used to compare isolates within each
-# transmission group, following the layout of the JASEN Makefile.
+# Sets up the chewBBACA schemas, reference genomes and databases used to compare
+# isolates within each transmission group, following the layout of the JASEN
+# Makefile.
 #
 #   make print_paths
 #   make install ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
@@ -22,6 +23,11 @@ PRODIGAL_TRAINING_DIR := $(ASSETS_DIR)/prodigal_training_files
 GAMBIT_DIR := $(ASSETS_DIR)/gambit_db
 GAMBIT_URL := https://storage.googleapis.com/jlumpe-gambit/public/databases/refseq-curated/1.0
 GAMBIT_FILES := gambit-refseq-curated-1.0.gdb gambit-refseq-curated-1.0.gs
+REFERENCES_DIR := $(ASSETS_DIR)/references
+REFERENCES := $(shell awk -F'\t' 'NR==1 {for (i = 1; i <= NF; i++) if ($$i == "reference") col = i; next} $$col != "" {print $$col}' $(SCRIPT_DIR)/assets/schemas.tsv)
+DEACON_DIR := $(ASSETS_DIR)/deacon
+DEACON_INDEX := panhuman-1.k31w15.idx
+DEACON_URL := https://objectstorage.uk-london-1.oraclecloud.com/n/lrbvkel2wjot/b/human-genome-bucket/o/deacon/3/$(DEACON_INDEX)
 
 APPTAINER ?= apptainer
 PREP_CPUS ?= 4
@@ -94,7 +100,7 @@ NCBI_EFETCH := https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucc
 # Main rules
 # ==============================================================================
 .PHONY: print_paths install download_or_build_containers schemas databases gambit_db \
-	check check_schemas check_databases
+	deacon_index references check check_schemas check_databases check_references
 
 print_paths:
 	@echo "SCRIPT_DIR:" $(SCRIPT_DIR)
@@ -102,10 +108,13 @@ print_paths:
 	@echo "CONTAINERS_DIR:" $(CONTAINERS_DIR)
 	@echo "SCHEMAS_DIR:" $(SCHEMAS_DIR)
 	@echo "GAMBIT_DIR:" $(GAMBIT_DIR)
+	@echo "REFERENCES_DIR:" $(REFERENCES_DIR)
+	@echo "DEACON_DIR:" $(DEACON_DIR)
 	@echo "BIND_ROOTS:" $(BIND_ROOTS)
 
 install: download_or_build_containers \
 	databases \
+	references \
 	schemas
 
 download_or_build_containers:
@@ -114,10 +123,10 @@ download_or_build_containers:
 
 schemas: $(addsuffix _all,$(SCHEMAS))
 
-databases: gambit_db
+databases: gambit_db deacon_index
 
 # The Kraken2 database is too large to download here; point the pipeline at an
-# existing one (e.g. the JASEN one) with --kraken-db.
+# existing one (e.g. the JASEN one) with --kraken_db.
 gambit_db: $(addprefix $(GAMBIT_DIR)/,$(GAMBIT_FILES))
 
 $(GAMBIT_DIR)/%:
@@ -127,7 +136,33 @@ $(GAMBIT_DIR)/%:
 	&& [[ -s $@.tmp ]] \
 	&& mv $@.tmp $@
 
-check: check_databases check_schemas
+deacon_index: $(DEACON_DIR)/$(DEACON_INDEX)
+
+$(DEACON_DIR)/$(DEACON_INDEX):
+	$(call log_message,"Downloading Deacon human pangenome index (3.3 GB) ...")
+	mkdir -p $(DEACON_DIR) \
+	&& wget "$(DEACON_URL)" -O $@.tmp --no-verbose |& tee -a $(INSTALL_LOG) \
+	&& [[ -s $@.tmp ]] \
+	&& mv $@.tmp $@
+
+# Each schema's reference genome (the reference column of assets/schemas.tsv),
+# downloaded from NCBI Datasets with jasentool as FASTA and GFF, then indexed.
+references: $(foreach accn,$(REFERENCES),$(REFERENCES_DIR)/$(accn).fasta.fai)
+
+$(REFERENCES_DIR)/%.fasta:
+	$(call log_message,"Downloading reference genome $* ...")
+	mkdir -p $(REFERENCES_DIR) \
+	&& $(APPTAINER) exec $(BIND_ARGS) $(CONTAINERS_DIR)/jasentool.sif \
+		jasentool download-ncbi -i $* -o $(REFERENCES_DIR) |& tee -a $(INSTALL_LOG) \
+	&& [[ -s $@ && -s $(REFERENCES_DIR)/$*.gff ]]
+
+$(REFERENCES_DIR)/%.fasta.fai: $(REFERENCES_DIR)/%.fasta
+	$(call log_message,"Indexing reference genome $* ...")
+	cd $(REFERENCES_DIR) \
+	&& $(APPTAINER) exec $(BIND_ARGS) $(CONTAINERS_DIR)/samtools.sif \
+		samtools faidx $*.fasta |& tee -a $(INSTALL_LOG)
+
+check: check_databases check_references check_schemas
 
 check_databases:
 	@status=0; \
@@ -137,6 +172,24 @@ check_databases:
 		else \
 			echo "[!] gambit: missing $(GAMBIT_DIR)/$$file"; status=1; \
 		fi; \
+	done; \
+	if [[ -s $(DEACON_DIR)/$(DEACON_INDEX) ]]; then \
+		echo "[✓] deacon: $(DEACON_DIR)/$(DEACON_INDEX)"; \
+	else \
+		echo "[!] deacon: missing $(DEACON_DIR)/$(DEACON_INDEX)"; status=1; \
+	fi; \
+	exit $$status
+
+check_references:
+	@status=0; \
+	for accn in $(REFERENCES); do \
+		for ext in fasta fasta.fai gff; do \
+			if [[ -s $(REFERENCES_DIR)/$$accn.$$ext ]]; then \
+				echo "[✓] reference: $(REFERENCES_DIR)/$$accn.$$ext"; \
+			else \
+				echo "[!] reference: missing $(REFERENCES_DIR)/$$accn.$$ext"; status=1; \
+			fi; \
+		done; \
 	done; \
 	exit $$status
 

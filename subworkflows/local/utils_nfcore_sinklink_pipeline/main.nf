@@ -172,6 +172,26 @@ def assetPath(value, name) {
 }
 
 //
+// The reference genome files for each sample whose schema has one: [ meta, [ fasta, fai, gff ] ]
+//
+def referenceChannel(ch_samples, references_dir) {
+    return ch_samples
+        .map { meta, _reads -> meta }
+        .filter { meta -> meta.reference }
+        .map { meta ->
+            def prefix = "${references_dir}/${meta.reference}"
+            [ meta, [ file("${prefix}.fasta"), file("${prefix}.fasta.fai"), file("${prefix}.gff") ] ]
+        }
+        .filter { meta, files ->
+            def missing = files.findAll { f -> !f.exists() }
+            if (missing) {
+                log.warn("Reference genome files ${missing*.name.join(', ')} for ${meta.id} are not in ${references_dir} (run make references); its reference-based steps are skipped")
+            }
+            !missing
+        }
+}
+
+//
 // Read a TSV file with a header into a list of maps
 //
 def readTsv(path) {
@@ -191,7 +211,8 @@ def readMetadata(path) {
 }
 
 //
-// Add the transmission group, growth label, schema and expected genome size to a sample's meta map
+// Add the transmission group, growth label, schema, expected genome size and reference genome
+// accession to a sample's meta map
 //
 def annotateSample(meta, metadata, species_map, schema_table) {
     def row = metadata[meta.id]
@@ -213,7 +234,8 @@ def annotateSample(meta, metadata, species_map, schema_table) {
         transmission: row?.transmission ?: '',
         growth      : growth,
         schema      : schema,
-        genome_size : genome_size
+        genome_size : genome_size,
+        reference   : schema ? (schema_table[schema].reference ?: '') : ''
     ]
 }
 

@@ -16,6 +16,7 @@ include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pi
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_sinklink_pipeline'
 include { assetPath              } from '../subworkflows/local/utils_nfcore_sinklink_pipeline'
+include { referenceChannel       } from '../subworkflows/local/utils_nfcore_sinklink_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,6 +44,13 @@ workflow SINKLINK {
     }
     ch_deacon_index = params.skip_host_removal ? [] : file(params.deacon_index, checkIfExists: true)
 
+    if (!params.skip_variant_calling && !params.references_dir) {
+        error("--references_dir is required for variant calling; set it or use --skip_variant_calling")
+    }
+    ch_reference = params.references_dir ?
+        referenceChannel(ch_samplesheet, params.references_dir) :
+        channel.empty()
+
     //
     // SUBWORKFLOW: Human read removal, optional read filtering and read QC
     //
@@ -60,7 +68,7 @@ workflow SINKLINK {
     //
     // SUBWORKFLOW: Assembly QC, read depth and 7-gene MLST
     //
-    ASSEMBLY_QC ( ch_assembly, ch_reads, ch_gambit_db )
+    ASSEMBLY_QC ( ch_assembly, ch_reads, ch_reference, ch_gambit_db )
     ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.multiqc_files)
 
     //
