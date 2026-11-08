@@ -61,4 +61,34 @@ nextflow_pipeline {
             )
         }
     }
+
+    test("-profile test, host removal, variant calling and allele calling skipped") {
+
+        when {
+            params {
+                outdir               = "$outputDir"
+                skip_host_removal    = true
+                skip_variant_calling = true
+                skip_chewbbaca       = true
+                deacon_index         = null
+                references_dir       = null
+                schemas_dir          = null
+            }
+        }
+
+        then {
+            def stable_name = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}'])
+            def stable_path = getAllFilesFromDir(params.outdir, ignoreFile: 'tests/.nftignore')
+            def versions = new org.yaml.snakeyaml.Yaml().load(file("$outputDir/pipeline_info/sinklink_software_mqc_versions.yml").text)
+            def tools = versions.findAll { process, names -> process != 'Workflow' }.collectEntries { process, names -> [ process, names.keySet().sort() ] }
+            assertAll(
+                { assert workflow.success},
+                { assert snapshot(
+                    tools,
+                    stable_name,
+                    stable_path
+                ).match() }
+            )
+        }
+    }
 }
