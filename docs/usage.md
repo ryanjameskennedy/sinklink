@@ -21,12 +21,12 @@ S02,illumina,/data/reads/S02.fastq.gz,
 S03,nanopore,/data/reads/S03.fastq.gz,
 ```
 
-| Column     | Description |
-| ---------- | ----------- |
-| `sample`   | Isolate ID, matching `translation_id` in the metadata. Letters, digits, `.`, `_` and `-` only; each sample once. |
-| `platform` | `illumina` or `nanopore`. |
-| `fastq_1`  | Gzipped FastQ (`.fastq.gz` or `.fq.gz`): read 1, single-end reads or Nanopore reads. |
-| `fastq_2`  | Gzipped FastQ for Illumina read 2. Leave empty for single-end and Nanopore reads. |
+| Column     | Description                                                                                              |
+| ---------- | -------------------------------------------------------------------------------------------------------- |
+| `sample`   | Isolate ID, matching `sample` in the metadata. Letters, digits, `.`, `_` and `-` only; each sample once. |
+| `platform` | `illumina` or `nanopore`.                                                                                |
+| `fastq_1`  | Gzipped FastQ (`.fastq.gz` or `.fq.gz`): read 1, single-end reads or Nanopore reads.                     |
+| `fastq_2`  | Gzipped FastQ for Illumina read 2. Leave empty for single-end and Nanopore reads.                        |
 
 The samplesheet is checked against
 [`assets/schema_input.json`](https://github.com/ryanjameskennedy/sinklink/blob/master/assets/schema_input.json)
@@ -42,30 +42,44 @@ is provided.
 The metadata (`--metadata`) describes the study: a CSV with one row per
 isolate.
 
-| Column               | Required | Description |
-| -------------------- | -------- | ----------- |
-| `translation_id`     | yes      | Isolate ID, matching `sample` in the samplesheet |
-| `transmission`       | yes      | Suspected transmission group; isolates in the same group are compared pairwise |
-| `growth`             | yes      | Species reported by the laboratory, mapped to a schema by `assets/species_map.tsv` (exact match) |
-| `studypatientnumber` | no       | Study patient, shown in the pair table |
-| `sample`             | no       | Sample type, e.g. `environment` or `airway`, shown in the pair table |
-| `date`               | no       | Sampling date, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM`, used for `days_apart` |
+```text
+transmission,sample,lims_id,studypatientnumber,sample_type,date,growth,comment
+Transmission_1,S01,LIMS-0001,P1,environment,2024-01-01T09:30:00,pseudomonas_aeruginosa,
+Transmission_1,S02,LIMS-0002,P1,airway,2024-01-20T14:06:00,pseudomonas_aeruginosa,
+```
 
-Other columns (such as `comment`) are ignored; quoted commas are fine.
+| Column               | Required | Description                                                                                                                            |
+| -------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `transmission`       | yes      | Suspected transmission group; isolates in the same group are compared pairwise                                                         |
+| `sample`             | yes      | Isolate ID, matching `sample` in the samplesheet                                                                                       |
+| `lims_id`            | no       | Laboratory (LIMS) ID, shown in the allele QC and pair tables                                                                           |
+| `studypatientnumber` | no       | Study patient, shown in the pair table                                                                                                 |
+| `sample_type`        | no       | Sample type, e.g. `environment` or `airway`, shown in the pair table                                                                   |
+| `date`               | no       | Sampling date and time in ISO 8601 (`YYYY-MM-DDTHH:MM:SS`, e.g. `2024-01-20T14:06:00`; `YYYY-MM-DD` also works), used for `days_apart` |
+| `growth`             | yes      | Species reported by the laboratory, mapped to a schema by `assets/species_map.tsv` (exact match)                                       |
+| `comment`            | no       | Free text; not used by the pipeline                                                                                                    |
+
+Column order does not matter, other columns are ignored and quoted commas are
+fine.
 
 How it is used:
 
 1. **At start-up**, each samplesheet row is matched to its metadata row.
    `growth` gives the schema, and the schema's genome size range in
    `assets/schemas.tsv` gives the expected genome size passed to Flye (for
-   *P. aeruginosa*, 5.5–7.8 Mb becomes `6.7m`). The run stops if a required
-   column is missing.
+   _P. aeruginosa_, 5.5–7.8 Mb becomes `6.7m`) and the reference genome used
+   for QUAST, Mash and variant calling. The run stops if a required column is
+   missing.
 2. An isolate missing from the metadata, or whose `growth` has no schema, gets a
-   warning and is assembled and QC'd but not allele called. The same goes for
-   a schema that is not set up in `--schemas_dir`.
+   warning and is assembled and QC'd but not allele called or variant called.
+   The same goes for a schema that is not set up in `--schemas_dir`, or whose
+   reference genome is not in `--references_dir`.
 3. **Allele calling** groups the assemblies by schema.
-4. **The QC summary** uses the schema's accepted species and genome size.
-5. **The distance check** pairs isolates within each transmission group. Every
+4. **Variant calling** maps each isolate's reads to its schema's reference
+   genome.
+5. **The QC summary** uses the schema's accepted species, genome size and
+   reference genome.
+6. **The distance check** pairs isolates within each transmission group. Every
    metadata row is included, so isolates listed in the metadata but missing
    from the samplesheet show up as `missing_profile`.
 
@@ -78,15 +92,29 @@ nextflow run ryanjameskennedy/sinklink -r v0.1.0 \
     --metadata metadata.csv \
     --schemas_dir /path/to/schemas \
     --kraken_db /path/to/kraken2_db \
+    --deacon_index /path/to/deacon/panhuman-1.k31w15.idx \
+    --references_dir /path/to/references \
     --gambit_db /path/to/gambit_db \
     --outdir results
 ```
 
-On thedonkey, the [thedonkey profile](setup/thedonkey.md) sets the database
-paths, Apptainer and the resource caps:
+`--kraken_db` is always required. `--deacon_index`, `--references_dir` and
+`--schemas_dir` are required unless `--skip_host_removal`,
+`--skip_variant_calling` or `--skip_chewbbaca` turns off the step that needs
+them. `make install` sets up everything except the Kraken2 database (see
+[installation](setup/install.md) and, for the Kraken2 download,
+[databases](setup/databases.md)).
+
+For Nanopore isolates, set `--clair3_model` to the Clair3 model that matches
+the flow cell and basecaller if the default, fine-tuned on bacterial R10.4.1
+SUP data, does not fit.
+
+On a server, put the database paths in a parameters file and the resources in
+a config (see [running on a server](setup/servers.md)):
 
 ```bash
-nextflow run ryanjameskennedy/sinklink -r v0.1.0 -profile thedonkey \
+nextflow run ryanjameskennedy/sinklink -r v0.1.0 -profile apptainer \
+    -c thedonkey.config -params-file thedonkey.yaml \
     --input samplesheet.csv --metadata vask_colonisation_hidden.csv \
     --outdir /media/Lagring/$USER/vask
 ```
@@ -137,6 +165,8 @@ Several generic profiles are bundled with the pipeline which instruct the pipeli
 > [!IMPORTANT]
 > We highly recommend the use of Docker or Singularity containers for full pipeline reproducibility, however when this is not possible, Conda is also supported.
 
+The pipeline also dynamically loads configurations from [https://github.com/nf-core/configs](https://github.com/nf-core/configs) when it runs, making multiple config profiles for various institutional clusters available at run time. For more information and to check if your system is supported, please see the [nf-core/configs documentation](https://github.com/nf-core/configs#documentation).
+
 Note that multiple profiles can be loaded, for example: `-profile test,docker` - the order of arguments is important!
 They are loaded in sequence, so later profiles can overwrite earlier profiles.
 
@@ -176,9 +206,7 @@ Specify the path to a specific config file (this is a core Nextflow command). Se
 
 ### Resource requests
 
-Whilst the default requirements set within the pipeline will hopefully work for most people and with most input data, you may find that you want to customise the compute resources that the pipeline requests. Each step in the pipeline has a default set of requirements for number of CPUs, memory and time. For most of the pipeline steps, if the job exits with any of the error codes specified [here](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/conf/base.config#L18) it will automatically be resubmitted with higher resources request (2 x original, then 3 x original). If it still fails after the third attempt then the pipeline execution is stopped.
-
-To change the resource requests, please see the [max resources](https://nf-co.re/docs/usage/configuration#max-resources) and [tuning workflow resources](https://nf-co.re/docs/usage/configuration#tuning-workflow-resources) section of the nf-core website.
+Each step requests CPUs, memory and time through its nf-core label. A step that runs out of memory or time is retried once with double the memory and time. To change the requests, or cap them at what your machine has, use a `-c` config; [running on a server](setup/servers.md) lists every tool with its label and the thedonkey settings.
 
 ### Custom Containers
 
@@ -189,6 +217,16 @@ To use a different container from the default container or conda environment spe
 ### Custom Tool Arguments
 
 A pipeline might not always support every possible argument or option of a particular tool used in pipeline. Fortunately, nf-core pipelines provide some freedom to users to insert additional parameters that the pipeline does not include by default.
+
+To learn how to provide additional arguments to a particular tool of the pipeline, please see the [customising tool arguments](https://nf-co.re/docs/usage/configuration#customising-tool-arguments) section of the nf-core website.
+
+### nf-core/configs
+
+In most cases, you will only need to create a custom config as a one-off but if you and others within your organisation are likely to be running nf-core pipelines regularly and need to use the same settings regularly it may be a good idea to request that your custom config file is uploaded to the `nf-core/configs` git repository. Before you do this please can you test that the config file works with your pipeline of choice using the `-c` parameter. You can then create a pull request to the `nf-core/configs` repository with the addition of your config file, associated documentation file (see examples in [`nf-core/configs/docs`](https://github.com/nf-core/configs/tree/master/docs)), and amending [`nfcore_custom.config`](https://github.com/nf-core/configs/blob/master/nfcore_custom.config) to include your custom profile.
+
+See the main [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more information about creating your own configuration files.
+
+If you have any questions or issues please send us a message on [Slack](https://nf-co.re/join/slack) on the [`#configs` channel](https://nfcore.slack.com/channels/configs).
 
 ## Running in the background
 

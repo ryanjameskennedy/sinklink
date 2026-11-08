@@ -12,7 +12,9 @@ include { UTILS_NFSCHEMA_PLUGIN     } from '../../nf-core/utils_nfschema_plugin'
 include { paramsSummaryMap          } from 'plugin/nf-schema'
 include { samplesheetToList         } from 'plugin/nf-schema'
 include { paramsHelp                } from 'plugin/nf-schema'
+include { completionEmail           } from '../../nf-core/utils_nfcore_pipeline'
 include { completionSummary         } from '../../nf-core/utils_nfcore_pipeline'
+include { imNotification            } from '../../nf-core/utils_nfcore_pipeline'
 include { UTILS_NFCORE_PIPELINE     } from '../../nf-core/utils_nfcore_pipeline'
 include { UTILS_NEXTFLOW_PIPELINE   } from '../../nf-core/utils_nextflow_pipeline'
 
@@ -52,7 +54,7 @@ workflow PIPELINE_INITIALISATION {
     //
     // Validate parameters and generate parameter summary to stdout
     //
-    command = "nextflow run ${workflow.manifest.name} -profile <docker/singularity/.../institute> --input samplesheet.csv --metadata metadata.csv --schemas_dir <SCHEMAS_DIR> --outdir <OUTDIR>"
+    command = "nextflow run ${workflow.manifest.name} -profile <docker/singularity/.../institute> --input samplesheet.csv --metadata metadata.csv --kraken_db <KRAKEN_DB> --schemas_dir <SCHEMAS_DIR> --outdir <OUTDIR>"
 
     UTILS_NFSCHEMA_PLUGIN (
         workflow,
@@ -105,8 +107,12 @@ workflow PIPELINE_INITIALISATION {
 workflow PIPELINE_COMPLETION {
 
     take:
+    email           //  string: email address
+    email_on_fail   //  string: email address sent on pipeline failure
+    plaintext_email // boolean: Send plain-text email instead of HTML
     outdir          //    path: Path to output directory where results will be published
     monochrome_logs // boolean: Disable ANSI colour codes in log output
+    hook_url        //  string: hook URL for notifications
     multiqc_report  //  string: Path to MultiQC report
 
     main:
@@ -117,8 +123,22 @@ workflow PIPELINE_COMPLETION {
     // Completion email and summary
     //
     workflow.onComplete {
+        if (email || email_on_fail) {
+            completionEmail(
+                summary_params,
+                email,
+                email_on_fail,
+                plaintext_email,
+                outdir,
+                monochrome_logs,
+                multiqc_reports.getVal(),
+            )
+        }
 
         completionSummary(monochrome_logs)
+        if (hook_url) {
+            imNotification(summary_params, hook_url)
+        }
     }
 
     workflow.onError {
@@ -152,6 +172,26 @@ def assetPath(value, name) {
 }
 
 //
+// The reference genome files for each sample whose schema has one: [ meta, [ fasta, fai, gff ] ]
+//
+def referenceChannel(ch_samples, references_dir) {
+    return ch_samples
+        .map { meta, _reads -> meta }
+        .filter { meta -> meta.reference }
+        .map { meta ->
+            def prefix = "${references_dir}/${meta.reference}"
+            [ meta, [ file("${prefix}.fasta"), file("${prefix}.fasta.fai"), file("${prefix}.gff") ] ]
+        }
+        .filter { meta, files ->
+            def missing = files.findAll { f -> !f.exists() }
+            if (missing) {
+                log.warn("Reference genome files ${missing*.name.join(', ')} for ${meta.id} are not in ${references_dir} (run make references); its reference-based steps are skipped")
+            }
+            !missing
+        }
+}
+
+//
 // Read a TSV file with a header into a list of maps
 //
 def readTsv(path) {
@@ -159,19 +199,20 @@ def readTsv(path) {
 }
 
 //
-// Read the study metadata (translation_id, transmission, growth, ...) keyed by translation_id
+// Read the study metadata (sample, transmission, growth, ...) keyed by sample
 //
 def readMetadata(path) {
     def rows = file(path, checkIfExists: true).splitCsv(header: true)
-    def missing = [ 'translation_id', 'transmission', 'growth' ].findAll { column -> !rows || !rows[0].containsKey(column) }
+    def missing = [ 'sample', 'transmission', 'growth' ].findAll { column -> !rows || !rows[0].containsKey(column) }
     if (missing) {
         error("Please check the metadata file -> missing column(s): ${missing.join(', ')}")
     }
-    return rows.collectEntries { row -> [ row.translation_id, row ] }
+    return rows.collectEntries { row -> [ row.sample, row ] }
 }
 
 //
-// Add the transmission group, growth label, schema and expected genome size to a sample's meta map
+// Add the transmission group, growth label, schema, expected genome size and reference genome
+// accession to a sample's meta map
 //
 def annotateSample(meta, metadata, species_map, schema_table) {
     def row = metadata[meta.id]
@@ -193,7 +234,8 @@ def annotateSample(meta, metadata, species_map, schema_table) {
         transmission: row?.transmission ?: '',
         growth      : growth,
         schema      : schema,
-        genome_size : genome_size
+        genome_size : genome_size,
+        reference   : schema ? (schema_table[schema].reference ?: '') : ''
     ]
 }
 
@@ -203,11 +245,12 @@ def annotateSample(meta, metadata, species_map, schema_table) {
 def toolCitationText() {
     def citation_text = [
             "Tools used in the workflow included:",
+            params.skip_host_removal ? "" : "Deacon (Constantinides et al. 2025),",
             params.trim ? "Trimmomatic (Bolger et al. 2014)," : "",
             params.filtlong ? "Filtlong (Wick 2017)," : "",
             "FastQC (Andrews 2010),",
             "NanoPlot (De Coster et al. 2018),",
-            params.assembler == 'spades' ? "SPAdes (Prjibelski et al. 2020)," : "SKESA (Souvorov et al. 2018),",
+            "SKESA (Souvorov et al. 2018),",
             "Flye (Kolmogorov et al. 2019),",
             "Medaka (Oxford Nanopore Technologies),",
             "QUAST (Gurevich et al. 2013),",
@@ -216,7 +259,9 @@ def toolCitationText() {
             "minimap2 (Li 2018),",
             "SAMtools (Danecek et al. 2021),",
             "mlst (Seemann),",
-            params.kraken_db ? "Kraken2 (Wood et al. 2019), Bracken (Lu et al. 2017)," : "",
+            "Kraken2 (Wood et al. 2019), Bracken (Lu et al. 2017),",
+            params.references_dir ? "Mash (Ondov et al. 2016)," : "",
+            params.skip_variant_calling ? "" : "Snippy (Seemann 2015) with FreeBayes (Garrison and Marth 2012), Clair3 (Zheng et al. 2022),",
             params.skip_chewbbaca ? "" : "chewBBACA (Silva et al. 2018),",
             "MultiQC (Ewels et al. 2016)",
             "."
@@ -227,17 +272,22 @@ def toolCitationText() {
 
 def toolBibliographyText() {
     def reference_text = [
+            params.skip_host_removal ? "" : "<li>Constantinides B, Lees J, Crook DW. (2025) Deacon: fast sequence filtering and contaminant depletion. bioRxiv. doi: 10.1101/2025.06.09.658732</li>",
             params.trim ? "<li>Bolger AM, Lohse M, Usadel B. (2014) Trimmomatic: a flexible trimmer for Illumina sequence data. Bioinformatics 30(15):2114-2120. doi: 10.1093/bioinformatics/btu170</li>" : "",
             params.filtlong ? "<li>Wick R. (2017) Filtlong, URL: https://github.com/rrwick/Filtlong</li>" : "",
             "<li>Andrews S, (2010) FastQC, URL: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/).</li>",
             "<li>De Coster W, et al. (2018) NanoPack: visualizing and processing long-read sequencing data. Bioinformatics 34(15):2666-2669. doi: 10.1093/bioinformatics/bty149</li>",
-            params.assembler == 'spades' ? "<li>Prjibelski A, et al. (2020) Using SPAdes de novo assembler. Curr Protoc Bioinformatics 70(1):e102. doi: 10.1002/cpbi.102</li>" : "<li>Souvorov A, Agarwala R, Lipman DJ. (2018) SKESA: strategic k-mer extension for scrupulous assemblies. Genome Biol 19:153. doi: 10.1186/s13059-018-1540-z</li>",
+            "<li>Souvorov A, Agarwala R, Lipman DJ. (2018) SKESA: strategic k-mer extension for scrupulous assemblies. Genome Biol 19:153. doi: 10.1186/s13059-018-1540-z</li>",
             "<li>Kolmogorov M, et al. (2019) Assembly of long, error-prone reads using repeat graphs. Nat Biotechnol 37:540-546. doi: 10.1038/s41587-019-0072-8</li>",
             "<li>Gurevich A, et al. (2013) QUAST: quality assessment tool for genome assemblies. Bioinformatics 29(8):1072-1075. doi: 10.1093/bioinformatics/btt086</li>",
             "<li>Li H. (2018) Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics 34(18):3094-3100. doi: 10.1093/bioinformatics/bty191</li>",
             "<li>Danecek P, et al. (2021) Twelve years of SAMtools and BCFtools. GigaScience 10(2):giab008. doi: 10.1093/gigascience/giab008</li>",
-            params.kraken_db ? "<li>Wood DE, Lu J, Langmead B. (2019) Improved metagenomic analysis with Kraken 2. Genome Biol 20:257. doi: 10.1186/s13059-019-1891-0</li>" : "",
-            params.kraken_db ? "<li>Lu J, et al. (2017) Bracken: estimating species abundance in metagenomics data. PeerJ Comput Sci 3:e104. doi: 10.7717/peerj-cs.104</li>" : "",
+            "<li>Wood DE, Lu J, Langmead B. (2019) Improved metagenomic analysis with Kraken 2. Genome Biol 20:257. doi: 10.1186/s13059-019-1891-0</li>",
+            "<li>Lu J, et al. (2017) Bracken: estimating species abundance in metagenomics data. PeerJ Comput Sci 3:e104. doi: 10.7717/peerj-cs.104</li>",
+            params.references_dir ? "<li>Ondov BD, et al. (2016) Mash: fast genome and metagenome distance estimation using MinHash. Genome Biol 17:132. doi: 10.1186/s13059-016-0997-x</li>" : "",
+            params.skip_variant_calling ? "" : "<li>Seemann T. (2015) Snippy: fast bacterial variant calling from NGS reads, URL: https://github.com/tseemann/snippy</li>",
+            params.skip_variant_calling ? "" : "<li>Garrison E, Marth G. (2012) Haplotype-based variant detection from short-read sequencing. arXiv:1207.3907</li>",
+            params.skip_variant_calling ? "" : "<li>Zheng Z, et al. (2022) Symphonizing pileup and full-alignment for deep learning-based long-read variant calling. Nat Comput Sci 2:797-803. doi: 10.1038/s43588-022-00387-x</li>",
             params.skip_chewbbaca ? "" : "<li>Silva M, et al. (2018) chewBBACA: A complete suite for gene-by-gene schema creation and strain identification. Microb Genom 4(3):e000166. doi: 10.1099/mgen.0.000166</li>",
             "<li>Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics , 32(19), 3047–3048. doi: /10.1093/bioinformatics/btw354</li>"
         ].join(' ').trim()

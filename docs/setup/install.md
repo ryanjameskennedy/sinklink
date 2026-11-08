@@ -26,8 +26,15 @@ make print_paths
 
 The pipeline pulls its own containers (the versions pinned by each nf-core
 module, see [software](../reference/software.md)). The Makefiles only set up
-what the pipeline reads: the chewBBACA schemas, the GAMBIT database and the
-two containers needed to prepare the schemas.
+what the pipeline reads: the chewBBACA schemas, the reference genomes, the
+Deacon human index, the GAMBIT database and the four containers needed to
+prepare them (chewBBACA, Prodigal, jasentool and SAMtools).
+
+The containers are saved under the names Nextflow uses in its Apptainer cache,
+and the chewBBACA and SAMtools images are the ones the pipeline runs. Use the
+same folder for `CONTAINERS_DIR` as `apptainer.cacheDir` in your server config
+(on thedonkey, `/mnt/cache/singularity`) and the pipeline reuses those two
+instead of downloading them again; it pulls the rest itself on its first run.
 
 ```bash
 make install ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
@@ -38,12 +45,14 @@ or step by step:
 ```bash
 make -C containers all CONTAINERS_DIR=/mnt/cache/singularity
 make databases ASSETS_DIR=/mnt/cache/dbs/vask
+make references ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
 make schemas ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
 make check ASSETS_DIR=/mnt/cache/dbs/vask
 ```
 
 - [Schemas](schemas.md): what `make schemas` does and what to do when a
   download fails.
-- [Databases](databases.md): GAMBIT and Kraken2/Bracken.
+- [Databases](databases.md): reference genomes, Deacon, GAMBIT, and how to
+  download the Kraken2/Bracken database, which `make install` leaves out.
 
 Then [run the pipeline](../usage.md).

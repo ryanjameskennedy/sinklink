@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
 name: "assembly_qc"
-description: "Assembly statistics, completeness, read depth over the own assembly and 7-gene MLST"
+description: "Assembly statistics and Mash distance against the reference genome (when there is one), completeness, read depth over the own assembly and 7-gene MLST"
 keywords:
   - bacteria
   - transmission
@@ -14,6 +14,7 @@ components:
   - samtools/index
   - samtools/coverage
   - mlst
+  - mash/dist
 input:
   - ch_assembly:
       type: channel
@@ -21,6 +22,9 @@ input:
   - ch_reads:
       type: channel
       description: "[ val(meta), [ fastq ] ]"
+  - ch_reference:
+      type: channel
+      description: "Reference genome per sample: [ val(meta), [ fasta, fai, gff ] ]"
   - gambit_db:
       type: file
       description: "GAMBIT database folder, or [] to skip gambitcore"
@@ -37,6 +41,9 @@ output:
   - mlst:
       type: channel
       description: "[ val(meta), path(tsv) ]"
+  - mash:
+      type: channel
+      description: "Mash distance from the assembly to the reference genome: [ val(meta), path(txt) ]"
   - multiqc_files:
       type: channel
       description: "QUAST reports for MultiQC"

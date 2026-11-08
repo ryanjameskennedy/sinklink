@@ -2,7 +2,7 @@ process CHECK_DISTANCES {
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/python:3.9--1' :
         'biocontainers/python:3.9--1' }"
 
@@ -10,6 +10,7 @@ process CHECK_DISTANCES {
     path metadata
     path qc_summary
     path alleles, stageAs: "alleles/*"
+    path pseudogenomes, stageAs: "pseudogenomes/*"
     path schema_table
     path species_map
 
@@ -27,7 +28,8 @@ process CHECK_DISTANCES {
     """
     check_distances.py \\
         --samplesheet ${metadata} \\
-        --alleles alleles/* \\
+        ${alleles ? '--alleles alleles/*' : ''} \\
+        ${pseudogenomes ? '--pseudogenomes pseudogenomes/*' : ''} \\
         --species-map ${species_map} \\
         --schemas ${schema_table} \\
         --qc-summary ${qc_summary} \\

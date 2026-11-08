@@ -1,11 +1,12 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
 name: "read_preparation"
-description: "Optional read filtering and read QC per platform"
+description: "Human read removal, optional read filtering and read QC per platform"
 keywords:
   - bacteria
   - transmission
   - genomics
 components:
+  - deacon/filter
   - trimmomatic
   - filtlong
   - fastqc
@@ -14,10 +15,13 @@ input:
   - ch_reads:
       type: channel
       description: "Reads per sample: [ val(meta), [ fastq ] ], with meta.platform set to illumina or nanopore"
+  - deacon_index:
+      type: file
+      description: "Deacon index of the human genome, or [] to keep human reads"
 output:
   - reads:
       type: channel
-      description: "Filtered (or original) reads: [ val(meta), [ fastq ] ]"
+      description: "Reads without human reads, filtered if requested: [ val(meta), [ fastq ] ]"
   - multiqc_files:
       type: channel
       description: "FastQC zips, Trimmomatic logs and NanoPlot stats for MultiQC"

@@ -23,6 +23,18 @@
                     "chewbbaca/allelecall": {
                         "branch": "master",
                         "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/chewbbaca/allelecall/chewbbaca-allelecall.diff"
+                    },
+                    "clair3": {
+                        "branch": "master",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/clair3/clair3.diff"
+                    },
+                    "deacon/filter": {
+                        "branch": "master",
+                        "git_sha": "719abfd0ec41bcc7e2f540b4fd5c8150fdfe228e",
                         "installed_by": ["modules"]
                     },
                     "fastqc": {
@@ -50,6 +62,11 @@
                         "git_sha": "d67d33d5925fcec4691b499670fa2bd926fd2be5",
                         "installed_by": ["modules"]
                     },
+                    "mash/dist": {
+                        "branch": "master",
+                        "git_sha": "da0102c4a5acf25c96d3cdaac35f1ea2bfabbdd9",
+                        "installed_by": ["modules"]
+                    },
                     "medaka": {
                         "branch": "master",
                         "git_sha": "c565f1b27c06a1e8b726e2a646d4c822ae3b514a",
@@ -58,7 +75,8 @@
                     "minimap2/align": {
                         "branch": "master",
                         "git_sha": "135d883a43b1a2324b4112cd270cf22e20835533",
-                        "installed_by": ["modules"]
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/minimap2/align/minimap2-align.diff"
                     },
                     "mlst": {
                         "branch": "master",
@@ -73,7 +91,8 @@
                     "nanoplot": {
                         "branch": "master",
                         "git_sha": "cc4d441624bd2a0db697502bdde9005a5a5f0b36",
-                        "installed_by": ["modules"]
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/nanoplot/nanoplot.diff"
                     },
                     "quast": {
                         "branch": "master",
@@ -81,6 +100,11 @@
                         "installed_by": ["modules"]
                     },
                     "samtools/coverage": {
+                        "branch": "master",
+                        "git_sha": "9339809fcb90af8a8b7051e6cd914894d5c52002",
+                        "installed_by": ["modules"]
+                    },
+                    "samtools/depth": {
                         "branch": "master",
                         "git_sha": "9339809fcb90af8a8b7051e6cd914894d5c52002",
                         "installed_by": ["modules"]
@@ -93,12 +117,14 @@
                     "skesa": {
                         "branch": "master",
                         "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
-                        "installed_by": ["modules"]
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/skesa/skesa.diff"
                     },
-                    "spades": {
+                    "snippy/run": {
                         "branch": "master",
-                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
-                        "installed_by": ["modules"]
+                        "git_sha": "2a0a771d78bb58205c784dea56f2e4db251a63ec",
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/snippy/run/snippy-run.diff"
                     },
                     "trimmomatic": {
                         "branch": "master",

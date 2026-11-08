@@ -1,0 +1,18 @@
+Changes in component 'nf-core/skesa'
+'modules/nf-core/skesa/environment.yml' is unchanged
+'modules/nf-core/skesa/meta.yml' is unchanged
+Changes in 'skesa/main.nf':
+--- modules/nf-core/skesa/main.nf
++++ modules/nf-core/skesa/main.nf
+@@ -1,6 +1,6 @@
+ process SKESA {
+     tag "$meta.id"
+-    label 'process_single'
++    label 'process_high'
+ 
+     conda "${moduleDir}/environment.yml"
+     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+
+'modules/nf-core/skesa/tests/main.nf.test.snap' is unchanged
+'modules/nf-core/skesa/tests/main.nf.test' is unchanged
+************************************************************

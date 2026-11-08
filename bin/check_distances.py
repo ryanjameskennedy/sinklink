@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Compare chewBBACA allele profiles within each transmission group.
+"""Compare isolates within each transmission group.
 
 For every pair of isolates in a group, counts allele differences over the loci
 called in both isolates and compares the count with the species threshold in
-assets/schemas.tsv. Read and assembly QC from qc_summary.tsv (summarise_qc.py)
+assets/schemas.tsv. When both isolates have a pseudogenome against the same
+reference genome (make_pseudogenome.py), also counts SNP differences over the
+positions called in both; there is no SNP threshold, so these are for
+information only. Read and assembly QC from qc_summary.tsv (summarise_qc.py)
 is carried into each pair. Writes allele_qc.tsv, pairwise_distances.tsv and
 group_summary.tsv.
 """
@@ -22,12 +25,10 @@ def read_tsv(path):
 
 
 def parse_date(value):
-    for fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%d"):
-        try:
-            return datetime.strptime(value.strip(), fmt)
-        except ValueError:
-            pass
-    return None
+    try:
+        return datetime.fromisoformat(value.strip())
+    except ValueError:
+        return None
 
 
 def normalise_call(value):
@@ -69,6 +70,38 @@ def load_profiles(path):
     return len(loci), profiles
 
 
+def load_pseudogenomes(paths):
+    genomes = {}
+    for path in paths:
+        name, chunks = None, []
+        with open(path) as handle:
+            for line in handle:
+                line = line.strip()
+                if line.startswith(">"):
+                    name = line[1:].split()[0]
+                elif line:
+                    chunks.append(line)
+        if name:
+            genomes[name] = "".join(chunks).upper().encode("ascii")
+    return genomes
+
+
+CALLED = frozenset(b"ACGT")
+
+
+def snp_distance(a, b):
+    """Return (positions called in both, differences), or None if the lengths differ."""
+    if len(a) != len(b):
+        return None
+    compared = diffs = 0
+    for x, y in zip(a, b):
+        if x in CALLED and y in CALLED:
+            compared += 1
+            if x != y:
+                diffs += 1
+    return compared, diffs
+
+
 def compare(a, b):
     shared = a.keys() & b.keys()
     return len(shared), sum(1 for locus in shared if a[locus] != b[locus])
@@ -103,6 +136,8 @@ def main():
                         help="chewBBACA allele tables named <schema>_results_alleles.tsv")
     parser.add_argument("--outdir", default=".", help="where to write the tables")
     parser.add_argument("--qc-summary", help="qc_summary.tsv from summarise_qc.py")
+    parser.add_argument("--pseudogenomes", nargs="*", default=[],
+                        help="pseudogenomes from make_pseudogenome.py, one isolate each")
     parser.add_argument("--species-map", required=True)
     parser.add_argument("--schemas", required=True)
     args = parser.parse_args()
@@ -116,8 +151,9 @@ def main():
         allele_files[schema] = path
     assembly_qc = {}
     if args.qc_summary and Path(args.qc_summary).is_file():
-        assembly_qc = {r["translation_id"]: r for r in read_tsv(args.qc_summary)}
+        assembly_qc = {r["sample"]: r for r in read_tsv(args.qc_summary)}
     species_map = {r["growth"]: r for r in read_tsv(args.species_map)}
+    pseudogenomes = load_pseudogenomes(args.pseudogenomes)
     schemas = {r["schema"]: r for r in read_tsv(args.schemas)}
     with open(args.samplesheet, newline="", encoding="utf-8-sig") as handle:
         samples = list(csv.DictReader(handle))
@@ -128,7 +164,7 @@ def main():
 
     qc_rows, sample_info = [], {}
     for sample in samples:
-        sid = sample["translation_id"]
+        sid = sample["sample"]
         mapping = species_map.get(sample["growth"])
         schema = mapping["schema"] if mapping else ""
         profile = profiles.get(schema, {}).get(sid)
@@ -155,7 +191,8 @@ def main():
             "st": aqc.get("st", ""),
         }
         qc_rows.append({
-            "translation_id": sid,
+            "sample": sid,
+            "lims_id": sample.get("lims_id", ""),
             "transmission": sample["transmission"],
             "growth": sample["growth"],
             "schema": schema,
@@ -169,7 +206,7 @@ def main():
 
     groups = {}
     for sample in samples:
-        groups.setdefault(sample["transmission"], []).append(sample["translation_id"])
+        groups.setdefault(sample["transmission"], []).append(sample["sample"])
 
     pair_rows = []
     for group, ids in groups.items():
@@ -179,8 +216,10 @@ def main():
                 "transmission": group,
                 "sample_a": id_a,
                 "sample_b": id_b,
-                "type_a": a.get("sample", ""),
-                "type_b": b.get("sample", ""),
+                "lims_a": a.get("lims_id", ""),
+                "lims_b": b.get("lims_id", ""),
+                "type_a": a.get("sample_type", ""),
+                "type_b": b.get("sample_type", ""),
                 "patient_a": a.get("studypatientnumber", ""),
                 "patient_b": b.get("studypatientnumber", ""),
                 "days_apart": "",
@@ -189,6 +228,8 @@ def main():
                 "allele_diffs": "",
                 "threshold": "",
                 "verdict": "",
+                "snp_sites_compared": "",
+                "snp_distance": "",
                 "qc": "",
                 "notes": "",
             }
@@ -200,8 +241,8 @@ def main():
                      if s["growth"] in species_map and species_map[s["growth"]]["note"]}
             if a["schema"] == "smaltophilia":
                 notes.add("wgMLST distance over loci shared by both; Groschel used 1275 core loci")
-            failed = [f"{s['translation_id']}:{s['qc']}" for s in (a, b) if s["qc"] != "pass"]
-            failed += [f"{s['translation_id']}:assembly {s['assembly_qc']} ({s['assembly_flags']})"
+            failed = [f"{s['sample']}:{s['qc']}" for s in (a, b) if s["qc"] != "pass"]
+            failed += [f"{s['sample']}:assembly {s['assembly_qc']} ({s['assembly_flags']})"
                        for s in (a, b) if s["assembly_qc"] in ("fail", "warn")]
             if a["platform"] and b["platform"] and a["platform"] != b["platform"]:
                 notes.add(f"mixed platforms ({a['platform']}/{b['platform']}); "
@@ -231,6 +272,10 @@ def main():
                 row["allele_diffs"] = diffs
                 row["threshold"] = threshold if borderline is None else f"{threshold}-{borderline}"
                 row["verdict"] = verdict(diffs, threshold, borderline)
+            if id_a in pseudogenomes and id_b in pseudogenomes and a["schema"] == b["schema"]:
+                snps = snp_distance(pseudogenomes[id_a], pseudogenomes[id_b])
+                if snps is not None:
+                    row["snp_sites_compared"], row["snp_distance"] = snps
             if failed:
                 notes.add("QC: " + ", ".join(failed))
             row["notes"] = "; ".join(sorted(notes))
@@ -241,6 +286,7 @@ def main():
         rows = [r for r in pair_rows if r["transmission"] == group]
         verdicts = [r["verdict"] for r in rows]
         diffs = [r["allele_diffs"] for r in rows if r["allele_diffs"] != ""]
+        snps = [r["snp_distance"] for r in rows if r["snp_distance"] != ""]
         if not rows:
             overall = "single_isolate"
         elif any(v in ("missing_profile", "different_schema") for v in verdicts):
@@ -258,6 +304,8 @@ def main():
             "pairs": len(rows),
             "min_diffs": min(diffs) if diffs else "",
             "max_diffs": max(diffs) if diffs else "",
+            "min_snps": min(snps) if snps else "",
+            "max_snps": max(snps) if snps else "",
             "pairs_within": verdicts.count("within_threshold"),
             "pairs_borderline": verdicts.count("borderline"),
             "overall": overall,
@@ -275,12 +323,13 @@ def main():
 
     if pair_rows:
         print_table(pair_rows, ["transmission", "sample_a", "sample_b", "days_apart", "schema",
-                                "shared_loci", "allele_diffs", "threshold", "verdict", "qc"])
+                                "shared_loci", "allele_diffs", "threshold", "verdict",
+                                "snp_distance", "qc"])
         print()
     print_table(summary_rows, summary_fields)
     print(f"\nWritten to {out_dir}: allele_qc.tsv, pairwise_distances.tsv, group_summary.tsv")
 
-    low = [r["translation_id"] for r in qc_rows if r["qc"] != "pass"]
+    low = [r["sample"] for r in qc_rows if r["qc"] != "pass"]
     if low:
         print(f"Isolates failing QC or missing profiles: {', '.join(low)}", file=sys.stderr)
 

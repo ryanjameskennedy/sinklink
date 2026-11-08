@@ -7,9 +7,9 @@ transmission group.
 
 | Verdict | Meaning |
 |---|---|
-| `within_threshold` | At or below the species threshold: same strain |
+| `within_threshold` | At or below the species threshold ([cut-offs](../species/index.md)): same strain, consistent with the same colonisation |
 | `borderline` | Between the strict and sensitive thresholds (*K. oxytoca* only) |
-| `above_threshold` | Above the threshold: not the same strain |
+| `above_threshold` | Above the threshold: different strains, not the same colonisation |
 | `missing_profile` | One or both isolates have no allele profile |
 | `different_schema` | The two isolates were typed with different schemas |
 
@@ -21,6 +21,23 @@ allele with the same number.
 
 The `notes` column lists QC flags of either isolate, different 7-gene STs and
 pairs sequenced on different platforms.
+
+## SNP distances
+
+When both isolates were variant called against the same reference genome,
+`snp_distance` counts the reference positions where both pseudogenomes have a
+base (read depth at least `--snp_min_depth` in both) and the bases differ;
+`snp_sites_compared` is how many positions that was. Indels and positions
+missing in either isolate are not counted.
+
+SNP distances have no threshold and do not change the verdict. Use them to
+check a pair near the allele threshold, or a `borderline` _K. oxytoca_ pair:
+a pair within the allele threshold but many SNPs apart deserves a closer look,
+and so does one with few SNPs but many allele differences. Compare
+`snp_sites_compared` with the reference length: if a large part of the
+reference was not compared, the isolates sit far from it (see
+`reference_distance` in the QC summary) and the SNP distance covers only their
+shared core.
 
 ## Group summaries
 
@@ -41,6 +58,6 @@ pairs sequenced on different platforms.
 
 For groups spanning months (in VASK, Transmission_3 and Transmission_4), expect
 more differences than in a short outbreak even from a single persisting
-source. Check borderline pairs with SNPs (e.g. SKA2 or Snippy).
+source. Check borderline pairs against their SNP distance.
 
 See also the [caveats](caveats.md).

@@ -11,11 +11,13 @@ include { ASSEMBLY               } from '../subworkflows/local/assembly'
 include { ASSEMBLY_QC            } from '../subworkflows/local/assembly_qc'
 include { SPECIES_CHECK          } from '../subworkflows/local/species_check'
 include { ALLELE_CALLING         } from '../subworkflows/local/allele_calling'
+include { VARIANT_CALLING        } from '../subworkflows/local/variant_calling'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_sinklink_pipeline'
 include { assetPath              } from '../subworkflows/local/utils_nfcore_sinklink_pipeline'
+include { referenceChannel       } from '../subworkflows/local/utils_nfcore_sinklink_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -38,10 +40,22 @@ workflow SINKLINK {
     ch_metadata     = file(params.metadata, checkIfExists: true)
     ch_gambit_db    = params.gambit_db ? file(params.gambit_db, checkIfExists: true) : []
 
+    if (!params.skip_host_removal && !params.deacon_index) {
+        error("--deacon_index is required for human read removal; set it or use --skip_host_removal")
+    }
+    ch_deacon_index = params.skip_host_removal ? [] : file(params.deacon_index, checkIfExists: true)
+
+    if (!params.skip_variant_calling && !params.references_dir) {
+        error("--references_dir is required for variant calling; set it or use --skip_variant_calling")
+    }
+    ch_reference = params.references_dir ?
+        referenceChannel(ch_samplesheet, params.references_dir) :
+        channel.empty()
+
     //
-    // SUBWORKFLOW: Optional read filtering and read QC
+    // SUBWORKFLOW: Human read removal, optional read filtering and read QC
     //
-    READ_PREPARATION ( ch_samplesheet )
+    READ_PREPARATION ( ch_samplesheet, ch_deacon_index )
     ch_reads         = READ_PREPARATION.out.reads
     ch_versions      = ch_versions.mix(READ_PREPARATION.out.versions)
     ch_multiqc_files = ch_multiqc_files.mix(READ_PREPARATION.out.multiqc_files)
@@ -55,21 +69,24 @@ workflow SINKLINK {
     //
     // SUBWORKFLOW: Assembly QC, read depth and 7-gene MLST
     //
-    ASSEMBLY_QC ( ch_assembly, ch_reads, ch_gambit_db )
+    ASSEMBLY_QC ( ch_assembly, ch_reads, ch_reference, ch_gambit_db )
     ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.multiqc_files)
 
     //
     // SUBWORKFLOW: Read-based species check
     //
-    ch_kraken_report = channel.empty()
-    ch_bracken       = channel.empty()
-    if (params.kraken_db) {
-        SPECIES_CHECK ( ch_reads, file(params.kraken_db, checkIfExists: true) )
-        ch_kraken_report = SPECIES_CHECK.out.kraken_report
-        ch_bracken       = SPECIES_CHECK.out.bracken
-        ch_multiqc_files = ch_multiqc_files.mix(SPECIES_CHECK.out.multiqc_files)
-    } else {
-        log.warn("No --kraken_db given; the read-based species check is skipped")
+    SPECIES_CHECK ( ch_reads, file(params.kraken_db, checkIfExists: true) )
+    ch_kraken_report = SPECIES_CHECK.out.kraken_report
+    ch_bracken       = SPECIES_CHECK.out.bracken
+    ch_multiqc_files = ch_multiqc_files.mix(SPECIES_CHECK.out.multiqc_files)
+
+    //
+    // SUBWORKFLOW: Variant calling against the schema's reference genome
+    //
+    ch_pseudogenomes = channel.empty()
+    if (!params.skip_variant_calling) {
+        VARIANT_CALLING ( ch_reads, ch_reference, params.clair3_model )
+        ch_pseudogenomes = VARIANT_CALLING.out.pseudogenome.map { _meta, fasta -> fasta }
     }
 
     //
@@ -84,6 +101,7 @@ workflow SINKLINK {
         .join(ch_bracken, remainder: true)
         .join(ch_kraken_report, remainder: true)
         .join(ASSEMBLY_QC.out.mlst, remainder: true)
+        .join(ASSEMBLY_QC.out.mash, remainder: true)
         .map { row -> row.collect { item -> item == null ? [] : item } }
         .set { ch_qc_input }
 
@@ -101,22 +119,28 @@ workflow SINKLINK {
         .set { ch_qc_summary }
 
     //
-    // SUBWORKFLOW: chewBBACA allele calling, then distances within transmission groups
+    // SUBWORKFLOW: chewBBACA allele calling
     //
+    ch_alleles = channel.empty()
     if (!params.skip_chewbbaca) {
         if (!params.schemas_dir) {
             error("--schemas_dir is required for allele calling; set it or use --skip_chewbbaca")
         }
         ALLELE_CALLING ( ch_assembly, params.schemas_dir )
-
-        CHECK_DISTANCES (
-            ch_metadata,
-            ch_qc_summary,
-            ALLELE_CALLING.out.alleles.map { _meta, tsv -> tsv }.collect().ifEmpty([]),
-            ch_schema_table,
-            ch_species_map
-        )
+        ch_alleles = ALLELE_CALLING.out.alleles.map { _meta, tsv -> tsv }
     }
+
+    //
+    // MODULE: Allele and SNP distances within transmission groups
+    //
+    CHECK_DISTANCES (
+        ch_metadata,
+        ch_qc_summary,
+        ch_alleles.collect().ifEmpty([]),
+        ch_pseudogenomes.collect().ifEmpty([]),
+        ch_schema_table,
+        ch_species_map
+    )
 
     //
     // Collate and save software versions

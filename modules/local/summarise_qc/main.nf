@@ -3,12 +3,12 @@ process SUMMARISE_QC {
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/python:3.9--1' :
         'biocontainers/python:3.9--1' }"
 
     input:
-    tuple val(meta), path(assembly), path(quast), path(coverage), path(gambitcore), path(bracken), path(kraken_report), path(mlst)
+    tuple val(meta), path(assembly), path(quast), path(coverage), path(gambitcore), path(bracken), path(kraken_report), path(mlst), path(mash)
     path schema_table
     path thresholds
 
@@ -29,6 +29,7 @@ process SUMMARISE_QC {
         --schema '${meta.schema ?: ''}' \\
         --growth '${meta.growth ?: ''}' \\
         --transmission '${meta.transmission ?: ''}' \\
+        --reference '${meta.reference ?: ''}' \\
         --schemas ${schema_table} \\
         --thresholds ${thresholds} \\
         ${assembly ? "--assembly ${assembly}" : ''} \\
@@ -38,6 +39,7 @@ process SUMMARISE_QC {
         ${bracken ? "--bracken ${bracken}" : ''} \\
         ${kraken_report ? "--kraken-report ${kraken_report}" : ''} \\
         ${mlst ? "--mlst ${mlst}" : ''} \\
+        ${mash ? "--mash ${mash}" : ''} \\
         ${args} \\
         --output ${prefix}.qc.tsv
     """
@@ -45,6 +47,6 @@ process SUMMARISE_QC {
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    printf 'translation_id\\tqc_status\\n${meta.id}\\tpass\\n' > ${prefix}.qc.tsv
+    printf 'sample\\tqc_status\\n${meta.id}\\tpass\\n' > ${prefix}.qc.tsv
     """
 }

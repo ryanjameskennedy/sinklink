@@ -1,4 +1,4 @@
 sample,platform,fastq_1,fastq_2
-S01,illumina,assets/test/reads/S01_R1.fastq.gz,assets/test/reads/S01_R2.fastq.gz
-S02,illumina,assets/test/reads/S02_R1.fastq.gz,assets/test/reads/S02_R2.fastq.gz
-S03,nanopore,assets/test/reads/S03.fastq.gz,
+S01,illumina,https://raw.githubusercontent.com/ryanjameskennedy/sinklink/master/assets/test/reads/S01_R1.fastq.gz,https://raw.githubusercontent.com/ryanjameskennedy/sinklink/master/assets/test/reads/S01_R2.fastq.gz
+S02,illumina,https://raw.githubusercontent.com/ryanjameskennedy/sinklink/master/assets/test/reads/S02_R1.fastq.gz,https://raw.githubusercontent.com/ryanjameskennedy/sinklink/master/assets/test/reads/S02_R2.fastq.gz
+S03,nanopore,https://raw.githubusercontent.com/ryanjameskennedy/sinklink/master/assets/test/reads/S03.fastq.gz,

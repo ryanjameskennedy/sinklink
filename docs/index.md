@@ -1,13 +1,17 @@
 # sinklink
 
-*Did the sink infect the patient?*
+_Did the sink infect the patient?_
 
 sinklink tests whether bacteria isolated from a hospital sink (or another
 environmental site) and from a patient belong to the same strain. Starting from
-Illumina or Nanopore reads it QCs and assembles every isolate, confirms the
-species, calls cgMLST/wgMLST alleles with chewBBACA and compares every pair of
+Illumina or Nanopore reads it removes human reads, QCs and assembles every
+isolate, confirms the species, calls variants against the species' reference
+genome, calls cgMLST/wgMLST alleles with chewBBACA and compares every pair of
 isolates within each suspected transmission group against a published,
-species-specific allele-difference threshold.
+species-specific allele-difference threshold, with their SNP distance
+alongside.
+
+![sinklink metro map](images/metro_map.svg)
 
 It is a Nextflow pipeline built on the [nf-core](https://nf-co.re) template
 and nf-core modules, with tool choices and the asset Makefiles modelled on
@@ -21,8 +25,8 @@ server without a job scheduler.
 - **Which threshold applies to my species, and where does it come from?** See
   [species and thresholds](species/index.md).
 - **Running it for the first time?** Follow [installation](setup/install.md),
-  then [running sinklink](usage.md). On thedonkey, see the
-  [thedonkey profile](setup/thedonkey.md).
+  then [running sinklink](usage.md). On a server, see
+  [running on a server](setup/servers.md).
 - **Reading the results?** See [output](output.md) and
   [interpreting the results](results/interpreting.md).
 
@@ -52,7 +56,7 @@ species/index
 setup/install
 setup/schemas
 setup/databases
-setup/thedonkey
+setup/servers
 ```
 
 ```{toctree}

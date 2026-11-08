@@ -1,17 +1,18 @@
-# *Stenotrophomonas maltophilia* complex
+# _Stenotrophomonas maltophilia_ complex
 
-| | |
-|---|---|
-| Schema | `smaltophilia` |
-| Scheme | Gröschel et al. 2020 wgMLST ([figshare 10005047](https://figshare.com/articles/dataset/Smaltophilia_wgMLST_all-alleles_fasta_gz/10005047)) |
-| Loci | 17,603 (about 4,174 per genome) |
-| Seed genome | NC_010943.1 (K279a, used to train Prodigal) |
-| Threshold | ≤10 alleles (d10) |
-| Lab labels | `stenotrophomonas_maltophilia` |
+|                  |                                                                                                                                            |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Schema           | `smaltophilia`                                                                                                                             |
+| Scheme           | Gröschel et al. 2020 wgMLST ([figshare 10005047](https://figshare.com/articles/dataset/Smaltophilia_wgMLST_all-alleles_fasta_gz/10005047)) |
+| Loci             | 17,603 (about 4,174 per genome)                                                                                                            |
+| Seed genome      | NC_010943.1 (K279a, used to train Prodigal)                                                                                                |
+| Reference genome | [GCF_020641395.2](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_020641395.2/) (ACYCa.6E) (used for QUAST, Mash and variant calling)     |
+| Threshold        | ≤10 alleles (d10)                                                                                                                          |
+| Lab labels       | `stenotrophomonas_maltophilia`                                                                                                             |
 
 ## The scheme
 
-No cgmlst.org scheme exists for *S. maltophilia*, so the wgMLST scheme from
+No cgmlst.org scheme exists for _S. maltophilia_, so the wgMLST scheme from
 Gröschel et al. (2020) is used. It was built by Applied Maths (bioMérieux) from
 171 public genomes: overlapping loci, loci with frequent invalid calls, tandem
 repeats and multi-copy loci were removed, leaving 17,603 loci (including the
@@ -48,14 +49,14 @@ of the scheme.
 
 ## Species check
 
-The schema accepts any *Stenotrophomonas* species, since the complex spans 23
+The schema accepts any _Stenotrophomonas_ species, since the complex spans 23
 lineages.
 
-| Setting in `assets/schemas.tsv` | Value |
-|---|---|
-| `species_pattern` | `^Stenotrophomonas` |
-| `genera` | Stenotrophomonas |
-| Expected genome size | 4.1–5.4 Mb |
+| Setting in `assets/schemas.tsv` | Value               |
+| ------------------------------- | ------------------- |
+| `species_pattern`               | `^Stenotrophomonas` |
+| `genera`                        | Stenotrophomonas    |
+| Expected genome size            | 4.1–5.4 Mb          |
 
 ## In the VASK study
 
@@ -66,6 +67,7 @@ SNPs (e.g. SKA2).
 
 ## Notes
 
+- The _S. maltophilia_ complex is diverse (Gröschel et al. 2020 describe 23 lineages), so many isolates sit far from any single reference and less of their genome is compared in the SNP distances; check `reference_distance` in the QC summary.
 - The FASTA header format is assumed to be `<locus>_<allele>`;
   `split_alleles.py` stops if it does not find about 17,603 loci, and
   `--pattern` can be set to match another format.

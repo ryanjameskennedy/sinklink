@@ -8,8 +8,11 @@ assets/schemas/
 assets/genomes/
 assets/prodigal_training_files/
 vask_colonisation_hidden.csv
+vask_samplesheet.csv
 .nextflow*
 work/
 /results/
 null/
 docs/_build/
+.nf-test/
+.nf-test.log

@@ -22,6 +22,14 @@
 
   > Silva M, Machado MP, Silva DN, Rossi M, Moran-Gilad J, Santos S, Ramirez M, Carriço JA. chewBBACA: A complete suite for gene-by-gene schema creation and strain identification. Microb Genom. 2018;4(3):e000166. doi: 10.1099/mgen.0.000166.
 
+- [Clair3](https://doi.org/10.1038/s43588-022-00387-x)
+
+  > Zheng Z, Li S, Su J, Leung AW, Lam TW, Luo R. Symphonizing pileup and full-alignment for deep learning-based long-read variant calling. Nat Comput Sci. 2022;2:797-803. doi: 10.1038/s43588-022-00387-x.
+
+- [Deacon](https://doi.org/10.1101/2025.06.09.658732)
+
+  > Constantinides B, Lees J, Crook DW. Deacon: fast sequence filtering and contaminant depletion. bioRxiv. 2025. doi: 10.1101/2025.06.09.658732.
+
 - [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 
   > Andrews, S. (2010). FastQC: A Quality Control Tool for High Throughput Sequence Data [Online].
@@ -34,6 +42,10 @@
 
   > Kolmogorov M, Yuan J, Lin Y, Pevzner PA. Assembly of long, error-prone reads using repeat graphs. Nat Biotechnol. 2019;37:540-546. doi: 10.1038/s41587-019-0072-8.
 
+- [FreeBayes](https://arxiv.org/abs/1207.3907)
+
+  > Garrison E, Marth G. Haplotype-based variant detection from short-read sequencing. arXiv. 2012;1207.3907.
+
 - [GAMBIT](https://doi.org/10.1371/journal.pone.0277575) and [gambitcore](https://github.com/gambit-suite/gambitcore)
 
   > Lumpe J, et al. GAMBIT (Genomic Approximation Method for Bacterial Identification and Tracking): A methodology to rapidly leverage whole genome sequencing of bacterial isolates for clinical identification. PLoS One. 2023;18(2):e0277575. doi: 10.1371/journal.pone.0277575.
@@ -41,6 +53,10 @@
 - [Kraken2](https://doi.org/10.1186/s13059-019-1891-0)
 
   > Wood DE, Lu J, Langmead B. Improved metagenomic analysis with Kraken 2. Genome Biol. 2019;20:257. doi: 10.1186/s13059-019-1891-0.
+
+- [Mash](https://doi.org/10.1186/s13059-016-0997-x)
+
+  > Ondov BD, Treangen TJ, Melsted P, Mallonee AB, Bergman NH, Koren S, Phillippy AM. Mash: fast genome and metagenome distance estimation using MinHash. Genome Biol. 2016;17:132. doi: 10.1186/s13059-016-0997-x.
 
 - [Medaka](https://github.com/nanoporetech/medaka)
 
@@ -70,9 +86,9 @@
 
   > Souvorov A, Agarwala R, Lipman DJ. SKESA: strategic k-mer extension for scrupulous assemblies. Genome Biol. 2018;19:153. doi: 10.1186/s13059-018-1540-z.
 
-- [SPAdes](https://doi.org/10.1002/cpbi.102)
+- [Snippy](https://github.com/tseemann/snippy)
 
-  > Prjibelski A, Antipov D, Meleshko D, Lapidus A, Korobeynikov A. Using SPAdes de novo assembler. Curr Protoc Bioinformatics. 2020;70(1):e102. doi: 10.1002/cpbi.102.
+  > Seemann T. Snippy: fast bacterial variant calling from NGS reads. 2015. https://github.com/tseemann/snippy
 
 - [Trimmomatic](https://doi.org/10.1093/bioinformatics/btu170)
 
