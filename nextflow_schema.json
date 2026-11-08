@@ -291,13 +291,6 @@
                     "description": "Filtlong options used with --filtlong.",
                     "fa_icon": "fas fa-filter"
                 },
-                "assembler": {
-                    "type": "string",
-                    "default": "skesa",
-                    "enum": ["skesa", "spades"],
-                    "description": "Assembler for Illumina reads. Nanopore reads always use Flye and Medaka.",
-                    "fa_icon": "fas fa-puzzle-piece"
-                },
                 "bracken_read_length": {
                     "type": "integer",
                     "default": 150,

@@ -314,8 +314,8 @@
                 "SAMTOOLS_INDEX": [
                     "samtools"
                 ],
-                "SPADES": [
-                    "spades"
+                "SKESA": [
+                    "skesa"
                 ],
                 "SUMMARISE_QC": [
                     "python"
@@ -333,11 +333,6 @@
                 "assembly/flye/S03.assembly_graph.gfa.gz",
                 "assembly/flye/S03.assembly_info.txt",
                 "assembly/flye/S03.flye.log",
-                "assembly/spades",
-                "assembly/spades/S01.spades.log",
-                "assembly/spades/S01.warnings.log",
-                "assembly/spades/S02.spades.log",
-                "assembly/spades/S02.warnings.log",
                 "bracken",
                 "bracken/S01.bracken.kraken2.report_bracken.txt",
                 "bracken/S01.bracken.tsv",
@@ -466,10 +461,6 @@
                 "S03.assembly_graph.gfa.gz:md5,f50b84b1db4b83ba62ec1deacc69c260",
                 "S03.assembly_info.txt:md5,e3aec731279050302fc8d6f126b3030e",
                 "S03.flye.log:md5,f50b84b1db4b83ba62ec1deacc69c260",
-                "S01.spades.log:md5,d41d8cd98f00b204e9800998ecf8427e",
-                "S01.warnings.log:md5,d41d8cd98f00b204e9800998ecf8427e",
-                "S02.spades.log:md5,d41d8cd98f00b204e9800998ecf8427e",
-                "S02.warnings.log:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.bracken.kraken2.report_bracken.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.bracken.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.bracken.kraken2.report_bracken.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -563,7 +554,7 @@
                 "S02_out.log:md5,d41d8cd98f00b204e9800998ecf8427e"
             ]
         ],
-        "timestamp": "2026-11-07T14:54:15.332011",
+        "timestamp": "2026-11-08T11:06:57.698449",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"

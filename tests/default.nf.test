@@ -40,7 +40,6 @@ nextflow_pipeline {
                 outdir    = "$outputDir"
                 trim      = true
                 filtlong  = true
-                assembler = 'spades'
                 kraken_db = "${projectDir}/assets/test/dbs/kraken2"
                 gambit_db = "${projectDir}/assets/test/dbs/gambit"
             }
