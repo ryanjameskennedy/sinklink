@@ -92,7 +92,6 @@ thedonkey's config then resizes the labels themselves towards the JASEN values:
 | Trimmomatic                            | `process_medium` | 6 CPUs, 36 GB            | 4 CPUs, 4 GB    | 4 CPUs, 12 GB                      |
 | Filtlong                               | `process_low`    | 2 CPUs, 12 GB            | 2 CPUs, 4 GB    | 2 CPUs, 4 GB                       |
 | SKESA                                  | `process_high`   | 12 CPUs, 72 GB           | 16 CPUs, 32 GB  | 15 CPUs, 32 GB                     |
-| SPAdes                                 | `process_high`   | 12 CPUs, 72 GB           | 16 CPUs, 15 GB  | 15 CPUs, 32 GB                     |
 | Flye                                   | `process_high`   | 12 CPUs, 72 GB           | 20 CPUs, 32 GB  | 15 CPUs, 32 GB                     |
 | Medaka                                 | `process_high`   | 12 CPUs, 72 GB           | 20 CPUs, 32 GB  | 15 CPUs, 32 GB                     |
 | QUAST                                  | `process_medium` | 6 CPUs, 36 GB            | 2 CPUs, 2 GB    | 4 CPUs, 12 GB                      |

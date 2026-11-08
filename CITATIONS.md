@@ -70,10 +70,6 @@
 
   > Souvorov A, Agarwala R, Lipman DJ. SKESA: strategic k-mer extension for scrupulous assemblies. Genome Biol. 2018;19:153. doi: 10.1186/s13059-018-1540-z.
 
-- [SPAdes](https://doi.org/10.1002/cpbi.102)
-
-  > Prjibelski A, Antipov D, Meleshko D, Lapidus A, Korobeynikov A. Using SPAdes de novo assembler. Curr Protoc Bioinformatics. 2020;70(1):e102. doi: 10.1002/cpbi.102.
-
 - [Trimmomatic](https://doi.org/10.1093/bioinformatics/btu170)
 
   > Bolger AM, Lohse M, Usadel B. Trimmomatic: a flexible trimmer for Illumina sequence data. Bioinformatics. 2014;30(15):2114-2120. doi: 10.1093/bioinformatics/btu170.

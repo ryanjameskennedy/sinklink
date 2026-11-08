@@ -16,7 +16,7 @@ runs five local subworkflows built from nf-core modules:
 | Subworkflow        | Illumina                                                                     | Nanopore                                                                                                 |
 | ------------------ | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `READ_PREPARATION` | Trimmomatic (with `--trim`), FastQC                                          | Filtlong (with `--filtlong`), NanoPlot                                                                   |
-| `ASSEMBLY`         | SKESA, or SPAdes `--isolate`                                                 | Flye `--nano-hq` (`--asm-coverage 50` with the schema's genome size), then `medaka_consensus --bacteria` |
+| `ASSEMBLY`         | SKESA                                                                        | Flye `--nano-hq` (`--asm-coverage 50` with the schema's genome size), then `medaka_consensus --bacteria` |
 | `ASSEMBLY_QC`      | QUAST, gambitcore, `bwa mem` to the own assembly + `samtools coverage`, mlst | QUAST, gambitcore, `minimap2 -x lr:hq` to the own assembly + `samtools coverage`, mlst                   |
 | `SPECIES_CHECK`    | Kraken2 (`--memory-mapping`) and Bracken (species level)                     | same                                                                                                     |
 | `ALLELE_CALLING`   | chewBBACA AlleleCall per schema, `--no-inferred`                             | same                                                                                                     |

@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stub CI workflow `ci.yml` is replaced by nf-test
 - The test samplesheet points at the test reads on GitHub, so tests run from any folder
 
+### `Removed`
+
+- SPAdes and the `--assembler` parameter: Illumina reads are always assembled with SKESA
+
 ## v0.1.0 - 2026-11-06
 
 First release of sinklink, created with the [nf-core](https://nf-co.re/) template.

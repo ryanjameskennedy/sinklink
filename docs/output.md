@@ -11,7 +11,7 @@ The directories listed below will be created in the results directory after the 
 The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
 
 - [Read preparation](#read-preparation) - Optional Trimmomatic or Filtlong, then FastQC or NanoPlot
-- [Assembly](#assembly) - SKESA or SPAdes (Illumina), Flye and Medaka (Nanopore)
+- [Assembly](#assembly) - SKESA (Illumina), Flye and Medaka (Nanopore)
 - [Assembly QC](#assembly-qc) - QUAST, gambitcore, read depth and 7-gene MLST
 - [Species check](#species-check) - Kraken2 and Bracken on the reads
 - [Allele calling](#allele-calling) - chewBBACA AlleleCall per schema
@@ -40,11 +40,10 @@ FastQC and NanoPlot summarise read quality and length. Filtered reads are not pu
 
 - `assembly/<sample>.fa`: the final assembly used for QC and allele calling.
 - `assembly/flye/`: Flye assembly graph, info and log (Nanopore).
-- `assembly/spades/`: SPAdes logs (with `--assembler spades`).
 
 </details>
 
-Illumina reads are assembled with SKESA (default) or SPAdes `--isolate`. Nanopore reads are assembled with Flye `--nano-hq` (with `--asm-coverage 50` and the schema's expected genome size) and polished once with `medaka_consensus --bacteria`.
+Illumina reads are assembled with SKESA. Nanopore reads are assembled with Flye `--nano-hq` (with `--asm-coverage 50` and the schema's expected genome size) and polished once with `medaka_consensus --bacteria`.
 
 ### Assembly QC
 

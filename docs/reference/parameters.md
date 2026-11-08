@@ -27,7 +27,6 @@ The full schema, with types and validation, is
 
 | Parameter               | Meaning                                | Default                                             |
 | ----------------------- | -------------------------------------- | --------------------------------------------------- |
-| `--assembler`           | `skesa` or `spades` for Illumina reads | `skesa`                                             |
 | `--trim`                | Trim Illumina reads with Trimmomatic   | off                                                 |
 | `--trimmomatic_args`    | Trimmomatic steps                      | `LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36` |
 | `--filtlong`            | Filter Nanopore reads with Filtlong    | off                                                 |

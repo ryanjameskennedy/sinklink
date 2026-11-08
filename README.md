@@ -11,7 +11,7 @@ environmental site) and from a patient belong to the same strain. Starting from
 Illumina or Nanopore reads, it:
 
 1. QCs the reads (FastQC or NanoPlot, optional Trimmomatic or Filtlong);
-2. assembles each isolate (SKESA or SPAdes for Illumina, Flye + Medaka for Nanopore);
+2. assembles each isolate (SKESA for Illumina, Flye + Medaka for Nanopore);
 3. QCs the assembly (QUAST, gambitcore, read depth, 7-gene MLST) and confirms
    the species from the reads (Kraken2/Bracken);
 4. calls alleles with chewBBACA against species-specific cgMLST/wgMLST schemas;

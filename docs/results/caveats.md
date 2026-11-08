@@ -17,5 +17,5 @@
 - **cgmlst.org allele sets grow over time**; the download date is recorded in
   `schemas/<schema>/download/SOURCE`.
 - **Tool versions** come from the nf-core modules and differ from JASEN's in
-  places (e.g. Flye 2.9.5, QUAST 5.3.0, SPAdes 4.1.0); chewBBACA is pinned to
+  places (e.g. Flye 2.9.5, QUAST 5.3.0); chewBBACA is pinned to
   3.5.4 to match schema prep.
