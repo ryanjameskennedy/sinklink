@@ -38,10 +38,15 @@ workflow SINKLINK {
     ch_metadata     = file(params.metadata, checkIfExists: true)
     ch_gambit_db    = params.gambit_db ? file(params.gambit_db, checkIfExists: true) : []
 
+    if (!params.skip_host_removal && !params.deacon_index) {
+        error("--deacon_index is required for human read removal; set it or use --skip_host_removal")
+    }
+    ch_deacon_index = params.skip_host_removal ? [] : file(params.deacon_index, checkIfExists: true)
+
     //
-    // SUBWORKFLOW: Optional read filtering and read QC
+    // SUBWORKFLOW: Human read removal, optional read filtering and read QC
     //
-    READ_PREPARATION ( ch_samplesheet )
+    READ_PREPARATION ( ch_samplesheet, ch_deacon_index )
     ch_reads         = READ_PREPARATION.out.reads
     ch_versions      = ch_versions.mix(READ_PREPARATION.out.versions)
     ch_multiqc_files = ch_multiqc_files.mix(READ_PREPARATION.out.multiqc_files)

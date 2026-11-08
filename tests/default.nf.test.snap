@@ -18,6 +18,9 @@
                 "CHEWBBACA_ALLELECALL": [
                     "chewbbaca"
                 ],
+                "DEACON_FILTER": [
+                    "deacon"
+                ],
                 "FASTQC": [
                     "fastqc"
                 ],
@@ -98,6 +101,10 @@
                 "fastqc/S01.zip",
                 "fastqc/S02.html",
                 "fastqc/S02.zip",
+                "host_removal",
+                "host_removal/S01.host_removed.json",
+                "host_removal/S02.host_removed.json",
+                "host_removal/S03.host_removed.json",
                 "kraken2",
                 "kraken2/S01.kraken2.report.txt",
                 "kraken2/S02.kraken2.report.txt",
@@ -210,6 +217,9 @@
                 "S01.zip:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.html:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.zip:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S01.host_removed.json:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.host_removed.json:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.host_removed.json:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.kraken2.report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.kraken2.report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.kraken2.report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -273,7 +283,7 @@
                 "qc_summary.tsv:md5,2c23545bd1a084360ee7d94a9f45bd16"
             ]
         ],
-        "timestamp": "2026-11-08T13:04:54.161257",
+        "timestamp": "2026-11-08T13:06:30.168757",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"
@@ -297,6 +307,9 @@
                 ],
                 "CHEWBBACA_ALLELECALL": [
                     "chewbbaca"
+                ],
+                "DEACON_FILTER": [
+                    "deacon"
                 ],
                 "FASTQC": [
                     "fastqc"
@@ -393,6 +406,10 @@
                 "gambitcore/S01.gambitcore.tsv",
                 "gambitcore/S02.gambitcore.tsv",
                 "gambitcore/S03.gambitcore.tsv",
+                "host_removal",
+                "host_removal/S01.host_removed.json",
+                "host_removal/S02.host_removed.json",
+                "host_removal/S03.host_removed.json",
                 "kraken2",
                 "kraken2/S01.kraken2.report.txt",
                 "kraken2/S02.kraken2.report.txt",
@@ -514,6 +531,9 @@
                 "S01.gambitcore.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.gambitcore.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.gambitcore.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S01.host_removed.json:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.host_removed.json:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.host_removed.json:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.kraken2.report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.kraken2.report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.kraken2.report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -581,7 +601,7 @@
                 "S02_out.log:md5,d41d8cd98f00b204e9800998ecf8427e"
             ]
         ],
-        "timestamp": "2026-11-08T11:06:57.698449",
+        "timestamp": "2026-11-08T13:06:48.830668",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"

@@ -1,21 +1,29 @@
 //
-// Optional read filtering and read QC: Trimmomatic and FastQC for Illumina,
-// Filtlong and NanoPlot for Nanopore
+// Human read removal with Deacon, then optional read filtering and read QC:
+// Trimmomatic and FastQC for Illumina, Filtlong and NanoPlot for Nanopore
 //
 
-include { TRIMMOMATIC } from '../../../modules/nf-core/trimmomatic/main'
-include { FILTLONG    } from '../../../modules/nf-core/filtlong/main'
-include { FASTQC      } from '../../../modules/nf-core/fastqc/main'
-include { NANOPLOT    } from '../../../modules/nf-core/nanoplot/main'
+include { DEACON_FILTER } from '../../../modules/nf-core/deacon/filter/main'
+include { TRIMMOMATIC   } from '../../../modules/nf-core/trimmomatic/main'
+include { FILTLONG      } from '../../../modules/nf-core/filtlong/main'
+include { FASTQC        } from '../../../modules/nf-core/fastqc/main'
+include { NANOPLOT      } from '../../../modules/nf-core/nanoplot/main'
 
 workflow READ_PREPARATION {
 
     take:
-    ch_reads // channel: [ val(meta), [ fastq ] ]
+    ch_reads     // channel: [ val(meta), [ fastq ] ]
+    deacon_index // path: Deacon index of the human genome, or [] to keep human reads
 
     main:
     ch_versions      = channel.empty()
     ch_multiqc_files = channel.empty()
+
+    if (deacon_index) {
+        DEACON_FILTER ( ch_reads.map { meta, reads -> [ meta, deacon_index, reads ] } )
+        ch_reads = DEACON_FILTER.out.fastq_filtered
+            .map { meta, reads -> [ meta, reads instanceof List ? reads : [ reads ] ] }
+    }
 
     ch_reads
         .branch { meta, _reads ->

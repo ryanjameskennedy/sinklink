@@ -230,6 +230,15 @@
                     "description": "Kraken2/Bracken database for the read-based species check.",
                     "fa_icon": "fas fa-database"
                 },
+                "deacon_index": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "pattern": "^\\S+\\.idx$",
+                    "description": "Deacon index of the human genome for human read removal, e.g. panhuman-1.k31w15.idx (`make deacon_index`).",
+                    "help_text": "Required unless --skip_host_removal is set.",
+                    "fa_icon": "fas fa-user-slash"
+                },
                 "gambit_db": {
                     "type": "string",
                     "format": "directory-path",
@@ -270,6 +279,16 @@
             "fa_icon": "fas fa-sliders-h",
             "description": "Read filtering, assembly, species check and allele calling.",
             "properties": {
+                "skip_host_removal": {
+                    "type": "boolean",
+                    "description": "Skip removing human reads with Deacon.",
+                    "fa_icon": "fas fa-forward"
+                },
+                "save_host_removed_reads": {
+                    "type": "boolean",
+                    "description": "Publish the reads left after human read removal, e.g. to archive or share them.",
+                    "fa_icon": "fas fa-save"
+                },
                 "trim": {
                     "type": "boolean",
                     "description": "Trim Illumina reads with Trimmomatic before assembly.",

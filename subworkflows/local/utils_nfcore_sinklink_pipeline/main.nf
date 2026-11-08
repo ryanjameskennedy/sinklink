@@ -223,6 +223,7 @@ def annotateSample(meta, metadata, species_map, schema_table) {
 def toolCitationText() {
     def citation_text = [
             "Tools used in the workflow included:",
+            params.skip_host_removal ? "" : "Deacon (Constantinides et al. 2025),",
             params.trim ? "Trimmomatic (Bolger et al. 2014)," : "",
             params.filtlong ? "Filtlong (Wick 2017)," : "",
             "FastQC (Andrews 2010),",
@@ -247,6 +248,7 @@ def toolCitationText() {
 
 def toolBibliographyText() {
     def reference_text = [
+            params.skip_host_removal ? "" : "<li>Constantinides B, Lees J, Crook DW. (2025) Deacon: fast sequence filtering and contaminant depletion. bioRxiv. doi: 10.1101/2025.06.09.658732</li>",
             params.trim ? "<li>Bolger AM, Lohse M, Usadel B. (2014) Trimmomatic: a flexible trimmer for Illumina sequence data. Bioinformatics 30(15):2114-2120. doi: 10.1093/bioinformatics/btu170</li>" : "",
             params.filtlong ? "<li>Wick R. (2017) Filtlong, URL: https://github.com/rrwick/Filtlong</li>" : "",
             "<li>Andrews S, (2010) FastQC, URL: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/).</li>",
