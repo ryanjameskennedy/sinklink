@@ -26,6 +26,16 @@
                         "installed_by": ["modules"],
                         "patch": "modules/nf-core/chewbbaca/allelecall/chewbbaca-allelecall.diff"
                     },
+                    "clair3": {
+                        "branch": "master",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
+                        "installed_by": ["modules"]
+                    },
+                    "deacon/filter": {
+                        "branch": "master",
+                        "git_sha": "719abfd0ec41bcc7e2f540b4fd5c8150fdfe228e",
+                        "installed_by": ["modules"]
+                    },
                     "fastqc": {
                         "branch": "master",
                         "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
@@ -49,6 +59,11 @@
                     "kraken2/kraken2": {
                         "branch": "master",
                         "git_sha": "d67d33d5925fcec4691b499670fa2bd926fd2be5",
+                        "installed_by": ["modules"]
+                    },
+                    "mash/dist": {
+                        "branch": "master",
+                        "git_sha": "da0102c4a5acf25c96d3cdaac35f1ea2bfabbdd9",
                         "installed_by": ["modules"]
                     },
                     "medaka": {
@@ -88,6 +103,11 @@
                         "git_sha": "9339809fcb90af8a8b7051e6cd914894d5c52002",
                         "installed_by": ["modules"]
                     },
+                    "samtools/depth": {
+                        "branch": "master",
+                        "git_sha": "9339809fcb90af8a8b7051e6cd914894d5c52002",
+                        "installed_by": ["modules"]
+                    },
                     "samtools/index": {
                         "branch": "master",
                         "git_sha": "9339809fcb90af8a8b7051e6cd914894d5c52002",
@@ -98,6 +118,11 @@
                         "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": ["modules"],
                         "patch": "modules/nf-core/skesa/skesa.diff"
+                    },
+                    "snippy/run": {
+                        "branch": "master",
+                        "git_sha": "2a0a771d78bb58205c784dea56f2e4db251a63ec",
+                        "installed_by": ["modules"]
                     },
                     "trimmomatic": {
                         "branch": "master",
