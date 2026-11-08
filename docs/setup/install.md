@@ -30,6 +30,12 @@ what the pipeline reads: the chewBBACA schemas, the reference genomes, the
 Deacon human index, the GAMBIT database and the four containers needed to
 prepare them (chewBBACA, Prodigal, jasentool and SAMtools).
 
+The containers are saved under the names Nextflow uses in its Apptainer cache,
+and the chewBBACA and SAMtools images are the ones the pipeline runs. Use the
+same folder for `CONTAINERS_DIR` as `apptainer.cacheDir` in your server config
+(on thedonkey, `/mnt/cache/singularity`) and the pipeline reuses those two
+instead of downloading them again; it pulls the rest itself on its first run.
+
 ```bash
 make install ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
 ```

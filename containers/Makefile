@@ -1,9 +1,13 @@
 # Downloads the Singularity/Apptainer images used by the setup in the top-level
 # Makefile (chewBBACA PrepExternalSchema, Prodigal training, reference genome
-# download with jasentool and indexing with samtools), in
-# the same way as the JASEN containers Makefile. URLs and versions match JASEN,
-# so a JASEN containers folder can be reused as CONTAINERS_DIR. The pipeline
-# itself pulls its containers through Nextflow.
+# download with jasentool and indexing with samtools), in the same way as the
+# JASEN containers Makefile.
+#
+# Each image is saved under the file name Nextflow gives it in its Apptainer
+# cache (the URL without https://, with / and : replaced by -). chewBBACA and
+# samtools are the same images the pipeline uses, so when CONTAINERS_DIR is the
+# pipeline's apptainer.cacheDir the pipeline reuses them instead of pulling
+# them again. The pipeline pulls its other containers itself on the first run.
 #
 #   make all CONTAINERS_DIR=/mnt/cache/singularity
 SHELL := /bin/bash
@@ -26,7 +30,7 @@ local_container_sifs := $(addprefix $(CONTAINERS_DIR)/,$(local_containers))
 
 URL_chewbbaca := https://depot.galaxyproject.org/singularity/chewbbaca:3.5.4--pyh106432d_0
 URL_prodigal := https://depot.galaxyproject.org/singularity/prodigal:2.6.3--h7b50bb2_10
-URL_samtools := https://depot.galaxyproject.org/singularity/samtools:1.17--h00cdaf9_0
+URL_samtools := https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/e9/e994bf4eb3731150511a14f5706b7bdfd64df1b6d40898fff334286c027e0859/data
 
 DOCKER_jasentool := docker://clinicalgenomicslund/jasentool:1.3.0
 
