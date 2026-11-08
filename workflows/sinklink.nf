@@ -61,16 +61,10 @@ workflow SINKLINK {
     //
     // SUBWORKFLOW: Read-based species check
     //
-    ch_kraken_report = channel.empty()
-    ch_bracken       = channel.empty()
-    if (params.kraken_db) {
-        SPECIES_CHECK ( ch_reads, file(params.kraken_db, checkIfExists: true) )
-        ch_kraken_report = SPECIES_CHECK.out.kraken_report
-        ch_bracken       = SPECIES_CHECK.out.bracken
-        ch_multiqc_files = ch_multiqc_files.mix(SPECIES_CHECK.out.multiqc_files)
-    } else {
-        log.warn("No --kraken_db given; the read-based species check is skipped")
-    }
+    SPECIES_CHECK ( ch_reads, file(params.kraken_db, checkIfExists: true) )
+    ch_kraken_report = SPECIES_CHECK.out.kraken_report
+    ch_bracken       = SPECIES_CHECK.out.bracken
+    ch_multiqc_files = ch_multiqc_files.mix(SPECIES_CHECK.out.multiqc_files)
 
     //
     // MODULE: Read and assembly QC summary per isolate, then one table for all

@@ -227,7 +227,7 @@
                     "type": "string",
                     "format": "directory-path",
                     "exists": true,
-                    "description": "Kraken2/Bracken database. The read-based species check is skipped without it.",
+                    "description": "Kraken2/Bracken database for the read-based species check.",
                     "fa_icon": "fas fa-database"
                 },
                 "gambit_db": {
@@ -261,7 +261,8 @@
                     "fa_icon": "fas fa-table",
                     "hidden": true
                 }
-            }
+            },
+            "required": ["kraken_db"]
         },
         "analysis_options": {
             "title": "Analysis options",

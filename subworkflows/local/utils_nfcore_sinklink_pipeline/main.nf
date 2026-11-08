@@ -54,7 +54,7 @@ workflow PIPELINE_INITIALISATION {
     //
     // Validate parameters and generate parameter summary to stdout
     //
-    command = "nextflow run ${workflow.manifest.name} -profile <docker/singularity/.../institute> --input samplesheet.csv --metadata metadata.csv --schemas_dir <SCHEMAS_DIR> --outdir <OUTDIR>"
+    command = "nextflow run ${workflow.manifest.name} -profile <docker/singularity/.../institute> --input samplesheet.csv --metadata metadata.csv --kraken_db <KRAKEN_DB> --schemas_dir <SCHEMAS_DIR> --outdir <OUTDIR>"
 
     UTILS_NFSCHEMA_PLUGIN (
         workflow,
@@ -236,7 +236,7 @@ def toolCitationText() {
             "minimap2 (Li 2018),",
             "SAMtools (Danecek et al. 2021),",
             "mlst (Seemann),",
-            params.kraken_db ? "Kraken2 (Wood et al. 2019), Bracken (Lu et al. 2017)," : "",
+            "Kraken2 (Wood et al. 2019), Bracken (Lu et al. 2017),",
             params.skip_chewbbaca ? "" : "chewBBACA (Silva et al. 2018),",
             "MultiQC (Ewels et al. 2016)",
             "."
@@ -256,8 +256,8 @@ def toolBibliographyText() {
             "<li>Gurevich A, et al. (2013) QUAST: quality assessment tool for genome assemblies. Bioinformatics 29(8):1072-1075. doi: 10.1093/bioinformatics/btt086</li>",
             "<li>Li H. (2018) Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics 34(18):3094-3100. doi: 10.1093/bioinformatics/bty191</li>",
             "<li>Danecek P, et al. (2021) Twelve years of SAMtools and BCFtools. GigaScience 10(2):giab008. doi: 10.1093/gigascience/giab008</li>",
-            params.kraken_db ? "<li>Wood DE, Lu J, Langmead B. (2019) Improved metagenomic analysis with Kraken 2. Genome Biol 20:257. doi: 10.1186/s13059-019-1891-0</li>" : "",
-            params.kraken_db ? "<li>Lu J, et al. (2017) Bracken: estimating species abundance in metagenomics data. PeerJ Comput Sci 3:e104. doi: 10.7717/peerj-cs.104</li>" : "",
+            "<li>Wood DE, Lu J, Langmead B. (2019) Improved metagenomic analysis with Kraken 2. Genome Biol 20:257. doi: 10.1186/s13059-019-1891-0</li>",
+            "<li>Lu J, et al. (2017) Bracken: estimating species abundance in metagenomics data. PeerJ Comput Sci 3:e104. doi: 10.7717/peerj-cs.104</li>",
             params.skip_chewbbaca ? "" : "<li>Silva M, et al. (2018) chewBBACA: A complete suite for gene-by-gene schema creation and strain identification. Microb Genom 4(3):e000166. doi: 10.1099/mgen.0.000166</li>",
             "<li>Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics , 32(19), 3047–3048. doi: /10.1093/bioinformatics/btw354</li>"
         ].join(' ').trim()

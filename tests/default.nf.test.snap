@@ -2,6 +2,9 @@
     "-profile test": {
         "content": [
             {
+                "BRACKEN_BRACKEN": [
+                    "bracken"
+                ],
                 "BWA_INDEX": [
                     "bwa"
                 ],
@@ -26,6 +29,10 @@
                 ],
                 "GUNZIP_FLYE": [
                     "gunzip"
+                ],
+                "KRAKEN2_KRAKEN2": [
+                    "kraken2",
+                    "pigz"
                 ],
                 "MEDAKA": [
                     "medaka"
@@ -64,6 +71,13 @@
                 "assembly/flye/S03.assembly_graph.gfa.gz",
                 "assembly/flye/S03.assembly_info.txt",
                 "assembly/flye/S03.flye.log",
+                "bracken",
+                "bracken/S01.bracken.kraken2.report_bracken.txt",
+                "bracken/S01.bracken.tsv",
+                "bracken/S02.bracken.kraken2.report_bracken.txt",
+                "bracken/S02.bracken.tsv",
+                "bracken/S03.bracken.kraken2.report_bracken.txt",
+                "bracken/S03.bracken.tsv",
                 "chewbbaca",
                 "chewbbaca/paeruginosa",
                 "chewbbaca/paeruginosa/paeruginosa_cds_coordinates.tsv",
@@ -84,6 +98,10 @@
                 "fastqc/S01.zip",
                 "fastqc/S02.html",
                 "fastqc/S02.zip",
+                "kraken2",
+                "kraken2/S01.kraken2.report.txt",
+                "kraken2/S02.kraken2.report.txt",
+                "kraken2/S03.kraken2.report.txt",
                 "mlst",
                 "mlst/S01.mlst.tsv",
                 "mlst/S02.mlst.tsv",
@@ -170,6 +188,12 @@
                 "S03.assembly_graph.gfa.gz:md5,f50b84b1db4b83ba62ec1deacc69c260",
                 "S03.assembly_info.txt:md5,e3aec731279050302fc8d6f126b3030e",
                 "S03.flye.log:md5,f50b84b1db4b83ba62ec1deacc69c260",
+                "S01.bracken.kraken2.report_bracken.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S01.bracken.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.bracken.kraken2.report_bracken.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.bracken.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.bracken.kraken2.report_bracken.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.bracken.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "paeruginosa_cds_coordinates.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "paeruginosa_invalid_cds.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "paeruginosa_loci_summary_stats.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -186,6 +210,9 @@
                 "S01.zip:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.html:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.zip:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S01.kraken2.report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.kraken2.report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.kraken2.report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.mlst.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.mlst.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.mlst.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -246,7 +273,7 @@
                 "qc_summary.tsv:md5,2c23545bd1a084360ee7d94a9f45bd16"
             ]
         ],
-        "timestamp": "2026-11-07T14:53:55.873061",
+        "timestamp": "2026-11-08T13:04:54.161257",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"
