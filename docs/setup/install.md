@@ -11,7 +11,7 @@
 Nextflow can fetch it directly:
 
 ```bash
-nextflow pull ryanjameskennedy/sinklink -r v0.1.0
+nextflow pull ryanjameskennedy/sinklink -r v0.2.0
 ```
 
 The asset Makefiles need a local copy:
