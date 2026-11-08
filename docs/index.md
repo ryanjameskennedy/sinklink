@@ -4,10 +4,12 @@ _Did the sink infect the patient?_
 
 sinklink tests whether bacteria isolated from a hospital sink (or another
 environmental site) and from a patient belong to the same strain. Starting from
-Illumina or Nanopore reads it QCs and assembles every isolate, confirms the
-species, calls cgMLST/wgMLST alleles with chewBBACA and compares every pair of
+Illumina or Nanopore reads it removes human reads, QCs and assembles every
+isolate, confirms the species, calls variants against the species' reference
+genome, calls cgMLST/wgMLST alleles with chewBBACA and compares every pair of
 isolates within each suspected transmission group against a published,
-species-specific allele-difference threshold.
+species-specific allele-difference threshold, with their SNP distance
+alongside.
 
 ![sinklink metro map](images/metro_map.svg)
 

@@ -26,8 +26,9 @@ make print_paths
 
 The pipeline pulls its own containers (the versions pinned by each nf-core
 module, see [software](../reference/software.md)). The Makefiles only set up
-what the pipeline reads: the chewBBACA schemas, the GAMBIT database and the
-two containers needed to prepare the schemas.
+what the pipeline reads: the chewBBACA schemas, the reference genomes, the
+Deacon human index, the GAMBIT database and the four containers needed to
+prepare them (chewBBACA, Prodigal, jasentool and SAMtools).
 
 ```bash
 make install ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
@@ -38,12 +39,14 @@ or step by step:
 ```bash
 make -C containers all CONTAINERS_DIR=/mnt/cache/singularity
 make databases ASSETS_DIR=/mnt/cache/dbs/vask
+make references ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
 make schemas ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
 make check ASSETS_DIR=/mnt/cache/dbs/vask
 ```
 
 - [Schemas](schemas.md): what `make schemas` does and what to do when a
   download fails.
-- [Databases](databases.md): GAMBIT and Kraken2/Bracken.
+- [Databases](databases.md): reference genomes, Deacon, GAMBIT and
+  Kraken2/Bracken.
 
 Then [run the pipeline](../usage.md).

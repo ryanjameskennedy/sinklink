@@ -1,13 +1,14 @@
 # _Enterobacter hormaechei_
 
-|             |                                                                          |
-| ----------- | ------------------------------------------------------------------------ |
-| Schema      | `ehormaechei`                                                            |
-| Scheme      | cgmlst.org [Ehormaechei](https://www.cgmlst.org/ncs/schema/Ehormaechei/) |
-| Loci        | 2,178                                                                    |
-| Seed genome | NZ_CP100388.1 (used to train Prodigal)                                   |
-| Threshold   | ≤12 alleles                                                              |
-| Lab labels  | `enterobacter_cloacae`, `enterobacter_cloacae_complex`                   |
+|                  |                                                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Schema           | `ehormaechei`                                                                                                                               |
+| Scheme           | cgmlst.org [Ehormaechei](https://www.cgmlst.org/ncs/schema/Ehormaechei/)                                                                    |
+| Loci             | 2,178                                                                                                                                       |
+| Seed genome      | NZ_CP100388.1 (used to train Prodigal)                                                                                                      |
+| Reference genome | [GCF_019048245.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_019048245.1/) (FDAARGOS 1433) (used for QUAST, Mash and variant calling) |
+| Threshold        | ≤12 alleles                                                                                                                                 |
+| Lab labels       | `enterobacter_cloacae`, `enterobacter_cloacae_complex`                                                                                      |
 
 ## Threshold
 

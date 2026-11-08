@@ -10,14 +10,18 @@ sinklink tests whether bacteria isolated from a hospital sink (or another
 environmental site) and from a patient belong to the same strain. Starting from
 Illumina or Nanopore reads, it:
 
-1. QCs the reads (FastQC or NanoPlot, optional Trimmomatic or Filtlong);
+1. removes human reads (Deacon) and QCs the reads (FastQC or NanoPlot,
+   optional Trimmomatic or Filtlong);
 2. assembles each isolate (SKESA for Illumina, Flye + Medaka for Nanopore);
-3. QCs the assembly (QUAST, gambitcore, read depth, 7-gene MLST) and confirms
-   the species from the reads (Kraken2/Bracken);
-4. calls alleles with chewBBACA against species-specific cgMLST/wgMLST schemas;
-5. compares every pair of isolates within each suspected transmission group
-   against a published, species-specific allele-difference threshold, flagging
-   pairs where either isolate failed QC.
+3. QCs the assembly (QUAST and Mash against the species' reference genome,
+   gambitcore, read depth, 7-gene MLST) and confirms the species from the reads
+   (Kraken2/Bracken);
+4. calls variants against the species' reference genome (Snippy for Illumina,
+   Clair3 for Nanopore);
+5. calls alleles with chewBBACA against species-specific cgMLST/wgMLST schemas;
+6. compares every pair of isolates within each suspected transmission group
+   against a published, species-specific allele-difference threshold, with
+   their SNP distance alongside, flagging pairs where either isolate failed QC.
 
 ![sinklink metro map](docs/images/metro_map.svg)
 
@@ -31,7 +35,7 @@ on a single server without a job scheduler.
 
 ## Quick start
 
-Set up the schemas and databases once:
+Set up the schemas, reference genomes and databases once:
 
 ```bash
 git clone git@github.com:ryanjameskennedy/sinklink.git && cd sinklink

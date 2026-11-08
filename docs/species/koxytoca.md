@@ -1,13 +1,14 @@
 # _Klebsiella oxytoca_ species complex
 
-|             |                                                                                    |
-| ----------- | ---------------------------------------------------------------------------------- |
-| Schema      | `koxytoca`                                                                         |
-| Scheme      | cgmlst.org [Koxytoca_complex](https://www.cgmlst.org/ncs/schema/Koxytoca_complex/) |
-| Loci        | 2,536                                                                              |
-| Seed genome | NZ_CP033844.1 (used to train Prodigal)                                             |
-| Threshold   | ≤6 alleles, borderline ≤9                                                          |
-| Lab labels  | `klebsiella_oxytoca`, `klebsiella_oxytoca_group`                                   |
+|                  |                                                                                                                                         |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Schema           | `koxytoca`                                                                                                                              |
+| Scheme           | cgmlst.org [Koxytoca_complex](https://www.cgmlst.org/ncs/schema/Koxytoca_complex/)                                                      |
+| Loci             | 2,536                                                                                                                                   |
+| Seed genome      | NZ_CP033844.1 (used to train Prodigal)                                                                                                  |
+| Reference genome | [GCF_900636985.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_900636985.1/) (NCTC13727) (used for QUAST, Mash and variant calling) |
+| Threshold        | ≤6 alleles, borderline ≤9                                                                                                               |
+| Lab labels       | `klebsiella_oxytoca`, `klebsiella_oxytoca_group`                                                                                        |
 
 ## Threshold
 
@@ -33,6 +34,7 @@ Transmission_4 (357 days) and Transmission_5 (3 days, same patient).
 
 ## Notes
 
+- The reference is _K. oxytoca_ NCTC13727. Many clinical isolates labelled _K. oxytoca_ are in fact _K. michiganensis_ or _K. grimontii_, which sit further from it, so less of their genome is compared in the SNP distances; check `reference_distance` in the QC summary.
 - _K. oxytoca_ is often confused with _K. michiganensis_ and _K. grimontii_ by
   MALDI-TOF; the scheme covers all of them, so the lab label matters less than
   for other species.

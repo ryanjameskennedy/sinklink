@@ -1,13 +1,14 @@
 # _Serratia marcescens_
 
-|             |                                                                          |
-| ----------- | ------------------------------------------------------------------------ |
-| Schema      | `smarcescens`                                                            |
-| Scheme      | cgmlst.org [Smarcescens](https://www.cgmlst.org/ncs/schema/Smarcescens/) |
-| Loci        | 2,692                                                                    |
-| Seed genome | NZ_HG326223.1 (used to train Prodigal)                                   |
-| Threshold   | ≤12 alleles                                                              |
-| Lab labels  | `serratia_marcescens`                                                    |
+|                  |                                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Schema           | `smarcescens`                                                                                                                         |
+| Scheme           | cgmlst.org [Smarcescens](https://www.cgmlst.org/ncs/schema/Smarcescens/)                                                              |
+| Loci             | 2,692                                                                                                                                 |
+| Seed genome      | NZ_HG326223.1 (used to train Prodigal)                                                                                                |
+| Reference genome | [GCF_030291735.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_030291735.1/) (ELP1.10) (used for QUAST, Mash and variant calling) |
+| Threshold        | ≤12 alleles                                                                                                                           |
+| Lab labels       | `serratia_marcescens`                                                                                                                 |
 
 ## Threshold
 

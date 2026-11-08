@@ -1,13 +1,14 @@
 # _Citrobacter freundii_
 
-|             |                                                                      |
-| ----------- | -------------------------------------------------------------------- |
-| Schema      | `cfreundii`                                                          |
-| Scheme      | cgmlst.org [Cfreundii](https://www.cgmlst.org/ncs/schema/Cfreundii/) |
-| Loci        | 3,250                                                                |
-| Seed genome | NZ_CP049015.1 (used to train Prodigal)                               |
-| Threshold   | ≤10 alleles                                                          |
-| Lab labels  | `citrobacter_freundii`                                               |
+|                  |                                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Schema           | `cfreundii`                                                                                                                           |
+| Scheme           | cgmlst.org [Cfreundii](https://www.cgmlst.org/ncs/schema/Cfreundii/)                                                                  |
+| Loci             | 3,250                                                                                                                                 |
+| Seed genome      | NZ_CP049015.1 (used to train Prodigal)                                                                                                |
+| Reference genome | [GCF_904859905.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_904859905.1/) (MSB1_1H) (used for QUAST, Mash and variant calling) |
+| Threshold        | ≤10 alleles                                                                                                                           |
+| Lab labels       | `citrobacter_freundii`                                                                                                                |
 
 ## Threshold
 

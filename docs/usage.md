@@ -67,14 +67,19 @@ How it is used:
 1. **At start-up**, each samplesheet row is matched to its metadata row.
    `growth` gives the schema, and the schema's genome size range in
    `assets/schemas.tsv` gives the expected genome size passed to Flye (for
-   _P. aeruginosa_, 5.5–7.8 Mb becomes `6.7m`). The run stops if a required
-   column is missing.
+   _P. aeruginosa_, 5.5–7.8 Mb becomes `6.7m`) and the reference genome used
+   for QUAST, Mash and variant calling. The run stops if a required column is
+   missing.
 2. An isolate missing from the metadata, or whose `growth` has no schema, gets a
-   warning and is assembled and QC'd but not allele called. The same goes for
-   a schema that is not set up in `--schemas_dir`.
+   warning and is assembled and QC'd but not allele called or variant called.
+   The same goes for a schema that is not set up in `--schemas_dir`, or whose
+   reference genome is not in `--references_dir`.
 3. **Allele calling** groups the assemblies by schema.
-4. **The QC summary** uses the schema's accepted species and genome size.
-5. **The distance check** pairs isolates within each transmission group. Every
+4. **Variant calling** maps each isolate's reads to its schema's reference
+   genome.
+5. **The QC summary** uses the schema's accepted species, genome size and
+   reference genome.
+6. **The distance check** pairs isolates within each transmission group. Every
    metadata row is included, so isolates listed in the metadata but missing
    from the samplesheet show up as `missing_profile`.
 
@@ -87,9 +92,21 @@ nextflow run ryanjameskennedy/sinklink -r v0.1.0 \
     --metadata metadata.csv \
     --schemas_dir /path/to/schemas \
     --kraken_db /path/to/kraken2_db \
+    --deacon_index /path/to/deacon/panhuman-1.k31w15.idx \
+    --references_dir /path/to/references \
     --gambit_db /path/to/gambit_db \
     --outdir results
 ```
+
+`--kraken_db` is always required. `--deacon_index`, `--references_dir` and
+`--schemas_dir` are required unless `--skip_host_removal`,
+`--skip_variant_calling` or `--skip_chewbbaca` turns off the step that needs
+them. `make install` sets up everything except the Kraken2 database (see
+[installation](setup/install.md)).
+
+For Nanopore isolates, set `--clair3_model` to the Clair3 model that matches
+the flow cell and basecaller if the default, fine-tuned on bacterial R10.4.1
+SUP data, does not fit.
 
 On a server, put the database paths in a parameters file and the resources in
 a config (see [running on a server](setup/servers.md)):

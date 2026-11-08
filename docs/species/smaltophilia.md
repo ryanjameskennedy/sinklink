@@ -1,13 +1,14 @@
 # _Stenotrophomonas maltophilia_ complex
 
-|             |                                                                                                                                            |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Schema      | `smaltophilia`                                                                                                                             |
-| Scheme      | Gröschel et al. 2020 wgMLST ([figshare 10005047](https://figshare.com/articles/dataset/Smaltophilia_wgMLST_all-alleles_fasta_gz/10005047)) |
-| Loci        | 17,603 (about 4,174 per genome)                                                                                                            |
-| Seed genome | NC_010943.1 (K279a, used to train Prodigal)                                                                                                |
-| Threshold   | ≤10 alleles (d10)                                                                                                                          |
-| Lab labels  | `stenotrophomonas_maltophilia`                                                                                                             |
+|                  |                                                                                                                                            |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Schema           | `smaltophilia`                                                                                                                             |
+| Scheme           | Gröschel et al. 2020 wgMLST ([figshare 10005047](https://figshare.com/articles/dataset/Smaltophilia_wgMLST_all-alleles_fasta_gz/10005047)) |
+| Loci             | 17,603 (about 4,174 per genome)                                                                                                            |
+| Seed genome      | NC_010943.1 (K279a, used to train Prodigal)                                                                                                |
+| Reference genome | [GCF_020641395.2](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_020641395.2/) (ACYCa.6E) (used for QUAST, Mash and variant calling)     |
+| Threshold        | ≤10 alleles (d10)                                                                                                                          |
+| Lab labels       | `stenotrophomonas_maltophilia`                                                                                                             |
 
 ## The scheme
 
@@ -66,6 +67,7 @@ SNPs (e.g. SKA2).
 
 ## Notes
 
+- The _S. maltophilia_ complex is diverse (Gröschel et al. 2020 describe 23 lineages), so many isolates sit far from any single reference and less of their genome is compared in the SNP distances; check `reference_distance` in the QC summary.
 - The FASTA header format is assumed to be `<locus>_<allele>`;
   `split_alleles.py` stops if it does not find about 17,603 loci, and
   `--pattern` can be set to match another format.

@@ -31,6 +31,8 @@ stopped run.
 | ------------------------------------------------ | --------------- | -------------------------------------------------------------- |
 | `--schemas_dir`                                  | parameters file | `/mnt/cache/dbs/vask/schemas`                                  |
 | `--kraken_db`                                    | parameters file | `/mnt/cache/dbs/kraken2/standard_2025-06` (the JASEN database) |
+| `--deacon_index`                                 | parameters file | `/mnt/cache/dbs/vask/deacon/panhuman-1.k31w15.idx`             |
+| `--references_dir`                               | parameters file | `/mnt/cache/dbs/vask/references`                               |
 | `--gambit_db`                                    | parameters file | `/mnt/cache/dbs/gambit_db`                                     |
 | Work directory                                   | config          | `/media/shortterm/$USER/work`                                  |
 | Total CPUs and memory in use (`executor.$local`) | config          | 15 CPUs, 141 GB, at most 8 tasks                               |
@@ -41,8 +43,9 @@ stopped run.
 thedonkey has 20 threads and 188 GB and is shared with two colleagues without a
 scheduler, so the caps sit about 25% below the machine totals.
 
-Only `--schemas_dir` is required. Without `--kraken_db` the read-based species
-check is skipped, and without `--gambit_db` gambitcore is skipped.
+`--kraken_db`, `--deacon_index`, `--references_dir` and `--schemas_dir` are
+required unless the matching `--skip_*` option is set. Without `--gambit_db`
+gambitcore is skipped.
 
 To see what a config resolves to before a run:
 
@@ -59,8 +62,8 @@ each label gets, using the nf-core template values, and a server config can
 resize a whole label with `withLabel` or one tool with `withName`.
 
 nf-core modules come with a label chosen by the module's authors. sinklink
-changes it for five tools, so that each label matches the resources JASEN gives
-the tool on the same server. For the four nf-core modules the change is recorded
+changes it for six tools, so that each label matches the resources JASEN gives
+the tool on the same server. For the five nf-core modules the change is recorded
 as a module patch (`modules/nf-core/<tool>/<tool>.diff`, listed in
 `modules.json`), which nf-core lint accepts and `nf-core modules update` keeps.
 
@@ -71,6 +74,11 @@ as a module patch (`modules/nf-core/<tool>/<tool>.diff`, listed in
 | NanoPlot                  | `process_low`    | `process_medium` | JASEN: 4 CPUs         |
 | gambitcore (local module) | `process_low`    | `process_medium` | JASEN: 4 CPUs, 8 GB   |
 | minimap2                  | `process_high`   | `process_medium` | JASEN: 4 CPUs, 12 GB  |
+| Snippy                    | `process_low`    | `process_high`   | JASEN: 16 CPUs, 32 GB |
+
+The Clair3 module also carries a patch that lets it find its bundled models
+under Apptainer, which the module otherwise only allows for Singularity,
+Docker and Podman.
 
 samtools index stays at `process_low` although JASEN gives it 16 CPUs: it
 indexes one BAM in seconds, and `process_high` would hold every CPU on
@@ -85,27 +93,33 @@ thedonkey's config then resizes the labels themselves towards the JASEN values:
 | `process_medium` | 6 CPUs, 36 GB, 8 h   | 4 CPUs, 12 GB, 8 h   |
 | `process_high`   | 12 CPUs, 72 GB, 16 h | 15 CPUs, 32 GB, 16 h |
 
-| Tool                                   | Label            | Pipeline default         | JASEN           | thedonkey                          |
-| -------------------------------------- | ---------------- | ------------------------ | --------------- | ---------------------------------- |
-| FastQC                                 | `process_medium` | 6 CPUs, 36 GB            | 4 CPUs, 2 GB    | 4 CPUs, 12 GB                      |
-| NanoPlot                               | `process_medium` | 6 CPUs, 36 GB            | 4 CPUs, 2 GB    | 4 CPUs, 12 GB                      |
-| Trimmomatic                            | `process_medium` | 6 CPUs, 36 GB            | 4 CPUs, 4 GB    | 4 CPUs, 12 GB                      |
-| Filtlong                               | `process_low`    | 2 CPUs, 12 GB            | 2 CPUs, 4 GB    | 2 CPUs, 4 GB                       |
-| SKESA                                  | `process_high`   | 12 CPUs, 72 GB           | 16 CPUs, 32 GB  | 15 CPUs, 32 GB                     |
-| Flye                                   | `process_high`   | 12 CPUs, 72 GB           | 20 CPUs, 32 GB  | 15 CPUs, 32 GB                     |
-| Medaka                                 | `process_high`   | 12 CPUs, 72 GB           | 20 CPUs, 32 GB  | 15 CPUs, 32 GB                     |
-| QUAST                                  | `process_medium` | 6 CPUs, 36 GB            | 2 CPUs, 2 GB    | 4 CPUs, 12 GB                      |
-| gambitcore                             | `process_medium` | 6 CPUs, 36 GB            | 4 CPUs, 8 GB    | 4 CPUs, 12 GB                      |
-| bwa index                              | none             | 1 CPU, 7 × assembly size | 2 CPUs, 2 GB    | 1 CPU, 7 × assembly size           |
-| bwa mem                                | `process_high`   | 12 CPUs, 72 GB           | 16 CPUs, 20 GB  | 15 CPUs, 32 GB                     |
-| minimap2                               | `process_medium` | 6 CPUs, 36 GB            | 4 CPUs, 12 GB   | 4 CPUs, 12 GB                      |
-| samtools index                         | `process_low`    | 2 CPUs, 12 GB            | 16 CPUs, 2 GB   | 2 CPUs, 4 GB                       |
-| samtools coverage                      | `process_single` | 1 CPU, 6 GB              | 2 CPUs, 2 GB    | 1 CPU, 2 GB                        |
-| mlst                                   | `process_low`    | 2 CPUs, 12 GB            | 2 CPUs, 2 GB    | 2 CPUs, 4 GB                       |
-| Kraken2                                | `process_high`   | 12 CPUs, 72 GB           | 16 CPUs, 100 GB | 15 CPUs, **100 GB**, one at a time |
-| Bracken                                | `process_low`    | 2 CPUs, 12 GB            | 2 CPUs, 2 GB    | 2 CPUs, 4 GB                       |
-| chewBBACA AlleleCall                   | `process_high`   | 12 CPUs, 72 GB           | 16 CPUs, 12 GB  | 15 CPUs, 32 GB                     |
-| gunzip, QC summary, distances, MultiQC | `process_single` | 1 CPU, 6 GB              | –               | 1 CPU, 2 GB                        |
+| Tool                                                 | Label            | Pipeline default         | JASEN           | thedonkey                          |
+| ---------------------------------------------------- | ---------------- | ------------------------ | --------------- | ---------------------------------- |
+| Deacon                                               | `process_medium` | 6 CPUs, 36 GB            | –               | 4 CPUs, 12 GB                      |
+| FastQC                                               | `process_medium` | 6 CPUs, 36 GB            | 4 CPUs, 2 GB    | 4 CPUs, 12 GB                      |
+| NanoPlot                                             | `process_medium` | 6 CPUs, 36 GB            | 4 CPUs, 2 GB    | 4 CPUs, 12 GB                      |
+| Trimmomatic                                          | `process_medium` | 6 CPUs, 36 GB            | 4 CPUs, 4 GB    | 4 CPUs, 12 GB                      |
+| Filtlong                                             | `process_low`    | 2 CPUs, 12 GB            | 2 CPUs, 4 GB    | 2 CPUs, 4 GB                       |
+| SKESA                                                | `process_high`   | 12 CPUs, 72 GB           | 16 CPUs, 32 GB  | 15 CPUs, 32 GB                     |
+| Flye                                                 | `process_high`   | 12 CPUs, 72 GB           | 20 CPUs, 32 GB  | 15 CPUs, 32 GB                     |
+| Medaka                                               | `process_high`   | 12 CPUs, 72 GB           | 20 CPUs, 32 GB  | 15 CPUs, 32 GB                     |
+| QUAST                                                | `process_medium` | 6 CPUs, 36 GB            | 2 CPUs, 2 GB    | 4 CPUs, 12 GB                      |
+| gambitcore                                           | `process_medium` | 6 CPUs, 36 GB            | 4 CPUs, 8 GB    | 4 CPUs, 12 GB                      |
+| bwa index                                            | none             | 1 CPU, 7 × assembly size | 2 CPUs, 2 GB    | 1 CPU, 7 × assembly size           |
+| bwa mem                                              | `process_high`   | 12 CPUs, 72 GB           | 16 CPUs, 20 GB  | 15 CPUs, 32 GB                     |
+| minimap2                                             | `process_medium` | 6 CPUs, 36 GB            | 4 CPUs, 12 GB   | 4 CPUs, 12 GB                      |
+| samtools index                                       | `process_low`    | 2 CPUs, 12 GB            | 16 CPUs, 2 GB   | 2 CPUs, 4 GB                       |
+| samtools coverage                                    | `process_single` | 1 CPU, 6 GB              | 2 CPUs, 2 GB    | 1 CPU, 2 GB                        |
+| mlst                                                 | `process_low`    | 2 CPUs, 12 GB            | 2 CPUs, 2 GB    | 2 CPUs, 4 GB                       |
+| Mash                                                 | `process_low`    | 2 CPUs, 12 GB            | –               | 2 CPUs, 4 GB                       |
+| Snippy                                               | `process_high`   | 12 CPUs, 72 GB           | 16 CPUs, 32 GB  | 15 CPUs, 32 GB                     |
+| minimap2 to the reference                            | `process_medium` | 6 CPUs, 36 GB            | 4 CPUs, 12 GB   | 4 CPUs, 12 GB                      |
+| Clair3                                               | `process_high`   | 12 CPUs, 72 GB           | 8 CPUs, 16 GB   | 15 CPUs, 32 GB                     |
+| samtools depth                                       | `process_low`    | 2 CPUs, 12 GB            | –               | 2 CPUs, 4 GB                       |
+| Kraken2                                              | `process_high`   | 12 CPUs, 72 GB           | 16 CPUs, 100 GB | 15 CPUs, **100 GB**, one at a time |
+| Bracken                                              | `process_low`    | 2 CPUs, 12 GB            | 2 CPUs, 2 GB    | 2 CPUs, 4 GB                       |
+| chewBBACA AlleleCall                                 | `process_high`   | 12 CPUs, 72 GB           | 16 CPUs, 12 GB  | 15 CPUs, 32 GB                     |
+| gunzip, pseudogenome, QC summary, distances, MultiQC | `process_single` | 1 CPU, 6 GB              | –               | 1 CPU, 2 GB                        |
 
 Only Kraken2's memory is set per tool on thedonkey; everything else follows
 from the label. Where JASEN asks for more than 15 CPUs, thedonkey's cap applies.
