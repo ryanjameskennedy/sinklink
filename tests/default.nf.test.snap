@@ -2,6 +2,12 @@
     "-profile test": {
         "content": [
             {
+                "BCFTOOLS_CONSENSUS": [
+                    "bcftools"
+                ],
+                "BCFTOOLS_VIEW": [
+                    "bcftools"
+                ],
                 "BRACKEN_BRACKEN": [
                     "bracken"
                 ],
@@ -30,6 +36,24 @@
                 "FLYE": [
                     "flye"
                 ],
+                "GAWK_ALIGNMENT": [
+                    "gawk"
+                ],
+                "GAWK_PSEUDOGENOME": [
+                    "gawk"
+                ],
+                "GAWK_REFERENCE_CHROMOSOME": [
+                    "gawk"
+                ],
+                "GAWK_REFERENCE_MASK": [
+                    "gawk"
+                ],
+                "GAWK_SAMPLE_MASK": [
+                    "gawk"
+                ],
+                "GUBBINS": [
+                    "gubbins"
+                ],
                 "GUNZIP_ASSEMBLY": [
                     "gunzip"
                 ],
@@ -39,9 +63,6 @@
                 "KRAKEN2_KRAKEN2": [
                     "kraken2",
                     "pigz"
-                ],
-                "MAKE_PSEUDOGENOME": [
-                    "python"
                 ],
                 "MASH_DIST": [
                     "mash"
@@ -58,16 +79,23 @@
                 "MLST": [
                     "mlst"
                 ],
+                "MOSDEPTH": [
+                    "gzip",
+                    "mosdepth"
+                ],
                 "NANOPLOT": [
                     "NanoPlot"
+                ],
+                "NUCMER": [
+                    "nucmer"
+                ],
+                "PHISPY": [
+                    "phispy"
                 ],
                 "QUAST": [
                     "quast"
                 ],
                 "SAMTOOLS_COVERAGE": [
-                    "samtools"
-                ],
-                "SAMTOOLS_DEPTH": [
                     "samtools"
                 ],
                 "SAMTOOLS_INDEX": [
@@ -78,6 +106,9 @@
                 ],
                 "SNIPPY_RUN": [
                     "snippy"
+                ],
+                "SNPDISTS": [
+                    "snpdists"
                 ],
                 "SUMMARISE_QC": [
                     "python"
@@ -315,6 +346,22 @@
                 "quast/S03.quast/report.txt",
                 "quast/S03.quast/transposed_report.tex",
                 "quast/S03.quast/transposed_report.txt",
+                "snp_distances",
+                "snp_distances/gubbins",
+                "snp_distances/gubbins/paeruginosa.branch_base_reconstruction.embl",
+                "snp_distances/gubbins/paeruginosa.csv",
+                "snp_distances/gubbins/paeruginosa.fasta",
+                "snp_distances/gubbins/paeruginosa.final_tree.tre",
+                "snp_distances/gubbins/paeruginosa.gff",
+                "snp_distances/gubbins/paeruginosa.node_labelled.final_tree.tre",
+                "snp_distances/gubbins/paeruginosa.phylip",
+                "snp_distances/gubbins/paeruginosa.recombination_predictions.embl",
+                "snp_distances/gubbins/paeruginosa.vcf",
+                "snp_distances/masks",
+                "snp_distances/masks/GCF_000006765.1.mask.bed",
+                "snp_distances/masks/GCF_000006765.1.phispy.tsv",
+                "snp_distances/paeruginosa.aln",
+                "snp_distances/paeruginosa.gubbins.snp_dists.tsv",
                 "summary",
                 "summary/allele_qc.tsv",
                 "summary/group_summary.tsv",
@@ -322,15 +369,12 @@
                 "summary/qc_summary.tsv",
                 "variants",
                 "variants/S01.pseudogenome.fa",
-                "variants/S01.pseudogenome.tsv",
                 "variants/S01.vcf.gz",
                 "variants/S01.vcf.gz.csi",
                 "variants/S02.pseudogenome.fa",
-                "variants/S02.pseudogenome.tsv",
                 "variants/S02.vcf.gz",
                 "variants/S02.vcf.gz.csi",
                 "variants/S03.pseudogenome.fa",
-                "variants/S03.pseudogenome.tsv",
                 "variants/S03.vcf.gz",
                 "variants/S03.vcf.gz.tbi"
             ],
@@ -525,25 +569,35 @@
                 "report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "transposed_report.tex:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "transposed_report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.branch_base_reconstruction.embl:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.csv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.fasta:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.final_tree.tre:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.gff:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.node_labelled.final_tree.tre:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.phylip:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.recombination_predictions.embl:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.vcf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "GCF_000006765.1.mask.bed:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "GCF_000006765.1.phispy.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.aln:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.gubbins.snp_dists.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "allele_qc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "group_summary.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "pairwise_distances.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "qc_summary.tsv:md5,2c23545bd1a084360ee7d94a9f45bd16",
-                "S01.pseudogenome.fa:md5,023c8c6b5c60a9bd98fe85304ef799e9",
-                "S01.pseudogenome.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S01.pseudogenome.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.vcf.gz:md5,68b329da9893e34099c7d8ad5cb9c940",
                 "S01.vcf.gz.csi:md5,d41d8cd98f00b204e9800998ecf8427e",
-                "S02.pseudogenome.fa:md5,2a5d5fbdca1e80c1d0549df241d4d96b",
-                "S02.pseudogenome.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.pseudogenome.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.vcf.gz:md5,68b329da9893e34099c7d8ad5cb9c940",
                 "S02.vcf.gz.csi:md5,d41d8cd98f00b204e9800998ecf8427e",
-                "S03.pseudogenome.fa:md5,fee6aefb8d664ec55378edeece618627",
-                "S03.pseudogenome.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.pseudogenome.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.vcf.gz:md5,68b329da9893e34099c7d8ad5cb9c940",
                 "S03.vcf.gz.tbi:md5,d41d8cd98f00b204e9800998ecf8427e"
             ]
         ],
-        "timestamp": "2026-11-08T13:15:46.307351",
+        "timestamp": "2026-11-08T22:58:21.026295",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"
@@ -552,6 +606,12 @@
     "-profile test, all optional steps": {
         "content": [
             {
+                "BCFTOOLS_CONSENSUS": [
+                    "bcftools"
+                ],
+                "BCFTOOLS_VIEW": [
+                    "bcftools"
+                ],
                 "BRACKEN_BRACKEN": [
                     "bracken"
                 ],
@@ -586,6 +646,24 @@
                 "GAMBITCORE": [
                     "gambitcore"
                 ],
+                "GAWK_ALIGNMENT": [
+                    "gawk"
+                ],
+                "GAWK_PSEUDOGENOME": [
+                    "gawk"
+                ],
+                "GAWK_REFERENCE_CHROMOSOME": [
+                    "gawk"
+                ],
+                "GAWK_REFERENCE_MASK": [
+                    "gawk"
+                ],
+                "GAWK_SAMPLE_MASK": [
+                    "gawk"
+                ],
+                "GUBBINS": [
+                    "gubbins"
+                ],
                 "GUNZIP_ASSEMBLY": [
                     "gunzip"
                 ],
@@ -595,9 +673,6 @@
                 "KRAKEN2_KRAKEN2": [
                     "kraken2",
                     "pigz"
-                ],
-                "MAKE_PSEUDOGENOME": [
-                    "python"
                 ],
                 "MASH_DIST": [
                     "mash"
@@ -614,16 +689,23 @@
                 "MLST": [
                     "mlst"
                 ],
+                "MOSDEPTH": [
+                    "gzip",
+                    "mosdepth"
+                ],
                 "NANOPLOT": [
                     "NanoPlot"
+                ],
+                "NUCMER": [
+                    "nucmer"
+                ],
+                "PHISPY": [
+                    "phispy"
                 ],
                 "QUAST": [
                     "quast"
                 ],
                 "SAMTOOLS_COVERAGE": [
-                    "samtools"
-                ],
-                "SAMTOOLS_DEPTH": [
                     "samtools"
                 ],
                 "SAMTOOLS_INDEX": [
@@ -634,6 +716,9 @@
                 ],
                 "SNIPPY_RUN": [
                     "snippy"
+                ],
+                "SNPDISTS": [
+                    "snpdists"
                 ],
                 "SUMMARISE_QC": [
                     "python"
@@ -880,6 +965,22 @@
                 "quast/S03.quast/report.txt",
                 "quast/S03.quast/transposed_report.tex",
                 "quast/S03.quast/transposed_report.txt",
+                "snp_distances",
+                "snp_distances/gubbins",
+                "snp_distances/gubbins/paeruginosa.branch_base_reconstruction.embl",
+                "snp_distances/gubbins/paeruginosa.csv",
+                "snp_distances/gubbins/paeruginosa.fasta",
+                "snp_distances/gubbins/paeruginosa.final_tree.tre",
+                "snp_distances/gubbins/paeruginosa.gff",
+                "snp_distances/gubbins/paeruginosa.node_labelled.final_tree.tre",
+                "snp_distances/gubbins/paeruginosa.phylip",
+                "snp_distances/gubbins/paeruginosa.recombination_predictions.embl",
+                "snp_distances/gubbins/paeruginosa.vcf",
+                "snp_distances/masks",
+                "snp_distances/masks/GCF_000006765.1.mask.bed",
+                "snp_distances/masks/GCF_000006765.1.phispy.tsv",
+                "snp_distances/paeruginosa.aln",
+                "snp_distances/paeruginosa.gubbins.snp_dists.tsv",
                 "summary",
                 "summary/allele_qc.tsv",
                 "summary/group_summary.tsv",
@@ -892,15 +993,12 @@
                 "trimmomatic/S02_out.log",
                 "variants",
                 "variants/S01.pseudogenome.fa",
-                "variants/S01.pseudogenome.tsv",
                 "variants/S01.vcf.gz",
                 "variants/S01.vcf.gz.csi",
                 "variants/S02.pseudogenome.fa",
-                "variants/S02.pseudogenome.tsv",
                 "variants/S02.vcf.gz",
                 "variants/S02.vcf.gz.csi",
                 "variants/S03.pseudogenome.fa",
-                "variants/S03.pseudogenome.tsv",
                 "variants/S03.vcf.gz",
                 "variants/S03.vcf.gz.tbi"
             ],
@@ -1099,6 +1197,19 @@
                 "report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "transposed_report.tex:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "transposed_report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.branch_base_reconstruction.embl:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.csv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.fasta:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.final_tree.tre:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.gff:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.node_labelled.final_tree.tre:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.phylip:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.recombination_predictions.embl:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.vcf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "GCF_000006765.1.mask.bed:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "GCF_000006765.1.phispy.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.aln:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.gubbins.snp_dists.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "allele_qc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "group_summary.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "pairwise_distances.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -1107,21 +1218,18 @@
                 "S01_out.log:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.summary:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02_out.log:md5,d41d8cd98f00b204e9800998ecf8427e",
-                "S01.pseudogenome.fa:md5,023c8c6b5c60a9bd98fe85304ef799e9",
-                "S01.pseudogenome.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S01.pseudogenome.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.vcf.gz:md5,68b329da9893e34099c7d8ad5cb9c940",
                 "S01.vcf.gz.csi:md5,d41d8cd98f00b204e9800998ecf8427e",
-                "S02.pseudogenome.fa:md5,2a5d5fbdca1e80c1d0549df241d4d96b",
-                "S02.pseudogenome.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.pseudogenome.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.vcf.gz:md5,68b329da9893e34099c7d8ad5cb9c940",
                 "S02.vcf.gz.csi:md5,d41d8cd98f00b204e9800998ecf8427e",
-                "S03.pseudogenome.fa:md5,fee6aefb8d664ec55378edeece618627",
-                "S03.pseudogenome.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.pseudogenome.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.vcf.gz:md5,68b329da9893e34099c7d8ad5cb9c940",
                 "S03.vcf.gz.tbi:md5,d41d8cd98f00b204e9800998ecf8427e"
             ]
         ],
-        "timestamp": "2026-11-08T13:16:10.970436",
+        "timestamp": "2026-11-08T22:58:50.197225",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"

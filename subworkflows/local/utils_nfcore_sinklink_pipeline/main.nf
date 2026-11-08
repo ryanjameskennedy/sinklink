@@ -172,7 +172,7 @@ def assetPath(value, name) {
 }
 
 //
-// The reference genome files for each sample whose schema has one: [ meta, [ fasta, fai, gff ] ]
+// The reference genome files for each sample whose schema has one: [ meta, [ fasta, fai, gff, gbff ] ]
 //
 def referenceChannel(ch_samples, references_dir) {
     return ch_samples
@@ -180,7 +180,7 @@ def referenceChannel(ch_samples, references_dir) {
         .filter { meta -> meta.reference }
         .map { meta ->
             def prefix = "${references_dir}/${meta.reference}"
-            [ meta, [ file("${prefix}.fasta"), file("${prefix}.fasta.fai"), file("${prefix}.gff") ] ]
+            [ meta, [ file("${prefix}.fasta"), file("${prefix}.fasta.fai"), file("${prefix}.gff"), file("${prefix}.gbff") ] ]
         }
         .filter { meta, files ->
             def missing = files.findAll { f -> !f.exists() }
@@ -261,7 +261,7 @@ def toolCitationText() {
             "mlst (Seemann),",
             "Kraken2 (Wood et al. 2019), Bracken (Lu et al. 2017),",
             params.references_dir ? "Mash (Ondov et al. 2016)," : "",
-            params.skip_variant_calling ? "" : "Snippy (Seemann 2015) with FreeBayes (Garrison and Marth 2012), Clair3 (Zheng et al. 2022),",
+            params.skip_variant_calling ? "" : "Snippy (Seemann 2015) with FreeBayes (Garrison and Marth 2012), Clair3 (Zheng et al. 2022), MUMmer (Marçais et al. 2018), PhiSpy (Akhter et al. 2012), mosdepth (Pedersen and Quinlan 2018), BCFtools (Danecek et al. 2021), Gubbins (Croucher et al. 2015), snp-dists (Seemann),",
             params.skip_chewbbaca ? "" : "chewBBACA (Silva et al. 2018),",
             "MultiQC (Ewels et al. 2016)",
             "."
@@ -288,6 +288,11 @@ def toolBibliographyText() {
             params.skip_variant_calling ? "" : "<li>Seemann T. (2015) Snippy: fast bacterial variant calling from NGS reads, URL: https://github.com/tseemann/snippy</li>",
             params.skip_variant_calling ? "" : "<li>Garrison E, Marth G. (2012) Haplotype-based variant detection from short-read sequencing. arXiv:1207.3907</li>",
             params.skip_variant_calling ? "" : "<li>Zheng Z, et al. (2022) Symphonizing pileup and full-alignment for deep learning-based long-read variant calling. Nat Comput Sci 2:797-803. doi: 10.1038/s43588-022-00387-x</li>",
+            params.skip_variant_calling ? "" : "<li>Marçais G, et al. (2018) MUMmer4: A fast and versatile genome alignment system. PLoS Comput Biol 14(1):e1005944. doi: 10.1371/journal.pcbi.1005944</li>",
+            params.skip_variant_calling ? "" : "<li>Akhter S, Aziz RK, Edwards RA. (2012) PhiSpy: a novel algorithm for finding prophages in bacterial genomes that combines similarity- and composition-based strategies. Nucleic Acids Res 40(16):e126. doi: 10.1093/nar/gks406</li>",
+            params.skip_variant_calling ? "" : "<li>Pedersen BS, Quinlan AR. (2018) Mosdepth: quick coverage calculation for genomes and exomes. Bioinformatics 34(5):867-868. doi: 10.1093/bioinformatics/btx699</li>",
+            params.skip_variant_calling ? "" : "<li>Croucher NJ, et al. (2015) Rapid phylogenetic analysis of large samples of recombinant bacterial whole genome sequences using Gubbins. Nucleic Acids Res 43(3):e15. doi: 10.1093/nar/gku1196</li>",
+            params.skip_variant_calling ? "" : "<li>Seemann T. snp-dists: pairwise SNP distance matrix from a FASTA sequence alignment, URL: https://github.com/tseemann/snp-dists</li>",
             params.skip_chewbbaca ? "" : "<li>Silva M, et al. (2018) chewBBACA: A complete suite for gene-by-gene schema creation and strain identification. Microb Genom 4(3):e000166. doi: 10.1099/mgen.0.000166</li>",
             "<li>Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics , 32(19), 3047–3048. doi: /10.1093/bioinformatics/btw354</li>"
         ].join(' ').trim()

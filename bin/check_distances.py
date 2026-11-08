@@ -3,10 +3,11 @@
 
 For every pair of isolates in a group, counts allele differences over the loci
 called in both isolates and compares the count with the species threshold in
-assets/schemas.tsv. When both isolates have a pseudogenome against the same
-reference genome (make_pseudogenome.py), also counts SNP differences over the
-positions called in both; there is no SNP threshold, so these are for
-information only. Read and assembly QC from qc_summary.tsv (summarise_qc.py)
+assets/schemas.tsv. When both isolates are in a snp-dists matrix for their
+schema (masked pseudogenomes, recombination removed with Gubbins when there were
+enough isolates), their SNP distance is added; there is no SNP threshold, so
+these are for information only. Read and assembly QC from qc_summary.tsv
+(summarise_qc.py)
 is carried into each pair. Writes allele_qc.tsv, pairwise_distances.tsv and
 group_summary.tsv.
 """
@@ -40,7 +41,9 @@ def normalise_call(value):
     value = value.strip()
     if value.startswith("INF-"):
         value = value[4:]
-    return value if value.lstrip("*").isdigit() else None
+    if not value.lstrip("*").isdigit() or int(value.lstrip("*")) == 0:
+        return None
+    return value
 
 
 def schema_of_alleles(path):
@@ -70,36 +73,24 @@ def load_profiles(path):
     return len(loci), profiles
 
 
-def load_pseudogenomes(paths):
-    genomes = {}
+def load_snp_dists(paths):
+    """Read snp-dists matrices named <schema>[.gubbins].snp_dists.tsv.
+
+    Returns {schema: (recombination_filtered, {(sample_a, sample_b): distance})}.
+    """
+    matrices = {}
     for path in paths:
-        name, chunks = None, []
-        with open(path) as handle:
-            for line in handle:
-                line = line.strip()
-                if line.startswith(">"):
-                    name = line[1:].split()[0]
-                elif line:
-                    chunks.append(line)
-        if name:
-            genomes[name] = "".join(chunks).upper().encode("ascii")
-    return genomes
-
-
-CALLED = frozenset(b"ACGT")
-
-
-def snp_distance(a, b):
-    """Return (positions called in both, differences), or None if the lengths differ."""
-    if len(a) != len(b):
-        return None
-    compared = diffs = 0
-    for x, y in zip(a, b):
-        if x in CALLED and y in CALLED:
-            compared += 1
-            if x != y:
-                diffs += 1
-    return compared, diffs
+        parts = Path(path).name.split(".")
+        schema, filtered = parts[0], "gubbins" in parts[1:]
+        with open(path, newline="") as handle:
+            rows = list(csv.reader(handle, delimiter="\t"))
+        names = rows[0][1:]
+        distances = {}
+        for row in rows[1:]:
+            for name, value in zip(names, row[1:]):
+                distances[(row[0], name)] = int(value)
+        matrices[schema] = (filtered, distances)
+    return matrices
 
 
 def compare(a, b):
@@ -136,8 +127,8 @@ def main():
                         help="chewBBACA allele tables named <schema>_results_alleles.tsv")
     parser.add_argument("--outdir", default=".", help="where to write the tables")
     parser.add_argument("--qc-summary", help="qc_summary.tsv from summarise_qc.py")
-    parser.add_argument("--pseudogenomes", nargs="*", default=[],
-                        help="pseudogenomes from make_pseudogenome.py, one isolate each")
+    parser.add_argument("--snp-dists", nargs="*", default=[],
+                        help="snp-dists matrices named <schema>[.gubbins].snp_dists.tsv")
     parser.add_argument("--species-map", required=True)
     parser.add_argument("--schemas", required=True)
     args = parser.parse_args()
@@ -153,7 +144,7 @@ def main():
     if args.qc_summary and Path(args.qc_summary).is_file():
         assembly_qc = {r["sample"]: r for r in read_tsv(args.qc_summary)}
     species_map = {r["growth"]: r for r in read_tsv(args.species_map)}
-    pseudogenomes = load_pseudogenomes(args.pseudogenomes)
+    snp_dists = load_snp_dists(args.snp_dists)
     schemas = {r["schema"]: r for r in read_tsv(args.schemas)}
     with open(args.samplesheet, newline="", encoding="utf-8-sig") as handle:
         samples = list(csv.DictReader(handle))
@@ -228,8 +219,8 @@ def main():
                 "allele_diffs": "",
                 "threshold": "",
                 "verdict": "",
-                "snp_sites_compared": "",
                 "snp_distance": "",
+                "snp_recombination_filtered": "",
                 "qc": "",
                 "notes": "",
             }
@@ -272,10 +263,11 @@ def main():
                 row["allele_diffs"] = diffs
                 row["threshold"] = threshold if borderline is None else f"{threshold}-{borderline}"
                 row["verdict"] = verdict(diffs, threshold, borderline)
-            if id_a in pseudogenomes and id_b in pseudogenomes and a["schema"] == b["schema"]:
-                snps = snp_distance(pseudogenomes[id_a], pseudogenomes[id_b])
-                if snps is not None:
-                    row["snp_sites_compared"], row["snp_distance"] = snps
+            if a["schema"] == b["schema"] and a["schema"] in snp_dists:
+                filtered, distances = snp_dists[a["schema"]]
+                if (id_a, id_b) in distances:
+                    row["snp_distance"] = distances[(id_a, id_b)]
+                    row["snp_recombination_filtered"] = "yes" if filtered else "no"
             if failed:
                 notes.add("QC: " + ", ".join(failed))
             row["notes"] = "; ".join(sorted(notes))

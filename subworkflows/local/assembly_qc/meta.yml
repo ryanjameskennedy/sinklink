@@ -24,7 +24,7 @@ input:
       description: "[ val(meta), [ fastq ] ]"
   - ch_reference:
       type: channel
-      description: "Reference genome per sample: [ val(meta), [ fasta, fai, gff ] ]"
+      description: "Reference genome per sample: [ val(meta), [ fasta, fai, gff, gbff ] ]"
   - gambit_db:
       type: file
       description: "GAMBIT database folder, or [] to skip gambitcore"

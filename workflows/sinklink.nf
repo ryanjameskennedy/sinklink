@@ -83,10 +83,10 @@ workflow SINKLINK {
     //
     // SUBWORKFLOW: Variant calling against the schema's reference genome
     //
-    ch_pseudogenomes = channel.empty()
+    ch_snp_dists = channel.empty()
     if (!params.skip_variant_calling) {
         VARIANT_CALLING ( ch_reads, ch_reference, params.clair3_model )
-        ch_pseudogenomes = VARIANT_CALLING.out.pseudogenome.map { _meta, fasta -> fasta }
+        ch_snp_dists = VARIANT_CALLING.out.snp_dists.map { _meta, tsv -> tsv }
     }
 
     //
@@ -137,7 +137,7 @@ workflow SINKLINK {
         ch_metadata,
         ch_qc_summary,
         ch_alleles.collect().ifEmpty([]),
-        ch_pseudogenomes.collect().ifEmpty([]),
+        ch_snp_dists.collect().ifEmpty([]),
         ch_schema_table,
         ch_species_map
     )
