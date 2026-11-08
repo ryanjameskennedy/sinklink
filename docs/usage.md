@@ -102,7 +102,8 @@ nextflow run ryanjameskennedy/sinklink -r v0.1.0 \
 `--schemas_dir` are required unless `--skip_host_removal`,
 `--skip_variant_calling` or `--skip_chewbbaca` turns off the step that needs
 them. `make install` sets up everything except the Kraken2 database (see
-[installation](setup/install.md)).
+[installation](setup/install.md) and, for the Kraken2 download,
+[databases](setup/databases.md)).
 
 For Nanopore isolates, set `--clair3_model` to the Clair3 model that matches
 the flow cell and basecaller if the default, fine-tuned on bacterial R10.4.1

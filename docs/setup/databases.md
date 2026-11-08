@@ -1,11 +1,11 @@
 # Databases
 
-| Database           | Set up with         | Parameter          | Needed                                           |
-| ------------------ | ------------------- | ------------------ | ------------------------------------------------ |
-| Kraken2/Bracken    | existing database   | `--kraken_db`      | always                                           |
-| Deacon human index | `make deacon_index` | `--deacon_index`   | unless `--skip_host_removal`                     |
-| Reference genomes  | `make references`   | `--references_dir` | unless `--skip_variant_calling`                  |
-| GAMBIT             | `make gambit_db`    | `--gambit_db`      | optional; completeness is not checked without it |
+| Database           | Set up with                                    | Parameter          | Needed                                           |
+| ------------------ | ---------------------------------------------- | ------------------ | ------------------------------------------------ |
+| Kraken2/Bracken    | [download once](#kraken2bracken-species-check) | `--kraken_db`      | always                                           |
+| Deacon human index | `make deacon_index`                            | `--deacon_index`   | unless `--skip_host_removal`                     |
+| Reference genomes  | `make references`                              | `--references_dir` | unless `--skip_variant_calling`                  |
+| GAMBIT             | `make gambit_db`                               | `--gambit_db`      | optional; completeness is not checked without it |
 
 ## Reference genomes
 
@@ -49,10 +49,34 @@ downloads it into `<ASSETS_DIR>/gambit_db`, as JASEN does. Pass the folder with
 
 ## Kraken2/Bracken (species check)
 
-The standard Kraken2 database is too large to download as part of the setup.
-Point the pipeline at an existing one with `--kraken_db`, which is required. Bracken needs the
-database's `database<length>mers.kmer_distrib` file for the read length given
-with `--bracken_read_length` (default 150); if Bracken fails, the Kraken2
+`make install` does not download a Kraken2 database: they are large, and a
+server often has one already. Point the pipeline at it with `--kraken_db`,
+which is required.
+
+To download one, use a prebuilt database from the
+[Langmead lab index](https://benlangmead.github.io/aws-indexes/k2). sinklink
+uses Standard-16, the RefSeq archaea, bacteria, viral, plasmid, human and
+UniVec_Core database capped at 16 GB, so it fits in memory on any of our
+servers. The cap drops some k-mers, which costs a little sensitivity; a
+cultured isolate has plenty of reads from one species, so this matters less
+than for metagenomes. The 2026-06-26 release used on thedonkey:
+
+```bash
+mkdir -p /mnt/cache/dbs/kraken2/standard_16gb_20260626
+cd /mnt/cache/dbs/kraken2/standard_16gb_20260626
+wget https://genome-idx.s3.amazonaws.com/kraken/k2_standard_16_GB_20260626.tar.gz
+tar -xzf k2_standard_16_GB_20260626.tar.gz
+rm k2_standard_16_GB_20260626.tar.gz
+```
+
+The archive is 12 GB. Unpacked, the folder holds the Kraken2 files
+(`hash.k2d`, `opts.k2d`, `taxo.k2d`) and the Bracken k-mer distributions
+(`database<length>mers.kmer_distrib`) for a range of read lengths. Pass the
+folder with `--kraken_db`. For a newer release, take the file name from the
+index page.
+
+Bracken needs the `database<length>mers.kmer_distrib` file for the read length
+given with `--bracken_read_length` (default 150); if Bracken fails, the Kraken2
 report is used instead.
 
 On a server, set them in the parameters file (see [running on a server](servers.md)).
