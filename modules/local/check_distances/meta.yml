@@ -1,8 +1,9 @@
 name: "check_distances"
-description: Compare allele profiles within each transmission group against species thresholds
+description: Compare allele profiles within each transmission group against species thresholds, with SNP distances between pseudogenomes for information
 keywords:
   - cgmlst
   - wgmlst
+  - snp
   - transmission
 tools:
   - "check_distances.py":
@@ -17,6 +18,9 @@ input:
   - alleles:
       type: file
       description: chewBBACA allele tables named <schema>_results_alleles.tsv
+  - pseudogenomes:
+      type: file
+      description: Pseudogenomes from MAKE_PSEUDOGENOME, one isolate each
   - schema_table:
       type: file
       description: assets/schemas.tsv

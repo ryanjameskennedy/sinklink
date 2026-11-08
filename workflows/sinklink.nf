@@ -83,8 +83,10 @@ workflow SINKLINK {
     //
     // SUBWORKFLOW: Variant calling against the schema's reference genome
     //
+    ch_pseudogenomes = channel.empty()
     if (!params.skip_variant_calling) {
         VARIANT_CALLING ( ch_reads, ch_reference, params.clair3_model )
+        ch_pseudogenomes = VARIANT_CALLING.out.pseudogenome.map { _meta, fasta -> fasta }
     }
 
     //
@@ -117,22 +119,28 @@ workflow SINKLINK {
         .set { ch_qc_summary }
 
     //
-    // SUBWORKFLOW: chewBBACA allele calling, then distances within transmission groups
+    // SUBWORKFLOW: chewBBACA allele calling
     //
+    ch_alleles = channel.empty()
     if (!params.skip_chewbbaca) {
         if (!params.schemas_dir) {
             error("--schemas_dir is required for allele calling; set it or use --skip_chewbbaca")
         }
         ALLELE_CALLING ( ch_assembly, params.schemas_dir )
-
-        CHECK_DISTANCES (
-            ch_metadata,
-            ch_qc_summary,
-            ALLELE_CALLING.out.alleles.map { _meta, tsv -> tsv }.collect().ifEmpty([]),
-            ch_schema_table,
-            ch_species_map
-        )
+        ch_alleles = ALLELE_CALLING.out.alleles.map { _meta, tsv -> tsv }
     }
+
+    //
+    // MODULE: Allele and SNP distances within transmission groups
+    //
+    CHECK_DISTANCES (
+        ch_metadata,
+        ch_qc_summary,
+        ch_alleles.collect().ifEmpty([]),
+        ch_pseudogenomes.collect().ifEmpty([]),
+        ch_schema_table,
+        ch_species_map
+    )
 
     //
     // Collate and save software versions
