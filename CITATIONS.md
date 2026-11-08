@@ -10,6 +10,10 @@
 
 ## Pipeline tools
 
+- [BCFtools](https://doi.org/10.1093/gigascience/giab008)
+
+  > Danecek P, Bonfield JK, Liddle J, Marshall J, Ohan V, Pollard MO, Whitwham A, Keane T, McCarthy SA, Davies RM, Li H. Twelve years of SAMtools and BCFtools. GigaScience. 2021;10(2):giab008. doi: 10.1093/gigascience/giab008.
+
 - [Bracken](https://doi.org/10.7717/peerj-cs.104)
 
   > Lu J, Breitwieser FP, Thielen P, Salzberg SL. Bracken: estimating species abundance in metagenomics data. PeerJ Comput Sci. 2017;3:e104. doi: 10.7717/peerj-cs.104.
@@ -50,6 +54,10 @@
 
   > Lumpe J, et al. GAMBIT (Genomic Approximation Method for Bacterial Identification and Tracking): A methodology to rapidly leverage whole genome sequencing of bacterial isolates for clinical identification. PLoS One. 2023;18(2):e0277575. doi: 10.1371/journal.pone.0277575.
 
+- [Gubbins](https://doi.org/10.1093/nar/gku1196)
+
+  > Croucher NJ, Page AJ, Connor TR, Delaney AJ, Keane JA, Bentley SD, Parkhill J, Harris SR. Rapid phylogenetic analysis of large samples of recombinant bacterial whole genome sequences using Gubbins. Nucleic Acids Res. 2015;43(3):e15. doi: 10.1093/nar/gku1196.
+
 - [Kraken2](https://doi.org/10.1186/s13059-019-1891-0)
 
   > Wood DE, Lu J, Langmead B. Improved metagenomic analysis with Kraken 2. Genome Biol. 2019;20:257. doi: 10.1186/s13059-019-1891-0.
@@ -70,9 +78,21 @@
 
   > Seemann T. mlst. https://github.com/tseemann/mlst. This publication made use of the PubMLST website (https://pubmlst.org/) developed by Keith Jolley (Jolley, Bray & Maiden 2018, Wellcome Open Res 3:124).
 
+- [mosdepth](https://doi.org/10.1093/bioinformatics/btx699)
+
+  > Pedersen BS, Quinlan AR. Mosdepth: quick coverage calculation for genomes and exomes. Bioinformatics. 2018;34(5):867-868. doi: 10.1093/bioinformatics/btx699.
+
+- [MUMmer](https://doi.org/10.1371/journal.pcbi.1005944)
+
+  > Marçais G, Delcher AL, Phillippy AM, Coston R, Salzberg SL, Zimin A. MUMmer4: A fast and versatile genome alignment system. PLoS Comput Biol. 2018;14(1):e1005944. doi: 10.1371/journal.pcbi.1005944.
+
 - [NanoPlot](https://doi.org/10.1093/bioinformatics/bty149)
 
   > De Coster W, D'Hert S, Schultz DT, Cruts M, Van Broeckhoven C. NanoPack: visualizing and processing long-read sequencing data. Bioinformatics. 2018;34(15):2666-2669. doi: 10.1093/bioinformatics/bty149.
+
+- [PhiSpy](https://doi.org/10.1093/nar/gks406)
+
+  > Akhter S, Aziz RK, Edwards RA. PhiSpy: a novel algorithm for finding prophages in bacterial genomes that combines similarity- and composition-based strategies. Nucleic Acids Res. 2012;40(16):e126. doi: 10.1093/nar/gks406.
 
 - [QUAST](https://doi.org/10.1093/bioinformatics/btt086)
 
@@ -89,6 +109,10 @@
 - [Snippy](https://github.com/tseemann/snippy)
 
   > Seemann T. Snippy: fast bacterial variant calling from NGS reads. 2015. https://github.com/tseemann/snippy
+
+- [snp-dists](https://github.com/tseemann/snp-dists)
+
+  > Seemann T. snp-dists: pairwise SNP distance matrix from a FASTA sequence alignment. https://github.com/tseemann/snp-dists
 
 - [Trimmomatic](https://doi.org/10.1093/bioinformatics/btu170)
 

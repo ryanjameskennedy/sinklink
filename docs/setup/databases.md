@@ -14,7 +14,8 @@ of `assets/schemas.tsv`: NCBI's RefSeq reference genome for the species, a
 complete and annotated assembly. `make references` downloads each one from
 NCBI Datasets with `jasentool download-ncbi`, as JASEN does, into
 `<ASSETS_DIR>/references` as `<accession>.fasta` and `<accession>.gff`, then
-indexes it with `samtools faidx`. Pass the folder with `--references_dir`.
+indexes it with `samtools faidx`. It also downloads the GenBank file
+(`<accession>.gbff`), which PhiSpy needs to find prophages. Pass the folder with `--references_dir`.
 
 | Schema       | Reference genome | Strain        |
 | ------------ | ---------------- | ------------- |

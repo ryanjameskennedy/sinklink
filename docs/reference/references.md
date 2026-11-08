@@ -3,6 +3,7 @@
 - Bush SJ, et al. Genomic diversity affects the accuracy of bacterial single-nucleotide polymorphism–calling pipelines. _GigaScience_ 2020;9:giaa007. [doi:10.1093/gigascience/giaa007](https://doi.org/10.1093/gigascience/giaa007)
 - Constantinides B, Lees J, Crook DW. Deacon: fast sequence filtering and contaminant depletion. _bioRxiv_ 2025. [doi:10.1101/2025.06.09.658732](https://doi.org/10.1101/2025.06.09.658732)
 - Constantinides B, et al. Genomic surveillance of _Escherichia coli_ and _Klebsiella_ spp. in hospital sink drains and patients. _Microb Genom_ 2020. [PMC7478627](https://pmc.ncbi.nlm.nih.gov/articles/PMC7478627)
+- Croucher NJ, et al. Rapid phylogenetic analysis of large samples of recombinant bacterial whole genome sequences using Gubbins. _Nucleic Acids Res_ 2015;43:e15. [doi:10.1093/nar/gku1196](https://doi.org/10.1093/nar/gku1196)
 - Dabernig-Heinz J, et al. Core genome multilocus sequence typing (cgMLST) applicable to the monophyletic _Klebsiella oxytoca_ species complex. _J Clin Microbiol_ 2024;62:e01725-23. [PMC11237601](https://pmc.ncbi.nlm.nih.gov/articles/PMC11237601/)
 - David S, et al. Epidemic of carbapenem-resistant _Klebsiella pneumoniae_ in Europe is driven by nosocomial spread. _Nat Microbiol_ 2019;4:1919–1929.
 - Duval A, Opatowski L, Brisse S. Defining genomic epidemiology thresholds for common-source bacterial outbreaks: a modelling study. _Lancet Microbe_ 2023;4:e349–e357.

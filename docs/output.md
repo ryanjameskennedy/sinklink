@@ -81,12 +81,21 @@ Always runs; `--kraken_db` is required. If Bracken fails (for example when the d
 <summary>Output files</summary>
 
 - `variants/<sample>.vcf.gz`: variant calls against the schema's reference genome, from Snippy (Illumina, with `.csi` index) or Clair3 (Nanopore, with `.tbi` index).
-- `variants/<sample>.pseudogenome.fa`: the reference genome with the isolate's substitutions applied, `N` where read depth is below `--snp_min_depth` and `-` where there are no reads.
-- `variants/<sample>.pseudogenome.tsv`: reference length, substitutions applied, masked positions and fraction of the reference called.
+- `variants/<sample>.pseudogenome.fa`: the reference chromosome with the isolate's substitutions applied, and `N` where read depth is below `--snp_min_depth` or the reference has a repeat or prophage.
+- `snp_distances/<schema>.aln`: the schema's pseudogenomes and the reference chromosome (`Reference`) in one alignment.
+- `snp_distances/gubbins/`: Gubbins output for each schema with 3 or more sequences: recombination predictions, tree and the filtered alignment.
+- `snp_distances/<schema>.gubbins.snp_dists.tsv` or `snp_distances/<schema>.snp_dists.tsv`: pairwise SNP distances, with or without recombination removed.
+- `snp_distances/masks/<accession>.mask.bed`: repeat and prophage regions of each reference genome, and `<accession>.phispy.tsv`, PhiSpy's prophage coordinates.
 
 </details>
 
-Illumina reads go through Snippy (`bwa mem` and FreeBayes, `--mincov` set by `--snp_min_depth`). Nanopore reads are mapped with `minimap2 -x lr:hq` and called with Clair3 in haploid mode (`--haploid_precise --include_all_ctgs --no_phasing_for_fa`) using `--clair3_model`. Only PASS substitutions with a homozygous alternative call go into the pseudogenome; indels are left out. Runs unless `--skip_variant_calling` is set.
+Illumina reads go through Snippy (`bwa mem` and FreeBayes, `--mincov` set by `--snp_min_depth`). Nanopore reads are mapped with `minimap2 -x lr:hq` and called with Clair3 in haploid mode (`--haploid_precise --include_all_ctgs --no_phasing_for_fa`) using `--clair3_model`. Runs unless `--skip_variant_calling` is set.
+
+The SNP distances follow the usual reference-based approach (as in nf-core/bactmap and snippy-core), built from existing tools:
+
+1. Once per reference genome, repeats are found by aligning the genome to itself with MUMmer `nucmer --maxmatch --nosimplify`, and prophages with PhiSpy on its GenBank file. Both are masked after mapping, not before, so reads are still placed against the whole genome.
+2. Per isolate, `bcftools view` keeps PASS SNPs and MNPs with an alternative genotype, mosdepth finds the regions below `--snp_min_depth`, and `bcftools consensus` applies the SNPs to the reference with the low-depth, repeat and prophage regions set to `N`. Only the chromosome is kept; plasmids move between strains and are left out of SNP comparisons. Indels are not used.
+3. Per schema, the pseudogenomes and the reference chromosome are joined into one alignment. With 3 or more sequences, Gubbins removes SNPs in recombinant regions; snp-dists then counts the differences between each pair, ignoring `N`.
 
 ### Allele calling
 
@@ -107,7 +116,7 @@ One AlleleCall job per schema, run with `--no-inferred` so the schemas are never
 
 - `summary/qc_summary.tsv`: read and assembly QC per isolate with `qc_status` (`pass`, `warn` or `fail`) and `qc_flags`.
 - `summary/allele_qc.tsv`: loci called per isolate and its assembly QC status.
-- `summary/pairwise_distances.tsv`: every pair within each transmission group: sample IDs, LIMS IDs, sample types and patients, days apart, schema, loci shared, allele differences, threshold, verdict, SNP sites compared, SNP distance, pair QC and notes.
+- `summary/pairwise_distances.tsv`: every pair within each transmission group: sample IDs, LIMS IDs, sample types and patients, days apart, schema, loci shared, allele differences, threshold, verdict, SNP distance and whether recombination was removed, pair QC and notes.
 - `summary/group_summary.tsv`: one line per transmission group, with the smallest and largest allele and SNP distances.
 
 </details>

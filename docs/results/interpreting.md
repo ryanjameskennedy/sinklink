@@ -24,20 +24,22 @@ pairs sequenced on different platforms.
 
 ## SNP distances
 
-When both isolates were variant called against the same reference genome,
-`snp_distance` counts the reference positions where both pseudogenomes have a
-base (read depth at least `--snp_min_depth` in both) and the bases differ;
-`snp_sites_compared` is how many positions that was. Indels and positions
-missing in either isolate are not counted.
+When both isolates were variant called against their schema's reference
+genome, `snp_distance` counts the chromosome positions where both have a base
+and the bases differ. Positions with too few reads (below `--snp_min_depth`)
+in either isolate, and the reference's repeats and prophages, are left out, as
+are indels. `snp_recombination_filtered` is `yes` when Gubbins removed SNPs in
+recombinant regions first; it needs 3 or more sequences in the schema's
+alignment (the reference counts as one), so a schema with a single isolate
+pair gets `no`.
 
 SNP distances have no threshold and do not change the verdict. Use them to
 check a pair near the allele threshold, or a `borderline` _K. oxytoca_ pair:
 a pair within the allele threshold but many SNPs apart deserves a closer look,
-and so does one with few SNPs but many allele differences. Compare
-`snp_sites_compared` with the reference length: if a large part of the
-reference was not compared, the isolates sit far from it (see
-`reference_distance` in the QC summary) and the SNP distance covers only their
-shared core.
+and so does one with few SNPs but many allele differences. Isolates far from
+the reference (see `reference_distance` in the QC summary) have less of their
+genome compared, so their SNP distance covers only the part they share with
+the reference.
 
 ## Group summaries
 
