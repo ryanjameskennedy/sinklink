@@ -22,7 +22,6 @@ lint:
   multiqc_config:
     - report_comment
   files_exist:
-    - conf/test_full.config
     - conf/igenomes.config
     - conf/igenomes_ignored.config
     - CODE_OF_CONDUCT.md
