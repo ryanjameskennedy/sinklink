@@ -3,7 +3,11 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## v0.2.0 - 2026-11-08
+
+Adds human read removal, variant calling against a reference genome per species
+and SNP distances next to the allele distances, and moves server settings out of
+the pipeline. Tested with stub runs only; not yet validated on real data.
 
 ### `Added`
 
