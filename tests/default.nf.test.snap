@@ -37,6 +37,9 @@
                     "kraken2",
                     "pigz"
                 ],
+                "MASH_DIST": [
+                    "mash"
+                ],
                 "MEDAKA": [
                     "medaka"
                 ],
@@ -109,6 +112,10 @@
                 "kraken2/S01.kraken2.report.txt",
                 "kraken2/S02.kraken2.report.txt",
                 "kraken2/S03.kraken2.report.txt",
+                "mash",
+                "mash/S01.mash.txt",
+                "mash/S02.mash.txt",
+                "mash/S03.mash.txt",
                 "mlst",
                 "mlst/S01.mlst.tsv",
                 "mlst/S02.mlst.tsv",
@@ -334,6 +341,9 @@
                 "S01.kraken2.report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.kraken2.report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.kraken2.report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S01.mash.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.mash.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.mash.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.mlst.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.mlst.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.mlst.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -493,7 +503,7 @@
                 "qc_summary.tsv:md5,2c23545bd1a084360ee7d94a9f45bd16"
             ]
         ],
-        "timestamp": "2026-11-08T13:09:54.130051",
+        "timestamp": "2026-11-08T13:12:19.216009",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"
@@ -542,6 +552,9 @@
                 "KRAKEN2_KRAKEN2": [
                     "kraken2",
                     "pigz"
+                ],
+                "MASH_DIST": [
+                    "mash"
                 ],
                 "MEDAKA": [
                     "medaka"
@@ -624,6 +637,10 @@
                 "kraken2/S01.kraken2.report.txt",
                 "kraken2/S02.kraken2.report.txt",
                 "kraken2/S03.kraken2.report.txt",
+                "mash",
+                "mash/S01.mash.txt",
+                "mash/S02.mash.txt",
+                "mash/S03.mash.txt",
                 "mlst",
                 "mlst/S01.mlst.tsv",
                 "mlst/S02.mlst.tsv",
@@ -858,6 +875,9 @@
                 "S01.kraken2.report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.kraken2.report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.kraken2.report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S01.mash.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.mash.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.mash.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.mlst.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.mlst.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.mlst.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -1021,7 +1041,7 @@
                 "S02_out.log:md5,d41d8cd98f00b204e9800998ecf8427e"
             ]
         ],
-        "timestamp": "2026-11-08T13:10:13.825346",
+        "timestamp": "2026-11-08T13:12:38.911378",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"

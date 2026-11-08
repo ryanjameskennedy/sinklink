@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Summarise read and assembly QC for one isolate and check it against thresholds.
 
-Reads QUAST, samtools coverage, gambitcore, Kraken2/Bracken and mlst output for
-one isolate, checks them against assets/qc_thresholds.tsv and the species and
-genome size expectations for its schema in assets/schemas.tsv, and writes a
-one-row TSV. Rows from all isolates are concatenated into qc_summary.tsv.
+Reads QUAST, samtools coverage, gambitcore, Kraken2/Bracken, mlst and Mash output
+for one isolate, checks them against assets/qc_thresholds.tsv and the species,
+genome size and reference genome expectations for its schema in
+assets/schemas.tsv, and writes a one-row TSV. Rows from all isolates are concatenated into qc_summary.tsv.
 """
 
 import argparse
@@ -16,6 +16,7 @@ import sys
 FIELDS = [
     "sample", "transmission", "growth", "schema", "platform",
     "assembly_length", "contigs", "n50", "gc", "mean_depth",
+    "reference", "reference_distance", "genome_fraction",
     "gambit_species", "completeness", "gambit_qc",
     "species_source", "top_species", "top_species_fraction",
     "expected_species_fraction", "other_genus_fraction",
@@ -52,6 +53,7 @@ def quast_metrics(path):
         "contigs": to_float(metrics.get("# contigs")),
         "n50": to_float(metrics.get("N50")),
         "gc": to_float(metrics.get("GC (%)")),
+        "genome_fraction": to_float(metrics.get("Genome fraction (%)")),
     }
 
 
@@ -100,6 +102,15 @@ def species_fractions(bracken, kraken_report):
     return "", []
 
 
+def mash_distance(path):
+    """Distance from `mash dist reference query` output (reference, query, distance, ...)."""
+    if not path:
+        return None
+    with open(path) as handle:
+        fields = handle.readline().rstrip("\n").split("\t")
+    return to_float(fields[2]) if len(fields) >= 3 else None
+
+
 def mlst_result(path):
     if not path:
         return "", ""
@@ -121,6 +132,7 @@ def main():
     parser.add_argument("--schema", default="")
     parser.add_argument("--growth", default="")
     parser.add_argument("--transmission", default="")
+    parser.add_argument("--reference", default="", help="reference genome accession")
     parser.add_argument("--schemas", required=True, help="assets/schemas.tsv")
     parser.add_argument("--thresholds", required=True, help="assets/qc_thresholds.tsv")
     parser.add_argument("--assembly")
@@ -130,6 +142,7 @@ def main():
     parser.add_argument("--bracken", help="Bracken species-level output")
     parser.add_argument("--kraken-report")
     parser.add_argument("--mlst", help="mlst TSV output")
+    parser.add_argument("--mash", help="mash dist output, reference against assembly")
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
@@ -151,6 +164,7 @@ def main():
     gambit = gambitcore_metrics(args.gambitcore)
     source, fractions = species_fractions(args.bracken, args.kraken_report)
     mlst_scheme, st = mlst_result(args.mlst)
+    ref_distance = mash_distance(args.mash)
 
     has_assembly = bool(args.assembly)
     check("fail", "no_assembly", not has_assembly)
@@ -185,6 +199,10 @@ def main():
     completeness = gambit.get("completeness")
     if completeness is not None and value is not None:
         check(severity, f"low_completeness({completeness:.1f}%<{value:g}%)", completeness < value)
+
+    value, severity = limit("max_reference_distance")
+    if ref_distance is not None and value is not None:
+        check(severity, f"distant_reference({ref_distance:.3f}>{value:g})", ref_distance > value)
 
     top_species = top_fraction = expected_fraction = other_genus = None
     if fractions:
@@ -227,6 +245,9 @@ def main():
         "n50": fmt(n50),
         "gc": fmt(quast.get("gc"), 2),
         "mean_depth": fmt(depth, 1),
+        "reference": args.reference,
+        "reference_distance": fmt(ref_distance, 4),
+        "genome_fraction": fmt(quast.get("genome_fraction"), 2),
         "gambit_species": gambit.get("gambit_species", ""),
         "completeness": fmt(completeness, 2),
         "gambit_qc": gambit.get("gambit_qc", ""),

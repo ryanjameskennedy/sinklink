@@ -1,7 +1,7 @@
 //
-// Assembly QC: QUAST statistics (against the schema's reference genome when there
-// is one), gambitcore completeness, read depth over the isolate's own assembly
-// and 7-gene MLST
+// Assembly QC: QUAST statistics and Mash distance against the schema's reference
+// genome (when there is one), gambitcore completeness, read depth over the
+// isolate's own assembly and 7-gene MLST
 //
 
 include { QUAST             } from '../../../modules/nf-core/quast/main'
@@ -12,6 +12,7 @@ include { MINIMAP2_ALIGN    } from '../../../modules/nf-core/minimap2/align/main
 include { SAMTOOLS_INDEX    } from '../../../modules/nf-core/samtools/index/main'
 include { SAMTOOLS_COVERAGE } from '../../../modules/nf-core/samtools/coverage/main'
 include { MLST              } from '../../../modules/nf-core/mlst/main'
+include { MASH_DIST         } from '../../../modules/nf-core/mash/dist/main'
 
 workflow ASSEMBLY_QC {
 
@@ -32,6 +33,15 @@ workflow ASSEMBLY_QC {
         }
         .set { ch_quast }
     QUAST ( ch_quast.assembly, ch_quast.reference, ch_quast.gff )
+
+    ch_assembly
+        .join(ch_reference)
+        .multiMap { meta, fasta, reference ->
+            assembly : [ meta, fasta ]
+            reference: reference[0]
+        }
+        .set { ch_mash }
+    MASH_DIST ( ch_mash.assembly, ch_mash.reference )
     MLST ( ch_assembly )
 
     ch_gambitcore = channel.empty()
@@ -79,5 +89,6 @@ workflow ASSEMBLY_QC {
     coverage      = SAMTOOLS_COVERAGE.out.coverage // channel: [ val(meta), path(txt) ]
     gambitcore    = ch_gambitcore                 // channel: [ val(meta), path(tsv) ]
     mlst          = MLST.out.tsv                  // channel: [ val(meta), path(tsv) ]
+    mash          = MASH_DIST.out.dist            // channel: [ val(meta), path(txt) ]
     multiqc_files = QUAST.out.tsv.map { _meta, tsv -> tsv } // channel: [ path ]
 }

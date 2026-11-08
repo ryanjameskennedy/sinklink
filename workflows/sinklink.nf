@@ -91,6 +91,7 @@ workflow SINKLINK {
         .join(ch_bracken, remainder: true)
         .join(ch_kraken_report, remainder: true)
         .join(ASSEMBLY_QC.out.mlst, remainder: true)
+        .join(ASSEMBLY_QC.out.mash, remainder: true)
         .map { row -> row.collect { item -> item == null ? [] : item } }
         .set { ch_qc_input }
 

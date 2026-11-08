@@ -8,7 +8,7 @@ process SUMMARISE_QC {
         'biocontainers/python:3.9--1' }"
 
     input:
-    tuple val(meta), path(assembly), path(quast), path(coverage), path(gambitcore), path(bracken), path(kraken_report), path(mlst)
+    tuple val(meta), path(assembly), path(quast), path(coverage), path(gambitcore), path(bracken), path(kraken_report), path(mlst), path(mash)
     path schema_table
     path thresholds
 
@@ -29,6 +29,7 @@ process SUMMARISE_QC {
         --schema '${meta.schema ?: ''}' \\
         --growth '${meta.growth ?: ''}' \\
         --transmission '${meta.transmission ?: ''}' \\
+        --reference '${meta.reference ?: ''}' \\
         --schemas ${schema_table} \\
         --thresholds ${thresholds} \\
         ${assembly ? "--assembly ${assembly}" : ''} \\
@@ -38,6 +39,7 @@ process SUMMARISE_QC {
         ${bracken ? "--bracken ${bracken}" : ''} \\
         ${kraken_report ? "--kraken-report ${kraken_report}" : ''} \\
         ${mlst ? "--mlst ${mlst}" : ''} \\
+        ${mash ? "--mash ${mash}" : ''} \\
         ${args} \\
         --output ${prefix}.qc.tsv
     """
