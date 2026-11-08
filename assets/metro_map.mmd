@@ -3,9 +3,10 @@
 %%metro file: reads_in | FASTQ
 %%metro file: distances_out | TSV
 %%metro file: report_out | HTML
-%%metro line: species | Species check (--kraken_db) | #e63946 | dashed
-%%metro line: illumina | Illumina: SKESA | #2db572
-%%metro line: nanopore | Nanopore: Flye + Medaka | #f5a623
+%%metro line: species | Species check | #e63946 | dashed
+%%metro line: variants | Variant calling: Snippy (Illumina), Clair3 (Nanopore) | #7b5ea7
+%%metro line: illumina | Illumina assembly: SKESA | #2db572
+%%metro line: nanopore | Nanopore assembly: Flye + Medaka | #f5a623
 %%metro marker: trimmomatic | square, open
 %%metro marker: filtlong | square, open
 %%metro marker: gambitcore | square, open
@@ -15,15 +16,17 @@
 graph LR
     %% Read preparation
     reads_in[ ]
+    deacon[Deacon]
     fastqc[FastQC]
     trimmomatic[Trimmomatic]
     nanoplot[NanoPlot]
     filtlong[Filtlong]
 
-    reads_in -->|illumina| fastqc
-    fastqc -->|illumina| trimmomatic
-    reads_in -->|nanopore| nanoplot
-    nanoplot -->|nanopore| filtlong
+    reads_in -->|variants,illumina,nanopore,species| deacon
+    deacon -->|variants,illumina| fastqc
+    fastqc -->|variants,illumina| trimmomatic
+    deacon -->|variants,nanopore| nanoplot
+    nanoplot -->|variants,nanopore| filtlong
 
     %% Species check
     kraken2[Kraken2]
@@ -40,6 +43,7 @@ graph LR
 
     %% Assembly QC
     quast[QUAST]
+    mash[Mash]
     gambitcore[gambitcore]
     bwa[BWA-MEM]
     minimap2[minimap2]
@@ -47,13 +51,22 @@ graph LR
     mlst[mlst]
     qc_summary[QC summary]
 
-    quast -->|illumina,nanopore| gambitcore
+    quast -->|illumina,nanopore| mash
+    mash -->|illumina,nanopore| gambitcore
     gambitcore -->|illumina| bwa
     gambitcore -->|nanopore| minimap2
     bwa -->|illumina| coverage
     minimap2 -->|nanopore| coverage
     coverage -->|illumina,nanopore| mlst
     mlst -->|illumina,nanopore| qc_summary
+
+    %% Variant calling
+    snippy[Snippy]
+    minimap2_ref[minimap2]
+    clair3[Clair3]
+    pseudogenome[Pseudogenome]
+
+    minimap2_ref -->|variants| clair3
 
     %% Allele calling and transmission check
     chewbbaca[chewBBACA]
@@ -63,15 +76,20 @@ graph LR
     report_out[ ]
 
     chewbbaca -->|illumina,nanopore| distances
-    distances -->|illumina,nanopore| distances_out
+    distances -->|variants,illumina,nanopore| distances_out
     distances -->|illumina,nanopore| multiqc
     multiqc -->|illumina,nanopore| report_out
 
     %% Between groups
-    reads_in -->|species| kraken2
+    deacon -->|species| kraken2
     trimmomatic -->|illumina| skesa
+    trimmomatic -->|variants| snippy
     filtlong -->|nanopore| flye
+    filtlong -->|variants| minimap2_ref
     skesa -->|illumina| quast
     medaka -->|nanopore| quast
+    snippy -->|variants| pseudogenome
+    clair3 -->|variants| pseudogenome
+    pseudogenome -->|variants| distances
     bracken -->|species| qc_summary
     qc_summary -->|illumina,nanopore| chewbbaca
