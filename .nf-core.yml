@@ -6,6 +6,7 @@ lint:
   files_unchanged:
     - LICENSE
     - .github/ISSUE_TEMPLATE/feature_request.yml
+    - .github/workflows/branch.yml
     - .github/CONTRIBUTING.md
     - CODE_OF_CONDUCT.md
     - assets/nf-core-sinklink_logo_light.png
