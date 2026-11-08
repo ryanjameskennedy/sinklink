@@ -16,17 +16,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - QUAST compares each assembly with its reference genome, and the QC summary reports the genome fraction and the Mash distance to the reference, with a `distant_reference` warning above 0.05
 - Variant calling against the reference genome: Snippy for Illumina, minimap2 and Clair3 (bacterial model, `--clair3_model`) for Nanopore, published as VCFs (`--skip_variant_calling`)
 - A masked pseudogenome per isolate and pairwise SNP distances within each transmission group, reported next to the allele differences (`--snp_min_depth`)
+- `test_full` profile (the test inputs with every optional step on), which `nf-core pipelines download` needs to list the containers
+- A test with host removal, variant calling and allele calling skipped
+- Docs on how to download the Standard-16 Kraken2 database, and on what the species thresholds mean for calling the same colonisation
+- `containers/Makefile` also downloads jasentool and samtools for `make references`
 
 ### `Changed`
 
 - SKESA and chewBBACA use their nf-core label resources instead of custom ones
-- Labels follow the JASEN resources: SKESA and chewBBACA `process_high`, NanoPlot, gambitcore and minimap2 `process_medium` (nf-core module patches)
+- Labels follow the JASEN resources: SKESA, chewBBACA and Snippy `process_high`, NanoPlot, gambitcore and minimap2 `process_medium` (nf-core module patches)
 - Removed the `thedonkey` profile: pass the server config with `-c` and the database paths with `-params-file` (see ryanjameskennedy/configs)
 - Metadata columns: `translation_id` is now `sample` and `sample` (the sample type) is now `sample_type`; the QC tables use `sample` too
 - The stub CI workflow `ci.yml` is replaced by nf-test
 - The test samplesheet points at the test reads on GitHub, so tests run from any folder
 - `--kraken_db` is required and the Kraken2/Bracken species check always runs
 - The distance check also runs with `--skip_chewbbaca`, reporting SNP distances only
+- Metadata dates are read as ISO 8601 date-times (`YYYY-MM-DDTHH:MM:SS`, or `YYYY-MM-DD`)
+- The setup's chewBBACA and samtools images are the ones the pipeline uses, saved under the names Nextflow caches them as, so the pipeline reuses them when `CONTAINERS_DIR` is its Apptainer cache
+- The nf-test and pipeline download CI jobs run on Ubuntu 24.04, and the download job tests the pull request's own branch
+
+### `Fixed`
+
+- The chewBBACA version is read from its version line only; the Python warning chewBBACA 3.5.4 prints made the software versions file invalid
+- Clair3 finds its bundled models under Apptainer (nf-core module patch)
+- The local modules use their Singularity images under Apptainer, as the nf-core modules do
 
 ### `Removed`
 
