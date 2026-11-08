@@ -5,13 +5,13 @@ sinklink follows the nf-core pipeline layout:
 ```text
 main.nf                     entry point
 workflows/sinklink.nf       main workflow
-subworkflows/local/         read_preparation, assembly, assembly_qc,
-                            species_check, allele_calling, utils_nfcore_sinklink_pipeline
+subworkflows/local/         read_preparation, assembly, assembly_qc, species_check,
+                            variant_calling, allele_calling, utils_nfcore_sinklink_pipeline
 modules/nf-core/            installed nf-core modules (modules.json)
-modules/local/              gambitcore, summarise_qc, check_distances
-conf/                       base, modules and test configs
+modules/local/              gambitcore, make_pseudogenome, summarise_qc, check_distances
+conf/                       base, modules, test and test_full configs
 assets/                     schemas.tsv, species_map.tsv, qc_thresholds.tsv, samplesheet schema, test inputs
-bin/                        summarise_qc.py, check_distances.py, split_alleles.py
+bin/                        make_pseudogenome.py, summarise_qc.py, check_distances.py, split_alleles.py
 docs/                       this documentation (Sphinx + MyST)
 Makefile, containers/       schema and database setup
 ```
@@ -38,9 +38,14 @@ GitHub Actions on pull requests (the nf-core template workflows):
 - `linting.yml`: pre-commit (prettier, whitespace) and `nf-core pipelines lint`;
 - `nf-test.yml`: the nf-test tests with Docker, and with Singularity on pull
   requests to `master`, on Nextflow 25.04.0;
-- `branch.yml`: pull requests to `master` must come from `dev` (or a branch
-  named `patch`);
+- `download_pipeline.yml`: `nf-core pipelines download` of the pull request's
+  branch with its Singularity images, then a stub run of the downloaded copy;
+- `branch.yml`: pull requests to `master` must come from `dev`, a `release/*`
+  branch or a branch named `patch`;
 - `docs.yml`: the strict docs build.
+
+The template's version comment workflow is removed: it needs the nf-core bot's
+token, so it could only fail here.
 
 ## Pipeline diagram
 

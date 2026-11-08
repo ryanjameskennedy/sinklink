@@ -38,6 +38,7 @@ the pipeline. Tested with stub runs only; not yet validated on real data.
 - Metadata dates are read as ISO 8601 date-times (`YYYY-MM-DDTHH:MM:SS`, or `YYYY-MM-DD`)
 - The setup's chewBBACA and samtools images are the ones the pipeline uses, saved under the names Nextflow caches them as, so the pipeline reuses them when `CONTAINERS_DIR` is its Apptainer cache
 - The nf-test and pipeline download CI jobs run on Ubuntu 24.04, and the download job tests the pull request's own branch
+- Pull requests into `master` may also come from `release/*` branches
 
 ### `Fixed`
 
@@ -48,6 +49,7 @@ the pipeline. Tested with stub runs only; not yet validated on real data.
 ### `Removed`
 
 - SPAdes and the `--assembler` parameter: Illumina reads are always assembled with SKESA
+- The nf-core template version comment workflow, which needs the nf-core bot's token
 
 ## v0.1.0 - 2026-11-06
 
