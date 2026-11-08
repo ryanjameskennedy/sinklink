@@ -25,6 +25,7 @@ GAMBIT_URL := https://storage.googleapis.com/jlumpe-gambit/public/databases/refs
 GAMBIT_FILES := gambit-refseq-curated-1.0.gdb gambit-refseq-curated-1.0.gs
 REFERENCES_DIR := $(ASSETS_DIR)/references
 REFERENCES := $(shell awk -F'\t' 'NR==1 {for (i = 1; i <= NF; i++) if ($$i == "reference") col = i; next} $$col != "" {print $$col}' $(SCRIPT_DIR)/assets/schemas.tsv)
+NCBI_DATASETS := https://api.ncbi.nlm.nih.gov/datasets/v2/genome/accession
 DEACON_DIR := $(ASSETS_DIR)/deacon
 DEACON_INDEX := panhuman-1.k31w15.idx
 DEACON_URL := https://objectstorage.uk-london-1.oraclecloud.com/n/lrbvkel2wjot/b/human-genome-bucket/o/deacon/3/$(DEACON_INDEX)
@@ -146,8 +147,9 @@ $(DEACON_DIR)/$(DEACON_INDEX):
 	&& mv $@.tmp $@
 
 # Each schema's reference genome (the reference column of assets/schemas.tsv),
-# downloaded from NCBI Datasets with jasentool as FASTA and GFF, then indexed.
-references: $(foreach accn,$(REFERENCES),$(REFERENCES_DIR)/$(accn).fasta.fai)
+# downloaded from NCBI Datasets with jasentool as FASTA and GFF, then indexed,
+# plus its GenBank file for finding prophages with PhiSpy.
+references: $(foreach accn,$(REFERENCES),$(REFERENCES_DIR)/$(accn).fasta.fai $(REFERENCES_DIR)/$(accn).gbff)
 
 $(REFERENCES_DIR)/%.fasta:
 	$(call log_message,"Downloading reference genome $* ...")
@@ -161,6 +163,16 @@ $(REFERENCES_DIR)/%.fasta.fai: $(REFERENCES_DIR)/%.fasta
 	cd $(REFERENCES_DIR) \
 	&& $(APPTAINER) exec $(BIND_ARGS) $(CONTAINERS_DIR)/samtools.sif \
 		samtools faidx $*.fasta |& tee -a $(INSTALL_LOG)
+
+$(REFERENCES_DIR)/%.gbff:
+	$(call log_message,"Downloading GenBank file for reference genome $* ...")
+	mkdir -p $(REFERENCES_DIR) \
+	&& wget "$(NCBI_DATASETS)/$*/download?include_annotation_type=GENOME_GBFF&filename=$*.zip" \
+		-O $@.zip --no-verbose |& tee -a $(INSTALL_LOG) \
+	&& unzip -p $@.zip "ncbi_dataset/data/$*/genomic.gbff" > $@.tmp \
+	&& [[ -s $@.tmp ]] \
+	&& mv $@.tmp $@ \
+	&& rm -f $@.zip
 
 check: check_databases check_references check_schemas
 
@@ -183,7 +195,7 @@ check_databases:
 check_references:
 	@status=0; \
 	for accn in $(REFERENCES); do \
-		for ext in fasta fasta.fai gff; do \
+		for ext in fasta fasta.fai gff gbff; do \
 			if [[ -s $(REFERENCES_DIR)/$$accn.$$ext ]]; then \
 				echo "[✓] reference: $(REFERENCES_DIR)/$$accn.$$ext"; \
 			else \

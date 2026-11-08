@@ -1,0 +1,10 @@
+LOCUS       NC_002516                 64 bp    DNA     circular CON 01-JAN-2024
+DEFINITION  Placeholder.
+ACCESSION   NC_002516
+VERSION     NC_002516.2
+FEATURES             Location/Qualifiers
+     source          1..64
+ORIGIN
+        1 acgtacgtac gtacgtacgt acgtacgtac gtacgtacgt acgtacgtac gtacgtacgt
+       61 acgt
+//
