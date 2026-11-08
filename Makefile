@@ -30,7 +30,7 @@ DEACON_DIR := $(ASSETS_DIR)/deacon
 DEACON_INDEX := panhuman-1.k31w15.idx
 DEACON_URL := https://objectstorage.uk-london-1.oraclecloud.com/n/lrbvkel2wjot/b/human-genome-bucket/o/deacon/3/$(DEACON_INDEX)
 
-APPTAINER ?= apptainer
+SINGULARITY ?= singularity
 PREP_CPUS ?= 4
 PYTHON ?= python3
 
@@ -154,14 +154,14 @@ references: $(foreach accn,$(REFERENCES),$(REFERENCES_DIR)/$(accn).fasta.fai $(R
 $(REFERENCES_DIR)/%.fasta:
 	$(call log_message,"Downloading reference genome $* ...")
 	mkdir -p $(REFERENCES_DIR) \
-	&& $(APPTAINER) exec $(BIND_ARGS) $(CONTAINERS_DIR)/jasentool.sif \
+	&& $(SINGULARITY) exec $(BIND_ARGS) $(CONTAINERS_DIR)/jasentool.sif \
 		jasentool download-ncbi -i $* -o $(REFERENCES_DIR) |& tee -a $(INSTALL_LOG) \
 	&& [[ -s $@ && -s $(REFERENCES_DIR)/$*.gff ]]
 
 $(REFERENCES_DIR)/%.fasta.fai: $(REFERENCES_DIR)/%.fasta
 	$(call log_message,"Indexing reference genome $* ...")
 	cd $(REFERENCES_DIR) \
-	&& $(APPTAINER) exec $(BIND_ARGS) $(CONTAINERS_DIR)/samtools.sif \
+	&& $(SINGULARITY) exec $(BIND_ARGS) $(CONTAINERS_DIR)/samtools.sif \
 		samtools faidx $*.fasta |& tee -a $(INSTALL_LOG)
 
 $(REFERENCES_DIR)/%.gbff:
@@ -244,7 +244,7 @@ $(1)_prodigal_training: $(PRODIGAL_TRAINING_DIR)/$(1).trn
 $(PRODIGAL_TRAINING_DIR)/$(1).trn: $(GENOMES_DIR)/$(SEED_$(1)).fasta
 	$$(call log_message,"Training Prodigal on $(NAME_$(1)) seed genome ...")
 	mkdir -p $$(dir $$@) \
-	&& $(APPTAINER) exec $(BIND_ARGS) $(CONTAINERS_DIR)/prodigal.sif \
+	&& $(SINGULARITY) exec $(BIND_ARGS) $(CONTAINERS_DIR)/prodigal.sif \
 		prodigal -i $$< -t $$@ -p single |& tee -a $(INSTALL_LOG) \
 	&& [[ -s $$@ ]]
 
@@ -283,7 +283,7 @@ $(1)_prep_schema: $(SCHEMAS_DIR)/$(1)/alleles_rereffed
 $(SCHEMAS_DIR)/$(1)/alleles_rereffed: $(PRODIGAL_TRAINING_DIR)/$(1).trn | $(SCHEMAS_DIR)/$(1)/alleles/unpacking.done
 	$$(call log_message,"Prepping $(NAME_$(1)) schema with chewBBACA ...")
 	rm -rf $$@ $$@.tmp \
-	&& $(APPTAINER) exec $(BIND_ARGS) $(CONTAINERS_DIR)/chewbbaca.sif \
+	&& $(SINGULARITY) exec $(BIND_ARGS) $(CONTAINERS_DIR)/chewbbaca.sif \
 		chewie PrepExternalSchema \
 		-g $(SCHEMAS_DIR)/$(1)/alleles \
 		-o $$@.tmp \

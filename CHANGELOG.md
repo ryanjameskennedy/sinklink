@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `make references` also downloads each reference's GenBank file for PhiSpy
 - `snp_recombination_filtered` in the pair table
 
+### `Changed`
+
+- The setup Makefiles run their containers with `singularity` (`SINGULARITY=apptainer` switches runtime)
+- The setup examples keep the databases directly under `/mnt/cache/dbs`
+
 ### `Fixed`
 
 - A `0` allele call counts as missing, as in cgmlst-dists, so two missing calls never count as a match
