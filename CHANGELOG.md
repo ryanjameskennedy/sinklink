@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A `0` allele call counts as missing, as in cgmlst-dists, so two missing calls never count as a match
 - PhiSpy finds its GenBank output when the input file name has dots, such as an NCBI accession (nf-core module patch)
+- `make references` keeps the reference FASTA files; make treated them as temporary and deleted them after indexing
+- Setup log messages with brackets no longer break the shell command
 
 ### `Removed`
 

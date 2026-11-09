@@ -149,7 +149,7 @@ $(DEACON_DIR)/$(DEACON_INDEX):
 # Each schema's reference genome (the reference column of assets/schemas.tsv),
 # downloaded from NCBI Datasets with jasentool as FASTA and GFF, then indexed,
 # plus its GenBank file for finding prophages with PhiSpy.
-references: $(foreach accn,$(REFERENCES),$(REFERENCES_DIR)/$(accn).fasta.fai $(REFERENCES_DIR)/$(accn).gbff)
+references: $(foreach accn,$(REFERENCES),$(REFERENCES_DIR)/$(accn).fasta $(REFERENCES_DIR)/$(accn).fasta.fai $(REFERENCES_DIR)/$(accn).gbff)
 
 $(REFERENCES_DIR)/%.fasta:
 	$(call log_message,Downloading reference genome $* ...)
