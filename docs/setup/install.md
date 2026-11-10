@@ -33,7 +33,7 @@ prepare them (chewBBACA, Prodigal, jasentool and SAMtools).
 The containers are built with `singularity` and saved under the names Nextflow
 uses in its Singularity/Apptainer cache,
 and the chewBBACA and SAMtools images are the ones the pipeline runs. Use the
-same folder for `CONTAINERS_DIR` as `apptainer.cacheDir` in your server config
+same folder for `CONTAINERS_DIR` as `singularity.cacheDir` in your server config
 (on thedonkey, `/mnt/cache/singularity`) and the pipeline reuses those two
 instead of downloading them again; it pulls the rest itself on its first run.
 

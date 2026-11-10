@@ -15,7 +15,7 @@ The configs for our own servers live in
 the JASEN ones. On thedonkey:
 
 ```bash
-tmux new -s sinklink 'nextflow run ryanjameskennedy/sinklink -r v0.2.0 -profile apptainer \
+tmux new -s sinklink 'nextflow run ryanjameskennedy/sinklink -r v0.2.0 -profile singularity \
     -c /path/to/configs/sinklink/thedonkey.config \
     -params-file /path/to/configs/sinklink/thedonkey.yaml \
     --input samplesheet.csv --metadata vask_colonisation_hidden.csv \
@@ -38,7 +38,7 @@ stopped run.
 | Total CPUs and memory in use (`executor.$local`) | config          | 15 CPUs, 141 GB, at most 8 tasks                              |
 | Largest single task (`process.resourceLimits`)   | config          | 15 CPUs, 141 GB, 48 h                                         |
 | CPUs and memory per tool                         | config          | see [resources](#resources)                                   |
-| Apptainer cache and bind mounts                  | config          | `/mnt/cache/singularity`, `--bind /mnt/cache/dbs`             |
+| Singularity cache and bind mounts                | config          | `/mnt/cache/singularity`, `--bind /mnt/cache/dbs`             |
 
 thedonkey has 20 threads and 188 GB and is shared with two colleagues without a
 scheduler, so the caps sit about 25% below the machine totals.
@@ -51,7 +51,7 @@ To see what a config resolves to before a run:
 
 ```bash
 nextflow -c /path/to/configs/sinklink/thedonkey.config config ryanjameskennedy/sinklink \
-    -profile apptainer -flat | grep -E "resourceLimits|withLabel|withName.*(cpus|memory)"
+    -profile singularity -flat | grep -E "resourceLimits|withLabel|withName.*(cpus|memory)"
 ```
 
 ## Resources

@@ -46,7 +46,7 @@ Then run every isolate, whatever its species, with one samplesheet and one
 metadata file:
 
 ```bash
-nextflow run ryanjameskennedy/sinklink -r v0.2.0 -profile apptainer \
+nextflow run ryanjameskennedy/sinklink -r v0.2.0 -profile singularity \
     -c thedonkey.config -params-file thedonkey.yaml \
     --input samplesheet.csv \
     --metadata metadata.csv \
