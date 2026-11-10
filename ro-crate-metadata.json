@@ -22,8 +22,8 @@
             "@id": "./",
             "@type": "Dataset",
             "creativeWorkStatus": "Stable",
-            "datePublished": "2026-11-08T14:55:38+00:00",
-            "description": "# sinklink\n\n[![nf-test](https://github.com/ryanjameskennedy/sinklink/actions/workflows/nf-test.yml/badge.svg)](https://github.com/ryanjameskennedy/sinklink/actions/workflows/nf-test.yml)\n[![Docs](https://readthedocs.org/projects/sinklink/badge/?version=latest)](https://sinklink.readthedocs.io)\n[![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A525.04.0-23aa62.svg)](https://www.nextflow.io/)\n\n_Did the sink infect the patient?_\n\nsinklink tests whether bacteria isolated from a hospital sink (or another\nenvironmental site) and from a patient belong to the same strain. Starting from\nIllumina or Nanopore reads, it:\n\n1. removes human reads (Deacon) and QCs the reads (FastQC or NanoPlot,\n   optional Trimmomatic or Filtlong);\n2. assembles each isolate (SKESA for Illumina, Flye + Medaka for Nanopore);\n3. QCs the assembly (QUAST and Mash against the species' reference genome,\n   gambitcore, read depth, 7-gene MLST) and confirms the species from the reads\n   (Kraken2/Bracken);\n4. calls variants against the species' reference genome (Snippy for Illumina,\n   Clair3 for Nanopore);\n5. calls alleles with chewBBACA against species-specific cgMLST/wgMLST schemas;\n6. compares every pair of isolates within each suspected transmission group\n   against a published, species-specific allele-difference threshold, with\n   their SNP distance alongside, flagging pairs where either isolate failed QC.\n\n![sinklink metro map](docs/images/metro_map.svg)\n\nIf the map above does not load, see the [static version](docs/images/metro_map_light.png).\n\nIt is a Nextflow pipeline built on the [nf-core](https://nf-co.re) template,\nmodelled on [JASEN](https://github.com/genomic-medicine-sweden/JASEN), and runs\non a single server without a job scheduler.\n\n**Documentation: <https://sinklink.readthedocs.io>**\n\n## Quick start\n\nSet up the schemas, reference genomes and databases once:\n\n```bash\ngit clone git@github.com:ryanjameskennedy/sinklink.git && cd sinklink\nmake install ASSETS_DIR=/mnt/cache/dbs CONTAINERS_DIR=/mnt/cache/singularity\n```\n\nThen run every isolate, whatever its species, with one samplesheet and one\nmetadata file:\n\n```bash\nnextflow run ryanjameskennedy/sinklink -r v0.2.0 -profile apptainer \\\n    -c thedonkey.config -params-file thedonkey.yaml \\\n    --input samplesheet.csv \\\n    --metadata metadata.csv \\\n    --outdir results\n```\n\n```text\nsample,platform,fastq_1,fastq_2\nS01,illumina,/data/reads/S01_R1.fastq.gz,/data/reads/S01_R2.fastq.gz\nS02,nanopore,/data/reads/S02.fastq.gz,\n```\n\nThe metadata needs `sample`, `transmission` and `growth` columns. See\n[running sinklink](https://sinklink.readthedocs.io/en/latest/usage.html) for\nthe formats and [running on a server](https://sinklink.readthedocs.io/en/latest/setup/servers.html)\nfor the `-c` config and parameters file.\n\n## Species and thresholds\n\n| Species                                 | Threshold (alleles) | Threshold from                   |\n| --------------------------------------- | ------------------- | -------------------------------- |\n| _Pseudomonas aeruginosa_                | \u226412                 | cgmlst.org complex type distance |\n| _Klebsiella pneumoniae_ species complex | \u226415                 | cgmlst.org complex type distance |\n| _Klebsiella oxytoca_ species complex    | \u22646 (borderline \u22649)  | Dabernig-Heinz et al. 2024       |\n| _Serratia marcescens_                   | \u226412                 | cgmlst.org complex type distance |\n| _Citrobacter freundii_                  | \u226410                 | cgmlst.org complex type distance |\n| _Enterobacter hormaechei_               | \u226412                 | cgmlst.org complex type distance |\n| _Stenotrophomonas maltophilia_ complex  | \u226410                 | Gr\u00f6schel et al. 2020 (d10)       |\n\nEach species has its own page, with the scheme, the paper behind it and the\nspecies the scheme accepts:\n[species and thresholds](https://sinklink.readthedocs.io/en/latest/species/index.html).\n\n## Data\n\nThe VASK study metadata (`vask_colonisation_hidden.csv`) contains study patient\nidentifiers and is not part of this repository; it is git-ignored.\n\n## Citations\n\nTools used by the pipeline are listed in [CITATIONS.md](CITATIONS.md), and the\nliterature behind the thresholds in the\n[references](https://sinklink.readthedocs.io/en/latest/reference/references.html).\n",
+            "datePublished": "2026-11-10T23:20:17+00:00",
+            "description": "# sinklink\n\n[![nf-test](https://github.com/ryanjameskennedy/sinklink/actions/workflows/nf-test.yml/badge.svg)](https://github.com/ryanjameskennedy/sinklink/actions/workflows/nf-test.yml)\n[![Docs](https://readthedocs.org/projects/sinklink/badge/?version=latest)](https://sinklink.readthedocs.io)\n[![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A525.04.0-23aa62.svg)](https://www.nextflow.io/)\n\n_Did the sink infect the patient?_\n\nsinklink tests whether bacteria isolated from a hospital sink (or another\nenvironmental site) and from a patient belong to the same strain. Starting from\nIllumina or Nanopore reads, it:\n\n1. removes human reads (Deacon) and QCs the reads (FastQC or NanoPlot,\n   optional Trimmomatic or Filtlong);\n2. assembles each isolate (SKESA for Illumina, Flye + Medaka for Nanopore);\n3. QCs the assembly (QUAST and Mash against the species' reference genome,\n   gambitcore, read depth, 7-gene MLST) and confirms the species from the reads\n   (Kraken2/Bracken);\n4. calls variants against the species' reference genome (Snippy for Illumina,\n   Clair3 for Nanopore);\n5. calls alleles with chewBBACA against species-specific cgMLST/wgMLST schemas;\n6. compares every pair of isolates within each suspected transmission group\n   against a published, species-specific allele-difference threshold, with\n   their SNP distance alongside, flagging pairs where either isolate failed QC.\n\n![sinklink metro map](docs/images/metro_map.svg)\n\nIf the map above does not load, see the [static version](docs/images/metro_map_light.png).\n\nIt is a Nextflow pipeline built on the [nf-core](https://nf-co.re) template,\nmodelled on [JASEN](https://github.com/genomic-medicine-sweden/JASEN), and runs\non a single server without a job scheduler.\n\n**Documentation: <https://sinklink.readthedocs.io>**\n\n## Quick start\n\nSet up the schemas, reference genomes and databases once:\n\n```bash\ngit clone git@github.com:ryanjameskennedy/sinklink.git && cd sinklink\nmake install ASSETS_DIR=/mnt/cache/dbs CONTAINERS_DIR=/mnt/cache/singularity\n```\n\nThen run every isolate, whatever its species, with one samplesheet and one\nmetadata file:\n\n```bash\nnextflow run ryanjameskennedy/sinklink -r v0.2.0 -profile singularity \\\n    -c thedonkey.config -params-file thedonkey.yaml \\\n    --input samplesheet.csv \\\n    --metadata metadata.csv \\\n    --outdir results\n```\n\n```text\nsample,platform,fastq_1,fastq_2\nS01,illumina,/data/reads/S01_R1.fastq.gz,/data/reads/S01_R2.fastq.gz\nS02,nanopore,/data/reads/S02.fastq.gz,\n```\n\nThe metadata needs `sample`, `transmission` and `growth` columns. See\n[running sinklink](https://sinklink.readthedocs.io/en/latest/usage.html) for\nthe formats and [running on a server](https://sinklink.readthedocs.io/en/latest/setup/servers.html)\nfor the `-c` config and parameters file.\n\n## Species and thresholds\n\n| Species                                 | Threshold (alleles) | Threshold from                   |\n| --------------------------------------- | ------------------- | -------------------------------- |\n| _Pseudomonas aeruginosa_                | \u226412                 | cgmlst.org complex type distance |\n| _Klebsiella pneumoniae_ species complex | \u226415                 | cgmlst.org complex type distance |\n| _Klebsiella oxytoca_ species complex    | \u22646 (borderline \u22649)  | Dabernig-Heinz et al. 2024       |\n| _Serratia marcescens_                   | \u226412                 | cgmlst.org complex type distance |\n| _Citrobacter freundii_                  | \u226410                 | cgmlst.org complex type distance |\n| _Enterobacter hormaechei_               | \u226412                 | cgmlst.org complex type distance |\n| _Stenotrophomonas maltophilia_ complex  | \u226410                 | Gr\u00f6schel et al. 2020 (d10)       |\n\nEach species has its own page, with the scheme, the paper behind it and the\nspecies the scheme accepts:\n[species and thresholds](https://sinklink.readthedocs.io/en/latest/species/index.html).\n\n## Data\n\nThe VASK study metadata (`vask_colonisation_hidden.csv`) contains study patient\nidentifiers and is not part of this repository; it is git-ignored.\n\n## Citations\n\nTools used by the pipeline are listed in [CITATIONS.md](CITATIONS.md), and the\nliterature behind the thresholds in the\n[references](https://sinklink.readthedocs.io/en/latest/reference/references.html).\n",
             "hasPart": [
                 {
                     "@id": "main.nf"
@@ -105,7 +105,7 @@
             },
             "mentions": [
                 {
-                    "@id": "#39ada92c-7fce-4aa0-8810-aeb6e0f1ab5d"
+                    "@id": "#f0361555-5021-408b-b2f4-44124a2ffeb2"
                 }
             ],
             "name": "ryanjameskennedy/sinklink"
@@ -134,11 +134,11 @@
             ],
             "creator": [
                 {
-                    "@id": "#ryanjameskennedy@icloud.com"
+                    "@id": "#67742838+ryanjameskennedy@users.noreply.github.com"
                 }
             ],
             "dateCreated": "",
-            "dateModified": "2026-11-08T15:55:38Z",
+            "dateModified": "2026-11-11T00:20:17Z",
             "dct:conformsTo": "https://bioschemas.org/profiles/ComputationalWorkflow/1.0-RELEASE/",
             "image": {
                 "@id": "docs/images/metro_map_light.png"
@@ -161,10 +161,10 @@
             },
             "url": [
                 "https://github.com/ryanjameskennedy/sinklink",
-                "https://nf-co.re/ryanjameskennedy/sinklink/0.2.0/"
+                "https://nf-co.re/ryanjameskennedy/sinklink/0.3.0/"
             ],
             "version": [
-                "0.2.0"
+                "0.3.0"
             ]
         },
         {
@@ -188,11 +188,11 @@
             "name": "Workflow diagram"
         },
         {
-            "@id": "#39ada92c-7fce-4aa0-8810-aeb6e0f1ab5d",
+            "@id": "#f0361555-5021-408b-b2f4-44124a2ffeb2",
             "@type": "TestSuite",
             "instance": [
                 {
-                    "@id": "#21a96909-e38e-45a0-9f4c-5b75147c9c55"
+                    "@id": "#a5232b15-0510-4e0e-8c07-586984a9af55"
                 }
             ],
             "mainEntity": {
@@ -201,7 +201,7 @@
             "name": "Test suite for ryanjameskennedy/sinklink"
         },
         {
-            "@id": "#21a96909-e38e-45a0-9f4c-5b75147c9c55",
+            "@id": "#a5232b15-0510-4e0e-8c07-586984a9af55",
             "@type": "TestInstance",
             "name": "GitHub Actions workflow for testing ryanjameskennedy/sinklink",
             "resource": "repos/ryanjameskennedy/sinklink/actions/workflows/nf-test.yml",
@@ -335,9 +335,9 @@
             "url": "https://nf-co.re/"
         },
         {
-            "@id": "#ryanjameskennedy@icloud.com",
+            "@id": "#67742838+ryanjameskennedy@users.noreply.github.com",
             "@type": "Person",
-            "email": "ryanjameskennedy@icloud.com",
+            "email": "67742838+ryanjameskennedy@users.noreply.github.com",
             "name": "Ryan James Kennedy"
         }
     ]
