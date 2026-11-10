@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The setup Makefiles run their containers with `singularity` (`SINGULARITY=apptainer` switches runtime)
 - The setup examples keep the databases directly under `/mnt/cache/dbs`
-- The run examples use `-profile singularity`, as thedonkey's config now sets up Singularity
+- The run examples use `-profile singularity`, as thedonkey's config now sets up Singularity and mounts `/media/shortterm`, where `TMPDIR` points
 
 ### `Fixed`
 

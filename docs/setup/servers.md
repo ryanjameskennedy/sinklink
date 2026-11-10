@@ -27,18 +27,18 @@ stopped run.
 
 ## What goes where
 
-| Setting                                          | File            | thedonkey                                                     |
-| ------------------------------------------------ | --------------- | ------------------------------------------------------------- |
-| `--schemas_dir`                                  | parameters file | `/mnt/cache/dbs/schemas`                                      |
-| `--kraken_db`                                    | parameters file | `/mnt/cache/dbs/kraken2/standard_16gb_20260626` (Standard-16) |
-| `--deacon_index`                                 | parameters file | `/mnt/cache/dbs/deacon/panhuman-1.k31w15.idx`                 |
-| `--references_dir`                               | parameters file | `/mnt/cache/dbs/references`                                   |
-| `--gambit_db`                                    | parameters file | `/mnt/cache/dbs/gambit_db`                                    |
-| Work directory                                   | config          | `/media/shortterm/$USER/work`                                 |
-| Total CPUs and memory in use (`executor.$local`) | config          | 15 CPUs, 141 GB, at most 8 tasks                              |
-| Largest single task (`process.resourceLimits`)   | config          | 15 CPUs, 141 GB, 48 h                                         |
-| CPUs and memory per tool                         | config          | see [resources](#resources)                                   |
-| Singularity cache and bind mounts                | config          | `/mnt/cache/singularity`, `--bind /mnt/cache/dbs`             |
+| Setting                                          | File            | thedonkey                                                                             |
+| ------------------------------------------------ | --------------- | ------------------------------------------------------------------------------------- |
+| `--schemas_dir`                                  | parameters file | `/mnt/cache/dbs/schemas`                                                              |
+| `--kraken_db`                                    | parameters file | `/mnt/cache/dbs/kraken2/standard_16gb_20260626` (Standard-16)                         |
+| `--deacon_index`                                 | parameters file | `/mnt/cache/dbs/deacon/panhuman-1.k31w15.idx`                                         |
+| `--references_dir`                               | parameters file | `/mnt/cache/dbs/references`                                                           |
+| `--gambit_db`                                    | parameters file | `/mnt/cache/dbs/gambit_db`                                                            |
+| Work directory                                   | config          | `/media/shortterm/$USER/work`                                                         |
+| Total CPUs and memory in use (`executor.$local`) | config          | 15 CPUs, 141 GB, at most 8 tasks                                                      |
+| Largest single task (`process.resourceLimits`)   | config          | 15 CPUs, 141 GB, 48 h                                                                 |
+| CPUs and memory per tool                         | config          | see [resources](#resources)                                                           |
+| Singularity cache and bind mounts                | config          | `/mnt/cache/singularity`, `--bind /mnt/cache/dbs --bind /media/shortterm` (`$TMPDIR`) |
 
 thedonkey has 20 threads and 188 GB and is shared with two colleagues without a
 scheduler, so the caps sit about 25% below the machine totals.
