@@ -20,11 +20,11 @@ typing, ≤21 SNPs has been used to define nosocomial transmission in Europe
 
 The schema accepts _K. pneumoniae_, _K. quasipneumoniae_, _K. variicola_, _K. quasivariicola_ and _K. africana_.
 
-| Setting in `assets/schemas.tsv` | Value                    |
-| ------------------------------- | ------------------------ | --------------- | --------- | -------------- | ----------- |
-| `species_pattern`               | `^Klebsiella (pneumoniae | quasipneumoniae | variicola | quasivariicola | africana)$` |
-| `genera`                        | Klebsiella               |
-| Expected genome size            | 5.0–6.5 Mb               |
+| Setting in `assets/schemas.tsv` | Value                                                                             |
+| ------------------------------- | --------------------------------------------------------------------------------- |
+| `species_pattern`               | `^Klebsiella (pneumoniae\|quasipneumoniae\|variicola\|quasivariicola\|africana)$` |
+| `genera`                        | Klebsiella                                                                        |
+| Expected genome size            | 5.0–6.5 Mb                                                                        |
 
 ## In the VASK study
 

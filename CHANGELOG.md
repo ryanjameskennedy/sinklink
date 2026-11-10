@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PhiSpy finds its GenBank output when the input file name has dots, such as an NCBI accession (nf-core module patch)
 - `make references` keeps the reference FASTA files; make treated them as temporary and deleted them after indexing
 - Setup log messages with brackets no longer break the shell command
+- The species check tables on the _K. oxytoca_, _K. pneumoniae_ and _S. marcescens_ pages, which the `|` in their species patterns split into extra columns
 
 ### `Removed`
 

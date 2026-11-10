@@ -20,11 +20,11 @@ used ≤20 alleles, with most outbreak isolates ≤4 apart.
 
 The schema accepts _S. marcescens_ and _S. nematodiphila_.
 
-| Setting in `assets/schemas.tsv` | Value                  |
-| ------------------------------- | ---------------------- | ---------------- |
-| `species_pattern`               | `^Serratia (marcescens | nematodiphila)$` |
-| `genera`                        | Serratia               |
-| Expected genome size            | 4.8–5.8 Mb             |
+| Setting in `assets/schemas.tsv` | Value                                    |
+| ------------------------------- | ---------------------------------------- |
+| `species_pattern`               | `^Serratia (marcescens\|nematodiphila)$` |
+| `genera`                        | Serratia                                 |
+| Expected genome size            | 4.8–5.8 Mb                               |
 
 ## In the VASK study
 

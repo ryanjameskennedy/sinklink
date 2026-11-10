@@ -22,11 +22,11 @@ only 10 alleles from the cluster.
 
 The schema accepts _K. oxytoca_, _K. michiganensis_, _K. grimontii_, _K. pasteurii_, _K. huaxiensis_ and _K. spallanzanii_; reads from _Raoultella_ are not counted as contamination.
 
-| Setting in `assets/schemas.tsv` | Value                  |
-| ------------------------------- | ---------------------- | ------------- | --------- | --------- | ---------- | --------------- |
-| `species_pattern`               | `^Klebsiella (oxytoca  | michiganensis | grimontii | pasteurii | huaxiensis | spallanzanii)$` |
-| `genera`                        | Klebsiella, Raoultella |
-| Expected genome size            | 5.5–6.8 Mb             |
+| Setting in `assets/schemas.tsv` | Value                                                                                   |
+| ------------------------------- | --------------------------------------------------------------------------------------- |
+| `species_pattern`               | `^Klebsiella (oxytoca\|michiganensis\|grimontii\|pasteurii\|huaxiensis\|spallanzanii)$` |
+| `genera`                        | Klebsiella, Raoultella                                                                  |
+| Expected genome size            | 5.5–6.8 Mb                                                                              |
 
 ## In the VASK study
 
