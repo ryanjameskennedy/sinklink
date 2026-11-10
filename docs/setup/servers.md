@@ -15,7 +15,7 @@ The configs for our own servers live in
 the JASEN ones. On thedonkey:
 
 ```bash
-tmux new -s sinklink 'nextflow run ryanjameskennedy/sinklink -r v0.2.0 -profile singularity \
+tmux new -s sinklink 'nextflow run ryanjameskennedy/sinklink -r v0.3.0 -profile singularity \
     -c /path/to/configs/sinklink/thedonkey.config \
     -params-file /path/to/configs/sinklink/thedonkey.yaml \
     --input samplesheet.csv --metadata vask_colonisation_hidden.csv \
