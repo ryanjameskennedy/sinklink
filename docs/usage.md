@@ -87,7 +87,7 @@ How it is used:
 
 ```bash
 nextflow run ryanjameskennedy/sinklink -r v0.2.0 \
-    -profile apptainer \
+    -profile singularity \
     --input samplesheet.csv \
     --metadata metadata.csv \
     --schemas_dir /path/to/schemas \
@@ -113,7 +113,7 @@ On a server, put the database paths in a parameters file and the resources in
 a config (see [running on a server](setup/servers.md)):
 
 ```bash
-nextflow run ryanjameskennedy/sinklink -r v0.2.0 -profile apptainer \
+nextflow run ryanjameskennedy/sinklink -r v0.2.0 -profile singularity \
     -c thedonkey.config -params-file thedonkey.yaml \
     --input samplesheet.csv --metadata vask_colonisation_hidden.csv \
     --outdir /media/Lagring/$USER/vask

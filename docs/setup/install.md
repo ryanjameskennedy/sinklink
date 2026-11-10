@@ -30,24 +30,25 @@ what the pipeline reads: the chewBBACA schemas, the reference genomes, the
 Deacon human index, the GAMBIT database and the four containers needed to
 prepare them (chewBBACA, Prodigal, jasentool and SAMtools).
 
-The containers are saved under the names Nextflow uses in its Apptainer cache,
+The containers are built with `singularity` and saved under the names Nextflow
+uses in its Singularity/Apptainer cache,
 and the chewBBACA and SAMtools images are the ones the pipeline runs. Use the
-same folder for `CONTAINERS_DIR` as `apptainer.cacheDir` in your server config
+same folder for `CONTAINERS_DIR` as `singularity.cacheDir` in your server config
 (on thedonkey, `/mnt/cache/singularity`) and the pipeline reuses those two
 instead of downloading them again; it pulls the rest itself on its first run.
 
 ```bash
-make install ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
+make install ASSETS_DIR=/mnt/cache/dbs CONTAINERS_DIR=/mnt/cache/singularity
 ```
 
 or step by step:
 
 ```bash
 make -C containers all CONTAINERS_DIR=/mnt/cache/singularity
-make databases ASSETS_DIR=/mnt/cache/dbs/vask
-make references ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
-make schemas ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
-make check ASSETS_DIR=/mnt/cache/dbs/vask
+make databases ASSETS_DIR=/mnt/cache/dbs
+make references ASSETS_DIR=/mnt/cache/dbs CONTAINERS_DIR=/mnt/cache/singularity
+make schemas ASSETS_DIR=/mnt/cache/dbs CONTAINERS_DIR=/mnt/cache/singularity
+make check ASSETS_DIR=/mnt/cache/dbs
 ```
 
 - [Schemas](schemas.md): what `make schemas` does and what to do when a

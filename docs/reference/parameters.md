@@ -14,16 +14,16 @@ The full schema, with types and validation, is
 
 ## Schemas and databases
 
-| Parameter          | Meaning                                                             | Default                                  |
-| ------------------ | ------------------------------------------------------------------- | ---------------------------------------- |
-| `--schemas_dir`    | Folder with `<schema>/alleles_rereffed`                             | required unless `--skip_chewbbaca`       |
-| `--kraken_db`      | Kraken2/Bracken database for the species check                      | required                                 |
-| `--deacon_index`   | Deacon human index, e.g. `panhuman-1.k31w15.idx`                    | required unless `--skip_host_removal`    |
-| `--references_dir` | Folder with `<accession>.fasta`, `.fasta.fai` and `.gff` per schema | required unless `--skip_variant_calling` |
-| `--gambit_db`      | GAMBIT database for gambitcore; completeness skipped without it     | none                                     |
-| `--schema_table`   | Thresholds, accepted species and genome size per schema             | `assets/schemas.tsv`                     |
-| `--species_map`    | Laboratory growth label to schema                                   | `assets/species_map.tsv`                 |
-| `--qc_thresholds`  | Read and assembly QC thresholds per platform                        | `assets/qc_thresholds.tsv`               |
+| Parameter          | Meaning                                                                      | Default                                  |
+| ------------------ | ---------------------------------------------------------------------------- | ---------------------------------------- |
+| `--schemas_dir`    | Folder with `<schema>/alleles_rereffed`                                      | required unless `--skip_chewbbaca`       |
+| `--kraken_db`      | Kraken2/Bracken database for the species check                               | required                                 |
+| `--deacon_index`   | Deacon human index, e.g. `panhuman-1.k31w15.idx`                             | required unless `--skip_host_removal`    |
+| `--references_dir` | Folder with `<accession>.fasta`, `.fasta.fai`, `.gff` and `.gbff` per schema | required unless `--skip_variant_calling` |
+| `--gambit_db`      | GAMBIT database for gambitcore; completeness skipped without it              | none                                     |
+| `--schema_table`   | Thresholds, accepted species and genome size per schema                      | `assets/schemas.tsv`                     |
+| `--species_map`    | Laboratory growth label to schema                                            | `assets/species_map.tsv`                 |
+| `--qc_thresholds`  | Read and assembly QC thresholds per platform                                 | `assets/qc_thresholds.tsv`               |
 
 ## Analysis
 

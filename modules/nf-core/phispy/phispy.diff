@@ -1,0 +1,28 @@
+Changes in component 'nf-core/phispy'
+'modules/nf-core/phispy/environment.yml' is unchanged
+'modules/nf-core/phispy/meta.yml' is unchanged
+Changes in 'phispy/main.nf':
+--- modules/nf-core/phispy/main.nf
++++ modules/nf-core/phispy/main.nf
+@@ -31,7 +31,7 @@
+     def args = task.ext.args ?: ''
+     prefix = task.ext.prefix ?: "${meta.id}"
+     // Extract GBK file extension, i.e. .gbff, .gbk.gz
+-    gbk_extension = gbk.getName() - gbk.getSimpleName()
++    gbk_extension = gbk.getName().endsWith(".gz") ? ".${gbk.getName().tokenize('.')[-2..-1].join('.')}" : ".${gbk.getExtension()}"
+ 
+     if ("${gbk}" == "${prefix}${gbk_extension}") error "Input and output names are the same, set prefix in module configuration to disambiguate!"
+ 
+@@ -50,7 +50,7 @@
+ 
+     stub:
+     prefix = task.ext.prefix ?: "${meta.id}"
+-    gbk_extension = gbk.getName() - gbk.getSimpleName()
++    gbk_extension = gbk.getName().endsWith(".gz") ? ".${gbk.getName().tokenize('.')[-2..-1].join('.')}" : ".${gbk.getExtension()}"
+     gbl_create_cmd = gbk_extension.endsWith(".gz") ? 'echo "" | gzip >' : "touch"
+ 
+     if ("${gbk}" == "${prefix}${gbk_extension}") error "Input and output names are the same, set prefix in module configuration to disambiguate!"
+
+'modules/nf-core/phispy/tests/main.nf.test.snap' is unchanged
+'modules/nf-core/phispy/tests/main.nf.test' is unchanged
+************************************************************

@@ -8,10 +8,11 @@ workflows/sinklink.nf       main workflow
 subworkflows/local/         read_preparation, assembly, assembly_qc, species_check,
                             variant_calling, allele_calling, utils_nfcore_sinklink_pipeline
 modules/nf-core/            installed nf-core modules (modules.json)
-modules/local/              gambitcore, make_pseudogenome, summarise_qc, check_distances
+modules/local/              gambitcore, summarise_qc, check_distances
 conf/                       base, modules, test and test_full configs
 assets/                     schemas.tsv, species_map.tsv, qc_thresholds.tsv, samplesheet schema, test inputs
-bin/                        make_pseudogenome.py, summarise_qc.py, check_distances.py, split_alleles.py
+bin/                        summarise_qc.py, check_distances.py, split_alleles.py
+assets/awk/                 gawk programs for the masks, pseudogenomes and alignments
 docs/                       this documentation (Sphinx + MyST)
 Makefile, containers/       schema and database setup
 ```

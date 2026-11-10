@@ -19,7 +19,7 @@ workflow ASSEMBLY_QC {
     take:
     ch_assembly  // channel: [ val(meta), path(fasta) ]
     ch_reads     // channel: [ val(meta), [ fastq ] ]
-    ch_reference // channel: [ val(meta), [ fasta, fai, gff ] ]
+    ch_reference // channel: [ val(meta), [ fasta, fai, gff, gbff ] ]
     gambit_db    // path: GAMBIT database folder, or [] to skip gambitcore
 
     main:

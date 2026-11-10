@@ -17,7 +17,13 @@ Distance to reference,Mash,2.3,nf-core/mash/dist
 Illumina variant calling,Snippy (BWA and FreeBayes),4.6.0,nf-core/snippy/run
 Nanopore variant calling,minimap2,2.30,nf-core/minimap2/align
 Nanopore variant calling,Clair3,2.0.0,nf-core/clair3
-Pseudogenome masking,SAMtools,1.24,nf-core/samtools/depth
+Repeat masking,MUMmer (nucmer),3.23,nf-core/nucmer
+Prophage masking,PhiSpy,4.2.21,nf-core/phispy (patched)
+Low-depth masking,mosdepth,0.3.14,nf-core/mosdepth
+Pseudogenome,BCFtools,1.23.1,nf-core/bcftools/view and bcftools/consensus
+Pseudogenome and alignment,GNU awk,5.3.1,nf-core/gawk
+Recombination,Gubbins,3.3.5,nf-core/gubbins
+SNP distances,snp-dists,0.8.2,nf-core/snpdists
 Species check,Kraken2,2.1.6,nf-core/kraken2/kraken2
 Species check,Bracken,3.1,nf-core/bracken/bracken
 Allele calling,chewBBACA,3.5.4,nf-core/chewbbaca/allelecall (container pinned to 3.5.4)

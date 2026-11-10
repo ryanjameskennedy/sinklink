@@ -3,6 +3,34 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased]
+
+### `Added`
+
+- SNP distances from masked pseudogenomes built with existing tools: repeats from a MUMmer self-alignment and prophages from PhiSpy are masked with the low-depth regions (mosdepth) when `bcftools consensus` applies each isolate's SNPs; Gubbins removes recombination for schemas with 3 or more sequences and snp-dists counts the differences
+- `make references` also downloads each reference's GenBank file for PhiSpy
+- `snp_recombination_filtered` in the pair table
+- Links from the species threshold table to each threshold's source, and DOIs for the Kampmeier, Kieninger and Prior papers
+
+### `Changed`
+
+- The setup Makefiles run their containers with `singularity` (`SINGULARITY=apptainer` switches runtime)
+- The setup examples keep the databases directly under `/mnt/cache/dbs`
+- The run examples use `-profile singularity`, as thedonkey's config now sets up Singularity and mounts `/media/shortterm`, where `TMPDIR` points
+
+### `Fixed`
+
+- A `0` allele call counts as missing, as in cgmlst-dists, so two missing calls never count as a match
+- PhiSpy finds its GenBank output when the input file name has dots, such as an NCBI accession (nf-core module patch)
+- `make references` keeps the reference FASTA files; make treated them as temporary and deleted them after indexing
+- Setup log messages with brackets no longer break the shell command
+- The species check tables on the _K. oxytoca_, _K. pneumoniae_ and _S. marcescens_ pages, which the `|` in their species patterns split into extra columns
+
+### `Removed`
+
+- The home-made pseudogenome script (`make_pseudogenome.py`) and the samtools depth step, replaced by the tools above
+- `snp_sites_compared` in the pair table
+
 ## v0.2.0 - 2026-11-08
 
 Adds human read removal, variant calling against a reference genome per species

@@ -327,7 +327,7 @@
                 },
                 "skip_variant_calling": {
                     "type": "boolean",
-                    "description": "Skip mapping reads to the schema's reference genome and calling variants.",
+                    "description": "Skip mapping reads to the schema's reference genome, variant calling and SNP distances.",
                     "fa_icon": "fas fa-forward"
                 },
                 "clair3_model": {
@@ -341,7 +341,7 @@
                     "type": "integer",
                     "default": 10,
                     "minimum": 1,
-                    "description": "Read depth below which a reference position is masked as N in the pseudogenome and left out of SNP distances (also Snippy's --mincov).",
+                    "description": "Read depth below which a reference position is masked and left out of SNP distances (also Snippy's --mincov).",
                     "fa_icon": "fas fa-layer-group"
                 },
                 "skip_chewbbaca": {

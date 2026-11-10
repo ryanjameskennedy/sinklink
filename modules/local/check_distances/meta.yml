@@ -1,5 +1,5 @@
 name: "check_distances"
-description: Compare allele profiles within each transmission group against species thresholds, with SNP distances between pseudogenomes for information
+description: Compare allele profiles within each transmission group against species thresholds, with SNP distances for information
 keywords:
   - cgmlst
   - wgmlst
@@ -18,9 +18,9 @@ input:
   - alleles:
       type: file
       description: chewBBACA allele tables named <schema>_results_alleles.tsv
-  - pseudogenomes:
+  - snp_dists:
       type: file
-      description: Pseudogenomes from MAKE_PSEUDOGENOME, one isolate each
+      description: snp-dists matrices named <schema>[.gubbins].snp_dists.tsv
   - schema_table:
       type: file
       description: assets/schemas.tsv

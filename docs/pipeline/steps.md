@@ -5,7 +5,7 @@ reads ──► READ_PREPARATION ──► ASSEMBLY ──► ASSEMBLY_QC ──
           (human read removal,  (per platform) (QUAST, Mash, │
            filter, read QC)                   depth, MLST)  ├──► SUMMARISE_QC ──► qc_summary.tsv ──┐
              ├──► SPECIES_CHECK (Kraken2/Bracken) ──────────┘                                      │
-             └──► VARIANT_CALLING (Snippy or Clair3 against the reference) ──► pseudogenomes ──────┤
+             └──► VARIANT_CALLING (Snippy or Clair3, masked pseudogenomes, Gubbins, snp-dists) ───┤
                                ASSEMBLY ──► ALLELE_CALLING (chewBBACA per schema) ──► CHECK_DISTANCES ◄┘
                                                                                       (pairs per group)
 ```
@@ -14,25 +14,23 @@ The workflow
 ([`workflows/sinklink.nf`](https://github.com/ryanjameskennedy/sinklink/blob/master/workflows/sinklink.nf))
 runs six local subworkflows built from nf-core modules:
 
-| Subworkflow        | Illumina                                                                                                           | Nanopore                                                                                                                     |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| `READ_PREPARATION` | Deacon human read removal, Trimmomatic (with `--trim`), FastQC                                                     | Deacon human read removal, Filtlong (with `--filtlong`), NanoPlot                                                            |
-| `ASSEMBLY`         | SKESA                                                                                                              | Flye `--nano-hq` (`--asm-coverage 50` with the schema's genome size), then `medaka_consensus --bacteria`                     |
-| `ASSEMBLY_QC`      | QUAST and Mash against the reference genome, gambitcore, `bwa mem` to the own assembly + `samtools coverage`, mlst | QUAST and Mash against the reference genome, gambitcore, `minimap2 -x lr:hq` to the own assembly + `samtools coverage`, mlst |
-| `SPECIES_CHECK`    | Kraken2 (`--memory-mapping`) and Bracken (species level)                                                           | same                                                                                                                         |
-| `VARIANT_CALLING`  | Snippy (`bwa mem` and FreeBayes) against the reference genome                                                      | `minimap2 -x lr:hq` to the reference genome, then Clair3 in haploid mode                                                     |
-| `ALLELE_CALLING`   | chewBBACA AlleleCall per schema, `--no-inferred`                                                                   | same                                                                                                                         |
+| Subworkflow        | Illumina                                                                                                                                                                            | Nanopore                                                                                                                     |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `READ_PREPARATION` | Deacon human read removal, Trimmomatic (with `--trim`), FastQC                                                                                                                      | Deacon human read removal, Filtlong (with `--filtlong`), NanoPlot                                                            |
+| `ASSEMBLY`         | SKESA                                                                                                                                                                               | Flye `--nano-hq` (`--asm-coverage 50` with the schema's genome size), then `medaka_consensus --bacteria`                     |
+| `ASSEMBLY_QC`      | QUAST and Mash against the reference genome, gambitcore, `bwa mem` to the own assembly + `samtools coverage`, mlst                                                                  | QUAST and Mash against the reference genome, gambitcore, `minimap2 -x lr:hq` to the own assembly + `samtools coverage`, mlst |
+| `SPECIES_CHECK`    | Kraken2 (`--memory-mapping`) and Bracken (species level)                                                                                                                            | same                                                                                                                         |
+| `VARIANT_CALLING`  | Snippy (`bwa mem` and FreeBayes) against the reference genome; then for both platforms, masked pseudogenomes (MUMmer, PhiSpy, mosdepth, bcftools), Gubbins and snp-dists per schema | `minimap2 -x lr:hq` to the reference genome, then Clair3 in haploid mode                                                     |
+| `ALLELE_CALLING`   | chewBBACA AlleleCall per schema, `--no-inferred`                                                                                                                                    | same                                                                                                                         |
 
 Then local modules finish the run:
 
-- `MAKE_PSEUDOGENOME` (`bin/make_pseudogenome.py`) applies each isolate's
-  substitutions to the reference genome and masks positions with too few reads
-  (`samtools depth` below `--snp_min_depth`), inside `VARIANT_CALLING`.
 - `SUMMARISE_QC` (`bin/summarise_qc.py`) writes one QC row per isolate, and the
   rows are combined into `qc_summary.tsv`. See [quality control](qc.md).
 - `CHECK_DISTANCES` (`bin/check_distances.py`) compares isolates within each
-  transmission group, by allele differences and by SNP differences between
-  pseudogenomes. See [interpreting the results](../results/interpreting.md).
+  transmission group, by allele differences against the species threshold, with
+  the SNP distances from snp-dists alongside. See
+  [interpreting the results](../results/interpreting.md).
 
 MultiQC collects FastQC, NanoPlot, QUAST and Kraken2 results into one report.
 
@@ -66,6 +64,11 @@ MultiQC collects FastQC, NanoPlot, QUAST and Kraken2 results into one report.
   next to the allele differences but have no threshold: published SNP
   cut-offs for these species are not standardised the way the cgMLST ones
   are, and they depend on the reference and the masking.
+- **Masking with existing tools.** Repeats come from a MUMmer self-alignment of
+  the reference, as in PhaME; prophages from PhiSpy, which is built for
+  complete bacterial genomes; recombination from Gubbins, as in nf-core/bactmap.
+  The masks are applied after mapping: masking the reference first makes reads
+  map to the wrong place.
 
 - **`--no-inferred`.** AlleleCall never adds alleles to the schemas, so
   parallel jobs are safe and repeat runs reproducible; novel alleles are still

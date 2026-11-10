@@ -13,7 +13,11 @@
   runs comparable but, for diverse species complexes, leaves part of each
   genome out of the comparison. Mapping a group to a closely related isolate
   (for example the best assembly in the group) would compare more of the
-  genome; sinklink does not do this.
+  genome; sinklink does not do this. Only the chromosome is compared.
+- **Recombination filtering needs isolates.** Gubbins finds recombination by
+  comparing many isolates of a species on a tree. With only a few isolates per
+  species it has little power, and with fewer than 3 sequences it does not
+  run; check `snp_recombination_filtered`.
 - **Mixed-platform SNP distances** compare Snippy (Illumina) calls with Clair3
   (Nanopore) calls. Clair3 matches Illumina accuracy for SNPs on recent ONT
   data (Hall et al. 2024), but the masking differs with the depth on each

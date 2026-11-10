@@ -20,7 +20,7 @@ Pass `<ASSETS_DIR>/schemas` to the pipeline as `--schemas_dir`.
 | `ASSETS_DIR`     | `assets/`     | Where schemas, seed genomes and training files go |
 | `CONTAINERS_DIR` | `containers/` | Where `chewbbaca.sif` and `prodigal.sif` are      |
 | `PREP_CPUS`      | 4             | Threads for PrepExternalSchema                    |
-| `APPTAINER`      | `apptainer`   | Set to `singularity` to switch runtime            |
+| `SINGULARITY`    | `singularity` | Set to `apptainer` to switch runtime              |
 
 `make check` lists which schemas are ready and how many loci each has.
 

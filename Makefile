@@ -3,7 +3,7 @@
 # Makefile.
 #
 #   make print_paths
-#   make install ASSETS_DIR=/mnt/cache/dbs/vask CONTAINERS_DIR=/mnt/cache/singularity
+#   make install ASSETS_DIR=/mnt/cache/dbs CONTAINERS_DIR=/mnt/cache/singularity
 #
 # Single organisms can be set up on their own, e.g. `make paeruginosa_all`.
 # ==============================================================================
@@ -25,11 +25,12 @@ GAMBIT_URL := https://storage.googleapis.com/jlumpe-gambit/public/databases/refs
 GAMBIT_FILES := gambit-refseq-curated-1.0.gdb gambit-refseq-curated-1.0.gs
 REFERENCES_DIR := $(ASSETS_DIR)/references
 REFERENCES := $(shell awk -F'\t' 'NR==1 {for (i = 1; i <= NF; i++) if ($$i == "reference") col = i; next} $$col != "" {print $$col}' $(SCRIPT_DIR)/assets/schemas.tsv)
+NCBI_DATASETS := https://api.ncbi.nlm.nih.gov/datasets/v2/genome/accession
 DEACON_DIR := $(ASSETS_DIR)/deacon
 DEACON_INDEX := panhuman-1.k31w15.idx
 DEACON_URL := https://objectstorage.uk-london-1.oraclecloud.com/n/lrbvkel2wjot/b/human-genome-bucket/o/deacon/3/$(DEACON_INDEX)
 
-APPTAINER ?= apptainer
+SINGULARITY ?= singularity
 PREP_CPUS ?= 4
 PYTHON ?= python3
 
@@ -118,7 +119,7 @@ install: download_or_build_containers \
 	schemas
 
 download_or_build_containers:
-	$(call log_message,"Checking if any containers need to be downloaded ...")
+	$(call log_message,Checking if any containers need to be downloaded ...)
 	@$(MAKE) -C $(CONTAINERS_SRC_DIR) CONTAINERS_DIR=$(CONTAINERS_DIR) all
 
 schemas: $(addsuffix _all,$(SCHEMAS))
@@ -130,7 +131,7 @@ databases: gambit_db deacon_index
 gambit_db: $(addprefix $(GAMBIT_DIR)/,$(GAMBIT_FILES))
 
 $(GAMBIT_DIR)/%:
-	$(call log_message,"Downloading GAMBIT database file $* ...")
+	$(call log_message,Downloading GAMBIT database file $* ...)
 	mkdir -p $(GAMBIT_DIR) \
 	&& wget "$(GAMBIT_URL)/$*" -O $@.tmp --no-verbose |& tee -a $(INSTALL_LOG) \
 	&& [[ -s $@.tmp ]] \
@@ -139,28 +140,39 @@ $(GAMBIT_DIR)/%:
 deacon_index: $(DEACON_DIR)/$(DEACON_INDEX)
 
 $(DEACON_DIR)/$(DEACON_INDEX):
-	$(call log_message,"Downloading Deacon human pangenome index (3.3 GB) ...")
+	$(call log_message,Downloading Deacon human pangenome index (3.3 GB) ...)
 	mkdir -p $(DEACON_DIR) \
 	&& wget "$(DEACON_URL)" -O $@.tmp --no-verbose |& tee -a $(INSTALL_LOG) \
 	&& [[ -s $@.tmp ]] \
 	&& mv $@.tmp $@
 
 # Each schema's reference genome (the reference column of assets/schemas.tsv),
-# downloaded from NCBI Datasets with jasentool as FASTA and GFF, then indexed.
-references: $(foreach accn,$(REFERENCES),$(REFERENCES_DIR)/$(accn).fasta.fai)
+# downloaded from NCBI Datasets with jasentool as FASTA and GFF, then indexed,
+# plus its GenBank file for finding prophages with PhiSpy.
+references: $(foreach accn,$(REFERENCES),$(REFERENCES_DIR)/$(accn).fasta $(REFERENCES_DIR)/$(accn).fasta.fai $(REFERENCES_DIR)/$(accn).gbff)
 
 $(REFERENCES_DIR)/%.fasta:
-	$(call log_message,"Downloading reference genome $* ...")
+	$(call log_message,Downloading reference genome $* ...)
 	mkdir -p $(REFERENCES_DIR) \
-	&& $(APPTAINER) exec $(BIND_ARGS) $(CONTAINERS_DIR)/jasentool.sif \
+	&& $(SINGULARITY) exec $(BIND_ARGS) $(CONTAINERS_DIR)/jasentool.sif \
 		jasentool download-ncbi -i $* -o $(REFERENCES_DIR) |& tee -a $(INSTALL_LOG) \
 	&& [[ -s $@ && -s $(REFERENCES_DIR)/$*.gff ]]
 
 $(REFERENCES_DIR)/%.fasta.fai: $(REFERENCES_DIR)/%.fasta
-	$(call log_message,"Indexing reference genome $* ...")
+	$(call log_message,Indexing reference genome $* ...)
 	cd $(REFERENCES_DIR) \
-	&& $(APPTAINER) exec $(BIND_ARGS) $(CONTAINERS_DIR)/samtools.sif \
+	&& $(SINGULARITY) exec $(BIND_ARGS) $(CONTAINERS_DIR)/samtools.sif \
 		samtools faidx $*.fasta |& tee -a $(INSTALL_LOG)
+
+$(REFERENCES_DIR)/%.gbff:
+	$(call log_message,Downloading GenBank file for reference genome $* ...)
+	mkdir -p $(REFERENCES_DIR) \
+	&& wget "$(NCBI_DATASETS)/$*/download?include_annotation_type=GENOME_GBFF&filename=$*.zip" \
+		-O $@.zip --no-verbose |& tee -a $(INSTALL_LOG) \
+	&& unzip -p $@.zip "ncbi_dataset/data/$*/genomic.gbff" > $@.tmp \
+	&& [[ -s $@.tmp ]] \
+	&& mv $@.tmp $@ \
+	&& rm -f $@.zip
 
 check: check_databases check_references check_schemas
 
@@ -183,7 +195,7 @@ check_databases:
 check_references:
 	@status=0; \
 	for accn in $(REFERENCES); do \
-		for ext in fasta fasta.fai gff; do \
+		for ext in fasta fasta.fai gff gbff; do \
 			if [[ -s $(REFERENCES_DIR)/$$accn.$$ext ]]; then \
 				echo "[✓] reference: $(REFERENCES_DIR)/$$accn.$$ext"; \
 			else \
@@ -221,7 +233,7 @@ $(1)_all: $(1)_prep_schema
 $(1)_download_reference: $(GENOMES_DIR)/$(SEED_$(1)).fasta
 
 $(GENOMES_DIR)/$(SEED_$(1)).fasta:
-	$$(call log_message,"Downloading $(NAME_$(1)) seed genome $(SEED_$(1)) ...")
+	$$(call log_message,Downloading $(NAME_$(1)) seed genome $(SEED_$(1)) ...)
 	mkdir -p $$(dir $$@) \
 	&& wget "$(NCBI_EFETCH)&id=$(SEED_$(1))" -O $$@.tmp --no-verbose |& tee -a $(INSTALL_LOG) \
 	&& grep -q '^>' $$@.tmp \
@@ -230,16 +242,16 @@ $(GENOMES_DIR)/$(SEED_$(1)).fasta:
 $(1)_prodigal_training: $(PRODIGAL_TRAINING_DIR)/$(1).trn
 
 $(PRODIGAL_TRAINING_DIR)/$(1).trn: $(GENOMES_DIR)/$(SEED_$(1)).fasta
-	$$(call log_message,"Training Prodigal on $(NAME_$(1)) seed genome ...")
+	$$(call log_message,Training Prodigal on $(NAME_$(1)) seed genome ...)
 	mkdir -p $$(dir $$@) \
-	&& $(APPTAINER) exec $(BIND_ARGS) $(CONTAINERS_DIR)/prodigal.sif \
+	&& $(SINGULARITY) exec $(BIND_ARGS) $(CONTAINERS_DIR)/prodigal.sif \
 		prodigal -i $$< -t $$@ -p single |& tee -a $(INSTALL_LOG) \
 	&& [[ -s $$@ ]]
 
 $(1)_download_schema: $(SCHEMAS_DIR)/$(1)/download/$(ARCHIVE_$(1))
 
 $(SCHEMAS_DIR)/$(1)/download/$(ARCHIVE_$(1)):
-	$$(call log_message,"Downloading $(NAME_$(1)) schema ...")
+	$$(call log_message,Downloading $(NAME_$(1)) schema ...)
 	mkdir -p $$(dir $$@) \
 	&& if wget "$(URL_$(1))" -O $$@.tmp --no-verbose 2>> $(INSTALL_LOG) \
 		&& $(if $(filter %.zip,$(ARCHIVE_$(1))),unzip -tq $$@.tmp > /dev/null,gzip -t $$@.tmp); then \
@@ -255,7 +267,7 @@ $(SCHEMAS_DIR)/$(1)/download/$(ARCHIVE_$(1)):
 $(1)_unpack_schema: $(SCHEMAS_DIR)/$(1)/alleles/unpacking.done
 
 $(SCHEMAS_DIR)/$(1)/alleles/unpacking.done: $(SCHEMAS_DIR)/$(1)/download/$(ARCHIVE_$(1))
-	$$(call log_message,"Unpacking $(NAME_$(1)) schema ...")
+	$$(call log_message,Unpacking $(NAME_$(1)) schema ...)
 	mkdir -p $$(dir $$@) \
 	&& if [[ $$< == *.zip ]]; then \
 		unzip -DDqo $$< -d $$(dir $$@); \
@@ -269,9 +281,9 @@ $(SCHEMAS_DIR)/$(1)/alleles/unpacking.done: $(SCHEMAS_DIR)/$(1)/download/$(ARCHI
 $(1)_prep_schema: $(SCHEMAS_DIR)/$(1)/alleles_rereffed
 
 $(SCHEMAS_DIR)/$(1)/alleles_rereffed: $(PRODIGAL_TRAINING_DIR)/$(1).trn | $(SCHEMAS_DIR)/$(1)/alleles/unpacking.done
-	$$(call log_message,"Prepping $(NAME_$(1)) schema with chewBBACA ...")
+	$$(call log_message,Prepping $(NAME_$(1)) schema with chewBBACA ...)
 	rm -rf $$@ $$@.tmp \
-	&& $(APPTAINER) exec $(BIND_ARGS) $(CONTAINERS_DIR)/chewbbaca.sif \
+	&& $(SINGULARITY) exec $(BIND_ARGS) $(CONTAINERS_DIR)/chewbbaca.sif \
 		chewie PrepExternalSchema \
 		-g $(SCHEMAS_DIR)/$(1)/alleles \
 		-o $$@.tmp \

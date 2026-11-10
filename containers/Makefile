@@ -1,12 +1,12 @@
-# Downloads the Singularity/Apptainer images used by the setup in the top-level
+# Downloads the Singularity images used by the setup in the top-level
 # Makefile (chewBBACA PrepExternalSchema, Prodigal training, reference genome
 # download with jasentool and indexing with samtools), in the same way as the
 # JASEN containers Makefile.
 #
-# Each image is saved under the file name Nextflow gives it in its Apptainer
+# Each image is saved under the file name Nextflow gives it in its Singularity
 # cache (the URL without https://, with / and : replaced by -). chewBBACA and
 # samtools are the same images the pipeline uses, so when CONTAINERS_DIR is the
-# pipeline's apptainer.cacheDir the pipeline reuses them instead of pulling
+# pipeline's Singularity/Apptainer cacheDir the pipeline reuses them instead of pulling
 # them again. The pipeline pulls its other containers itself on the first run.
 #
 #   make all CONTAINERS_DIR=/mnt/cache/singularity
@@ -67,7 +67,7 @@ $(local_container_sifs): | $(INSTALL_LOG)
 	@mkdir -p $(CONTAINERS_DIR) \
 	&& cd $(CONTAINERS_DIR) \
 	&& output_file=$$(echo ${container_url} | sed -e 's#docker://##' -e 's#/#-#g' -e 's#:#-#g').img \
-	&& apptainer build --force $${output_file} ${container_url} \
+	&& singularity build --force $${output_file} ${container_url} \
 	&& ln -sf $${output_file} $(notdir $@)
 
 $(INSTALL_LOG):
