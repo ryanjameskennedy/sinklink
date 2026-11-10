@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SNP distances from masked pseudogenomes built with existing tools: repeats from a MUMmer self-alignment and prophages from PhiSpy are masked with the low-depth regions (mosdepth) when `bcftools consensus` applies each isolate's SNPs; Gubbins removes recombination for schemas with 3 or more sequences and snp-dists counts the differences
 - `make references` also downloads each reference's GenBank file for PhiSpy
 - `snp_recombination_filtered` in the pair table
+- Links from the species threshold table to each threshold's source, and DOIs for the Kampmeier, Kieninger and Prior papers
 
 ### `Changed`
 
