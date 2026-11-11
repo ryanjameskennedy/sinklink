@@ -68,7 +68,7 @@ workflow SINKLINK {
     ch_assembly = ASSEMBLY.out.assembly
 
     //
-    // SUBWORKFLOW: Assembly QC, read depth and 7-gene MLST
+    // SUBWORKFLOW: Assembly QC, ANI to the reference, read counts and depth, and 7-gene MLST
     //
     ASSEMBLY_QC ( ch_assembly, ch_reads, ch_reference, ch_gambit_db )
     ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.multiqc_files)
@@ -98,11 +98,13 @@ workflow SINKLINK {
         .join(ch_assembly, remainder: true)
         .join(ASSEMBLY_QC.out.quast, remainder: true)
         .join(ASSEMBLY_QC.out.coverage, remainder: true)
+        .join(ASSEMBLY_QC.out.flagstat, remainder: true)
         .join(ASSEMBLY_QC.out.gambitcore, remainder: true)
         .join(ch_bracken, remainder: true)
         .join(ch_kraken_report, remainder: true)
         .join(ASSEMBLY_QC.out.mlst, remainder: true)
         .join(ASSEMBLY_QC.out.mash, remainder: true)
+        .join(ASSEMBLY_QC.out.ani, remainder: true)
         .map { row -> row.collect { item -> item == null ? [] : item } }
         .set { ch_qc_input }
 
