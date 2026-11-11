@@ -2,7 +2,7 @@
 
 ```text
 reads ──► READ_PREPARATION ──► ASSEMBLY ──► ASSEMBLY_QC ──┐
-          (human read removal,  (per platform) (QUAST, Mash, │
+          (human read removal,  (per platform) (QUAST, ANI,  │
            filter, read QC)                   depth, MLST)  ├──► SUMMARISE_QC ──► qc_summary.tsv ──┐
              ├──► SPECIES_CHECK (Kraken2/Bracken) ──────────┘                                      │
              └──► VARIANT_CALLING (Snippy or Clair3, masked pseudogenomes, Gubbins, snp-dists) ───┤
@@ -17,14 +17,14 @@ The workflow
 ([`workflows/sinklink.nf`](https://github.com/ryanjameskennedy/sinklink/blob/master/workflows/sinklink.nf))
 runs six local subworkflows built from nf-core modules:
 
-| Subworkflow        | Illumina                                                                                                                                                                            | Nanopore                                                                                                                     |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `READ_PREPARATION` | Deacon human read removal, Trimmomatic (with `--trim`), FastQC                                                                                                                      | Deacon human read removal, Filtlong (with `--filtlong`), NanoPlot                                                            |
-| `ASSEMBLY`         | SKESA                                                                                                                                                                               | Flye `--nano-hq` (`--asm-coverage 50` with the schema's genome size), then `medaka_consensus --bacteria`                     |
-| `ASSEMBLY_QC`      | QUAST and Mash against the reference genome, gambitcore, `bwa mem` to the own assembly + `samtools coverage`, mlst                                                                  | QUAST and Mash against the reference genome, gambitcore, `minimap2 -x lr:hq` to the own assembly + `samtools coverage`, mlst |
-| `SPECIES_CHECK`    | Kraken2 (`--memory-mapping`) and Bracken (species level)                                                                                                                            | same                                                                                                                         |
-| `VARIANT_CALLING`  | Snippy (`bwa mem` and FreeBayes) against the reference genome; then for both platforms, masked pseudogenomes (MUMmer, PhiSpy, mosdepth, bcftools), Gubbins and snp-dists per schema | `minimap2 -x lr:hq` to the reference genome, then Clair3 in haploid mode                                                     |
-| `ALLELE_CALLING`   | chewBBACA AlleleCall per schema, `--no-inferred`                                                                                                                                    | same                                                                                                                         |
+| Subworkflow        | Illumina                                                                                                                                                                            | Nanopore                                                                                                                                           |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `READ_PREPARATION` | Deacon human read removal, Trimmomatic (with `--trim`), FastQC                                                                                                                      | Deacon human read removal, Filtlong (with `--filtlong`), NanoPlot                                                                                  |
+| `ASSEMBLY`         | SKESA                                                                                                                                                                               | Flye `--nano-hq` (`--asm-coverage 50` with the schema's genome size), then `medaka_consensus --bacteria`                                           |
+| `ASSEMBLY_QC`      | QUAST, Mash and skani against the reference genome, gambitcore, `bwa mem` to the own assembly + `samtools coverage` and `flagstat`, mlst                                            | QUAST, Mash and skani against the reference genome, gambitcore, `minimap2 -x lr:hq` to the own assembly + `samtools coverage` and `flagstat`, mlst |
+| `SPECIES_CHECK`    | Kraken2 (`--memory-mapping`) and Bracken (species level)                                                                                                                            | same                                                                                                                                               |
+| `VARIANT_CALLING`  | Snippy (`bwa mem` and FreeBayes) against the reference genome; then for both platforms, masked pseudogenomes (MUMmer, PhiSpy, mosdepth, bcftools), Gubbins and snp-dists per schema | `minimap2 -x lr:hq` to the reference genome, then Clair3 in haploid mode                                                                           |
+| `ALLELE_CALLING`   | chewBBACA AlleleCall per schema, `--no-inferred`                                                                                                                                    | same                                                                                                                                               |
 
 Then local modules finish the run:
 

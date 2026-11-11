@@ -66,6 +66,10 @@
 
   > Ondov BD, Treangen TJ, Melsted P, Mallonee AB, Bergman NH, Koren S, Phillippy AM. Mash: fast genome and metagenome distance estimation using MinHash. Genome Biol. 2016;17:132. doi: 10.1186/s13059-016-0997-x.
 
+- [skani](https://doi.org/10.1038/s41592-023-02018-3)
+
+  > Shaw J, Yu YW. Fast and robust metagenomic sequence comparison through sparse chaining with skani. Nat Methods. 2023;20:1661-1665. doi: 10.1038/s41592-023-02018-3.
+
 - [Medaka](https://github.com/nanoporetech/medaka)
 
   > Oxford Nanopore Technologies. Medaka. https://github.com/nanoporetech/medaka
