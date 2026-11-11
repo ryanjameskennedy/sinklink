@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
-- Transmission report (`report/transmission_report.html`) and publication figures (`report/figures/`) drawn with matplotlib: distances per group, distance against time, allele against SNP distance, sampling timelines, minimum spanning trees and isolate QC, plus `report/table1.tsv` with one line per transmission group
+- Transmission report (`report/transmission_report.html`) and publication figures (`report/figures/`) drawn with matplotlib: distances per group, distance against time, allele against SNP distance, sampling timelines, minimum spanning trees, isolates by QC status and isolate QC, plus `report/table1.tsv` with one line per transmission group
 - `--skip_report`, `--report_formats` and `--report_environment_types`
 
 ## v0.3.0 - 2026-11-11

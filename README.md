@@ -24,7 +24,7 @@ Illumina or Nanopore reads, it:
    their SNP distance alongside, flagging pairs where either isolate failed QC;
 7. draws a transmission report (HTML) and publication figures: distances per
    group, distance against time, sampling timelines, minimum spanning trees,
-   allele against SNP distance and isolate QC.
+   allele against SNP distance, isolates by QC status and isolate QC.
 
 ![sinklink metro map](docs/images/metro_map.svg)
 

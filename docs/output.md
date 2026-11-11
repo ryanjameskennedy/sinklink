@@ -137,6 +137,7 @@ See [quality control](pipeline/qc.md) for the QC flags and [interpreting the res
   - `allele_vs_snp`: allele differences against SNP differences, one panel per species (only when variant calling ran);
   - `timeline_<group>` and `timelines`: when and where each isolate was sampled, with each isolate joined to the earlier isolate it is closest to when that pair is within the threshold;
   - `tree_<group>` and `trees`: a minimum spanning tree of each group with three or more isolates;
+  - `sample_qc`: how many isolates passed, warned or failed read and assembly QC, per species and per kind of sample;
   - `isolate_qc`: read depth, species purity, contamination and loci called per isolate against the QC cut-offs.
 
 </details>
