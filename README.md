@@ -21,7 +21,10 @@ Illumina or Nanopore reads, it:
 5. calls alleles with chewBBACA against species-specific cgMLST/wgMLST schemas;
 6. compares every pair of isolates within each suspected transmission group
    against a published, species-specific allele-difference threshold, with
-   their SNP distance alongside, flagging pairs where either isolate failed QC.
+   their SNP distance alongside, flagging pairs where either isolate failed QC;
+7. draws a transmission report (HTML) and publication figures: distances per
+   group, distance against time, sampling timelines, minimum spanning trees,
+   allele against SNP distance and isolate QC.
 
 ![sinklink metro map](docs/images/metro_map.svg)
 

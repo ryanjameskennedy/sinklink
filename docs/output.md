@@ -17,6 +17,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 - [Variant calling](#variant-calling) - Snippy (Illumina) or minimap2 and Clair3 (Nanopore) against the reference genome
 - [Allele calling](#allele-calling) - chewBBACA AlleleCall per schema
 - [Summary](#summary) - QC summary and allele and SNP distances within transmission groups
+- [Transmission report](#transmission-report) - HTML report and publication figures
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
@@ -122,6 +123,54 @@ One AlleleCall job per schema, run with `--no-inferred` so the schemas are never
 </details>
 
 See [quality control](pipeline/qc.md) for the QC flags and [interpreting the results](results/interpreting.md) for the verdicts and how to read a pair.
+
+### Transmission report
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `report/transmission_report.html`: one self-contained page with the figures, a table of the transmission groups, a section for each group with its timeline, tree and pairs, the isolate QC and the thresholds used. Open it in a browser; it needs no internet connection.
+- `report/table1.tsv`: one line per transmission group (species, isolates, environment and patient samples, patients, first and last sample, days, allele and SNP distance ranges, verdict and QC), ready to become Table 1 of a paper.
+- `report/figures/`: every figure as PDF, SVG and PNG (`--report_formats`):
+  - `distance_overview`: the allele differences of every pair, one row per group and one panel per species, with the threshold and borderline range;
+  - `distance_vs_time`: allele differences against the days between the two samples, one panel per species;
+  - `allele_vs_snp`: allele differences against SNP differences, one panel per species (only when variant calling ran);
+  - `timeline_<group>` and `timelines`: when and where each isolate was sampled, with each isolate joined to the earlier isolate it is closest to when that pair is within the threshold;
+  - `tree_<group>` and `trees`: a minimum spanning tree of each group with three or more isolates;
+  - `isolate_qc`: read depth, species purity, contamination and loci called per isolate against the QC cut-offs.
+
+</details>
+
+The figures are sized for a journal page (180 mm wide by default), use colours
+that stay distinct for colour-blind readers and keep their text editable in the
+PDF and SVG files. Environmental samples are the ones whose `sample_type` is in
+`--report_environment_types` (default `environment`); every other sample type
+counts as a patient sample. See
+[interpreting the results](results/interpreting.md#transmission-report) for how
+to read the figures.
+
+To restyle the figures for a journal without rerunning the pipeline, run the
+script on a finished results folder. It needs Python 3 with matplotlib, or the
+report container:
+
+```bash
+python3 bin/transmission_report.py \
+    --pairs results/summary/pairwise_distances.tsv \
+    --groups results/summary/group_summary.tsv \
+    --allele-qc results/summary/allele_qc.tsv \
+    --qc-summary results/summary/qc_summary.tsv \
+    --metadata metadata.csv \
+    --schemas assets/schemas.tsv \
+    --qc-thresholds assets/qc_thresholds.tsv \
+    --outdir paper_figures \
+    --formats pdf,png --width-mm 88 --font-size 6
+```
+
+`--width-mm` sets the width of full-width figures (88 mm is a single journal
+column) and `--font-size` the base font size in points. The figures use Arial
+or Helvetica when installed, otherwise Liberation Sans or DejaVu Sans; the
+container only has DejaVu Sans, so run the script locally if the journal asks
+for Arial.
 
 ### MultiQC
 
