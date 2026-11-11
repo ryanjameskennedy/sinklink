@@ -8,10 +8,10 @@ workflows/sinklink.nf       main workflow
 subworkflows/local/         read_preparation, assembly, assembly_qc, species_check,
                             variant_calling, allele_calling, utils_nfcore_sinklink_pipeline
 modules/nf-core/            installed nf-core modules (modules.json)
-modules/local/              gambitcore, summarise_qc, check_distances
+modules/local/              gambitcore, summarise_qc, check_distances, transmission_report
 conf/                       base, modules, test and test_full configs
 assets/                     schemas.tsv, species_map.tsv, qc_thresholds.tsv, samplesheet schema, test inputs
-bin/                        summarise_qc.py, check_distances.py, split_alleles.py
+bin/                        summarise_qc.py, check_distances.py, split_alleles.py, transmission_report.py
 assets/awk/                 gawk programs for the masks, pseudogenomes and alignments
 docs/                       this documentation (Sphinx + MyST)
 Makefile, containers/       schema and database setup
@@ -56,9 +56,14 @@ After a change to the steps, update that file and redraw both images:
 
 ```bash
 pip install nf-metro
-nf-metro render assets/metro_map.mmd -o docs/images/metro_map.svg
-nf-metro render assets/metro_map.mmd --mode light -o docs/images/metro_map_light.png
+python3 docs/render_metro_map.py
 ```
+
+The script renders the map with nf-metro, shades the assembly QC stations
+yellow and the typing stations green, and writes `docs/images/metro_map.svg`
+and `docs/images/metro_map_light.png`. The blocks are drawn by the script
+rather than as nf-metro sections, because the map does not lay out inside
+sections; add a new QC or typing station to `BLOCKS` in the script.
 
 ## Modules
 

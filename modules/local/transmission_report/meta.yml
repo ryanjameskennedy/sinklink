@@ -1,0 +1,47 @@
+name: "transmission_report"
+description: Transmission report (HTML) and publication figures from the distance tables
+keywords:
+  - transmission
+  - report
+  - figures
+  - cgmlst
+tools:
+  - "transmission_report.py":
+      description: "sinklink script in bin/, drawing with matplotlib"
+input:
+  - pairwise:
+      type: file
+      description: pairwise_distances.tsv from CHECK_DISTANCES
+  - summary:
+      type: file
+      description: group_summary.tsv from CHECK_DISTANCES
+  - allele_qc:
+      type: file
+      description: allele_qc.tsv from CHECK_DISTANCES
+  - qc_summary:
+      type: file
+      description: qc_summary.tsv from SUMMARISE_QC
+  - metadata:
+      type: file
+      description: Study metadata CSV
+  - schema_table:
+      type: file
+      description: assets/schemas.tsv
+  - qc_thresholds:
+      type: file
+      description: assets/qc_thresholds.tsv
+output:
+  html:
+    - report/transmission_report.html:
+        type: file
+        description: Self-contained HTML report with the figures, a summary of each transmission group and sortable tables
+  table:
+    - report/table1.tsv:
+        type: file
+        description: One line per transmission group, ready for the manuscript
+  figures:
+    - report/figures/*:
+        type: file
+        description: Every figure as PDF, SVG and PNG (see --report_formats)
+authors:
+  - "@ryanjameskennedy"

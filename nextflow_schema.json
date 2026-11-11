@@ -348,6 +348,26 @@
                     "type": "boolean",
                     "description": "Stop after assembly and QC; no allele calling or distances.",
                     "fa_icon": "fas fa-forward"
+                },
+                "skip_report": {
+                    "type": "boolean",
+                    "description": "Skip the transmission report and figures.",
+                    "fa_icon": "fas fa-forward"
+                },
+                "report_formats": {
+                    "type": "string",
+                    "default": "pdf,svg,png",
+                    "description": "File formats for the report figures, comma-separated.",
+                    "help_text": "Any of `pdf`, `svg` and `png`. PDF and SVG keep the text editable for journals; PNG is drawn at 300 dpi.",
+                    "pattern": "^(pdf|svg|png)(,(pdf|svg|png))*$",
+                    "fa_icon": "fas fa-image"
+                },
+                "report_environment_types": {
+                    "type": "string",
+                    "default": "environment",
+                    "description": "`sample_type` values in the metadata that are environmental samples, comma-separated.",
+                    "help_text": "The report draws these as environment and every other sample type as patient, and counts environment–patient pairs.",
+                    "fa_icon": "fas fa-tags"
                 }
             }
         }

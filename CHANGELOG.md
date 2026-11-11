@@ -3,6 +3,17 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased]
+
+### `Added`
+
+- Transmission report (`report/transmission_report.html`) and publication figures (`report/figures/`) drawn with matplotlib: distances per group, distance against time, allele against SNP distance, sampling timelines, minimum spanning trees, isolates by QC status and isolate QC, plus `report/table1.tsv` with one line per transmission group
+- `--skip_report`, `--report_formats` and `--report_environment_types`
+
+### `Changed`
+
+- The metro map is redrawn: one track per stage with the Illumina / Nanopore tools named together, read QC on top and the SNP track at the bottom, the assembly splitting into an assembly QC track (shaded yellow) and a typing track (shaded green), and the distances feeding the transmission report; `docs/render_metro_map.py` draws it
+
 ## v0.3.0 - 2026-11-11
 
 Rebuilds the SNP distances from existing tools, masking repeats, prophages,

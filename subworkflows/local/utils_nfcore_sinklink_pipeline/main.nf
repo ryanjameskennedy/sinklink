@@ -263,6 +263,7 @@ def toolCitationText() {
             params.references_dir ? "Mash (Ondov et al. 2016)," : "",
             params.skip_variant_calling ? "" : "Snippy (Seemann 2015) with FreeBayes (Garrison and Marth 2012), Clair3 (Zheng et al. 2022), MUMmer (Marçais et al. 2018), PhiSpy (Akhter et al. 2012), mosdepth (Pedersen and Quinlan 2018), BCFtools (Danecek et al. 2021), Gubbins (Croucher et al. 2015), snp-dists (Seemann),",
             params.skip_chewbbaca ? "" : "chewBBACA (Silva et al. 2018),",
+            params.skip_report ? "" : "Matplotlib (Hunter 2007),",
             "MultiQC (Ewels et al. 2016)",
             "."
         ].join(' ').trim()
@@ -294,6 +295,7 @@ def toolBibliographyText() {
             params.skip_variant_calling ? "" : "<li>Croucher NJ, et al. (2015) Rapid phylogenetic analysis of large samples of recombinant bacterial whole genome sequences using Gubbins. Nucleic Acids Res 43(3):e15. doi: 10.1093/nar/gku1196</li>",
             params.skip_variant_calling ? "" : "<li>Seemann T. snp-dists: pairwise SNP distance matrix from a FASTA sequence alignment, URL: https://github.com/tseemann/snp-dists</li>",
             params.skip_chewbbaca ? "" : "<li>Silva M, et al. (2018) chewBBACA: A complete suite for gene-by-gene schema creation and strain identification. Microb Genom 4(3):e000166. doi: 10.1099/mgen.0.000166</li>",
+            params.skip_report ? "" : "<li>Hunter JD. (2007) Matplotlib: A 2D graphics environment. Comput Sci Eng 9(3):90-95. doi: 10.1109/MCSE.2007.55</li>",
             "<li>Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics , 32(19), 3047–3048. doi: /10.1093/bioinformatics/btw354</li>"
         ].join(' ').trim()
 

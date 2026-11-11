@@ -42,3 +42,16 @@ The full schema, with types and validation, is
 | `--skip_chewbbaca`          | Skip allele calling                                                  | off                                                 |
 
 The trimming and filtering defaults are JASEN's.
+
+## Report
+
+| Parameter                    | Meaning                                                              | Default       |
+| ---------------------------- | -------------------------------------------------------------------- | ------------- |
+| `--skip_report`              | Skip the transmission report and figures                             | off           |
+| `--report_formats`           | Figure formats, any of `pdf`, `svg` and `png`, comma-separated       | `pdf,svg,png` |
+| `--report_environment_types` | `sample_type` values that are environmental samples, comma-separated | `environment` |
+
+Figure width and font size are options of `bin/transmission_report.py`
+(`--width-mm`, `--font-size`); set them with `ext.args` for `TRANSMISSION_REPORT`
+in a config, or rerun the script on its own (see
+[output](../output.md#transmission-report)).
