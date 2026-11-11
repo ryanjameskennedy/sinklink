@@ -52,7 +52,8 @@ endef
 
 # ------------------------------------------------------------------------------
 # Schemas. Each needs an allele download URL, the archive name to save it as and
-# the seed (reference) genome used to train Prodigal for PrepExternalSchema.
+# the seed (reference) genome used to train Prodigal for PrepExternalSchema, or
+# READY_<schema> for a ready-to-use chewBBACA schema that is only unpacked.
 # Thresholds used when checking distances live in assets/schemas.tsv.
 # ------------------------------------------------------------------------------
 SCHEMAS := paeruginosa \
@@ -61,6 +62,7 @@ SCHEMAS := paeruginosa \
 	smarcescens \
 	cfreundii \
 	ehormaechei \
+	ecloacae \
 	smaltophilia
 
 NAME_paeruginosa := P. aeruginosa
@@ -92,6 +94,13 @@ NAME_ehormaechei := E. hormaechei
 URL_ehormaechei := https://www.cgmlst.org/ncs/schema/Ehormaechei/alleles/
 ARCHIVE_ehormaechei := alleles.zip
 SEED_ehormaechei := NZ_CP100388.1
+
+# Miller et al. 2026 cgMLST for the whole complex, a ready-to-use chewBBACA
+# schema on Chewie-NS (species 21, schema 1) with its own Prodigal training file.
+NAME_ecloacae := E. cloacae complex
+URL_ecloacae := https://chewbbaca.online/api/NS/api/species/21/schemas/1/zip?request_type=download
+ARCHIVE_ecloacae := ecloacae_cgMLST.zip
+READY_ecloacae := yes
 
 # Groschel et al. 2020 wgMLST, published as a single FASTA of all alleles.
 NAME_smaltophilia := S. maltophilia
@@ -247,6 +256,7 @@ define schema_rules
 
 $(1)_all: $(1)_prep_schema
 
+ifndef READY_$(1)
 $(1)_download_reference: $(GENOMES_DIR)/$(SEED_$(1)).fasta
 
 $(GENOMES_DIR)/$(SEED_$(1)).fasta:
@@ -264,6 +274,7 @@ $(PRODIGAL_TRAINING_DIR)/$(1).trn: $(GENOMES_DIR)/$(SEED_$(1)).fasta
 	&& $(SINGULARITY) exec $(BIND_ARGS) $(CONTAINERS_DIR)/prodigal.sif \
 		prodigal -i $$< -t $$@ -p single |& tee -a $(INSTALL_LOG) \
 	&& [[ -s $$@ ]]
+endif
 
 $(1)_download_schema: $(SCHEMAS_DIR)/$(1)/download/$(ARCHIVE_$(1))
 
@@ -297,6 +308,18 @@ $(SCHEMAS_DIR)/$(1)/alleles/unpacking.done: $(SCHEMAS_DIR)/$(1)/download/$(ARCHI
 
 $(1)_prep_schema: $(SCHEMAS_DIR)/$(1)/alleles_rereffed
 
+ifdef READY_$(1)
+$(SCHEMAS_DIR)/$(1)/alleles_rereffed: | $(SCHEMAS_DIR)/$(1)/alleles/unpacking.done
+	$$(call log_message,Moving the ready-to-use $(NAME_$(1)) schema into place ...)
+	config=$$$$(find $(SCHEMAS_DIR)/$(1)/alleles -name .schema_config | head -n 1) \
+	&& [[ -n $$$$config ]] \
+	&& rm -rf $$@.tmp \
+	&& mkdir $$@.tmp \
+	&& cp -a "$$$$(dirname $$$$config)/." $$@.tmp/ \
+	&& find $$@.tmp -maxdepth 1 -name unpacking.done -delete \
+	&& mv $$@.tmp $$@ \
+	&& find $(SCHEMAS_DIR)/$(1)/alleles -type f ! -name 'unpacking.done' -delete
+else
 $(SCHEMAS_DIR)/$(1)/alleles_rereffed: $(PRODIGAL_TRAINING_DIR)/$(1).trn | $(SCHEMAS_DIR)/$(1)/alleles/unpacking.done
 	$$(call log_message,Prepping $(NAME_$(1)) schema with chewBBACA ...)
 	rm -rf $$@ $$@.tmp \
@@ -309,6 +332,7 @@ $(SCHEMAS_DIR)/$(1)/alleles_rereffed: $(PRODIGAL_TRAINING_DIR)/$(1).trn | $(SCHE
 	&& [[ $$$${PIPESTATUS[0]} -eq 0 ]] \
 	&& mv $$@.tmp $$@ \
 	&& find $(SCHEMAS_DIR)/$(1)/alleles -type f ! -name 'unpacking.done' -delete
+endif
 endef
 
 $(foreach schema,$(SCHEMAS),$(eval $(call schema_rules,$(schema))))

@@ -13,9 +13,9 @@ Illumina or Nanopore reads, it:
 1. removes human reads (Deacon) and QCs the reads (FastQC or NanoPlot,
    optional Trimmomatic or Filtlong);
 2. assembles each isolate (SKESA for Illumina, Flye + Medaka for Nanopore);
-3. QCs the assembly (QUAST and Mash against the species' reference genome,
-   gambitcore, read depth, 7-gene MLST) and confirms the species from the reads
-   (Kraken2/Bracken);
+3. QCs the assembly (QUAST, Mash and skani ANI against the species' reference
+   genome, gambitcore, reads and depth, 7-gene MLST) and confirms the species
+   from the reads (Kraken2/Bracken);
 4. calls variants against the species' reference genome (Snippy for Illumina,
    Clair3 for Nanopore);
 5. calls alleles with chewBBACA against species-specific cgMLST/wgMLST schemas;
@@ -77,6 +77,7 @@ for the `-c` config and parameters file.
 | _Serratia marcescens_                   | ≤12                 | cgmlst.org complex type distance |
 | _Citrobacter freundii_                  | ≤10                 | cgmlst.org complex type distance |
 | _Enterobacter hormaechei_               | ≤12                 | cgmlst.org complex type distance |
+| _Enterobacter cloacae_ complex          | ≤3 (borderline ≤5)  | Miller et al. 2026 (preprint)    |
 | _Stenotrophomonas maltophilia_ complex  | ≤10                 | Gröschel et al. 2020 (d10)       |
 
 Each species has its own page, with the scheme, the paper behind it and the

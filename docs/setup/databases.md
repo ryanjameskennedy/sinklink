@@ -25,6 +25,7 @@ indexes it with `samtools faidx`. It also downloads the GenBank file
 | smarcescens  | GCF_030291735.1  | ELP1.10       |
 | cfreundii    | GCF_904859905.1  | MSB1_1H       |
 | ehormaechei  | GCF_019048245.1  | FDAARGOS 1433 |
+| ecloacae     | GCF_905331265.2  | 1382          |
 | smaltophilia | GCF_020641395.2  | ACYCa.6E      |
 
 To use another reference, change the accession in your copy of the schema

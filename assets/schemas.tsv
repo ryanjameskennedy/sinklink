@@ -5,4 +5,5 @@ koxytoca	Klebsiella oxytoca species complex	cgmlst.org Koxytoca_complex cgMLST	2
 smarcescens	Serratia marcescens	cgmlst.org Smarcescens cgMLST	2692	12		0.9	^Serratia (marcescens|nematodiphila)$	Serratia	4.8	5.8	GCF_030291735.1	cgmlst.org complex type distance; Kampmeier et al. J Clin Microbiol 2022
 cfreundii	Citrobacter freundii	cgmlst.org Cfreundii cgMLST	3250	10		0.9	^Citrobacter freundii$	Citrobacter	4.7	5.9	GCF_904859905.1	cgmlst.org complex type distance; Kieninger et al. J Clin Microbiol 2025
 ehormaechei	Enterobacter hormaechei	cgmlst.org Ehormaechei cgMLST	2178	12		0.9	^Enterobacter hormaechei$	Enterobacter	4.4	5.4	GCF_019048245.1	cgmlst.org complex type distance; Prior et al. J Clin Microbiol 2025
+ecloacae	Enterobacter cloacae complex	Chewie-NS Enterobacter cloacae complex cgMLST	1812	3	5	0.9	^Enterobacter\b	Enterobacter	4.3	5.8	GCF_905331265.2	Miller et al. bioRxiv 2026 (linked isolates 0-3 alleles apart; 5 for more sensitivity)
 smaltophilia	Stenotrophomonas maltophilia complex	Groschel 2020 wgMLST (figshare 10005047)	17603	10			^Stenotrophomonas	Stenotrophomonas	4.1	5.4	GCF_020641395.2	Groschel et al. Nat Commun 2020 (d10, over 1275 core loci)
