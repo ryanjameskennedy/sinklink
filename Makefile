@@ -29,6 +29,11 @@ NCBI_DATASETS := https://api.ncbi.nlm.nih.gov/datasets/v2/genome/accession
 DEACON_DIR := $(ASSETS_DIR)/deacon
 DEACON_INDEX := panhuman-1.k31w15.idx
 DEACON_URL := https://objectstorage.uk-london-1.oraclecloud.com/n/lrbvkel2wjot/b/human-genome-bucket/o/deacon/3/$(DEACON_INDEX)
+KRAKEN_DB ?= standard
+KRAKEN_DB_DATE ?= 20260626
+KRAKEN_ARCHIVE := k2_$(KRAKEN_DB)_$(KRAKEN_DB_DATE).tar.gz
+KRAKEN_DIR := $(ASSETS_DIR)/kraken2/$(KRAKEN_DB)_$(KRAKEN_DB_DATE)
+KRAKEN_URL := https://genome-idx.s3.amazonaws.com/kraken/$(KRAKEN_ARCHIVE)
 
 SINGULARITY ?= singularity
 PREP_CPUS ?= 4
@@ -101,7 +106,7 @@ NCBI_EFETCH := https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucc
 # Main rules
 # ==============================================================================
 .PHONY: print_paths install download_or_build_containers schemas databases gambit_db \
-	deacon_index references check check_schemas check_databases check_references
+	deacon_index kraken_db references check check_schemas check_databases check_references
 
 print_paths:
 	@echo "SCRIPT_DIR:" $(SCRIPT_DIR)
@@ -111,6 +116,7 @@ print_paths:
 	@echo "GAMBIT_DIR:" $(GAMBIT_DIR)
 	@echo "REFERENCES_DIR:" $(REFERENCES_DIR)
 	@echo "DEACON_DIR:" $(DEACON_DIR)
+	@echo "KRAKEN_DIR:" $(KRAKEN_DIR)
 	@echo "BIND_ROOTS:" $(BIND_ROOTS)
 
 install: download_or_build_containers \
@@ -126,8 +132,19 @@ schemas: $(addsuffix _all,$(SCHEMAS))
 
 databases: gambit_db deacon_index
 
-# The Kraken2 database is too large to download here; point the pipeline at an
-# existing one (e.g. the JASEN one) with --kraken_db.
+# Not part of `databases`: the full Standard database is an 85 GB download.
+# Pick another one from the Langmead lab index with KRAKEN_DB (e.g.
+# standard_16_GB, pluspf) and KRAKEN_DB_DATE.
+kraken_db: $(KRAKEN_DIR)/hash.k2d
+
+$(KRAKEN_DIR)/hash.k2d:
+	$(call log_message,Downloading Kraken2/Bracken database $(KRAKEN_ARCHIVE) ...)
+	mkdir -p $(KRAKEN_DIR) \
+	&& wget "$(KRAKEN_URL)" -O $(KRAKEN_DIR)/$(KRAKEN_ARCHIVE) --no-verbose |& tee -a $(INSTALL_LOG) \
+	&& tar -xzf $(KRAKEN_DIR)/$(KRAKEN_ARCHIVE) -C $(KRAKEN_DIR) \
+	&& [[ -s $@ && -s $(KRAKEN_DIR)/taxo.k2d ]] \
+	&& find $(KRAKEN_DIR) -maxdepth 1 -name $(KRAKEN_ARCHIVE) -delete
+
 gambit_db: $(addprefix $(GAMBIT_DIR)/,$(GAMBIT_FILES))
 
 $(GAMBIT_DIR)/%:
