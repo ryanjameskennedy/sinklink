@@ -21,7 +21,10 @@ Illumina or Nanopore reads, it:
 5. calls alleles with chewBBACA against species-specific cgMLST/wgMLST schemas;
 6. compares every pair of isolates within each suspected transmission group
    against a published, species-specific allele-difference threshold, with
-   their SNP distance alongside, flagging pairs where either isolate failed QC.
+   their SNP distance alongside, flagging pairs where either isolate failed QC;
+7. draws a transmission report (HTML) and publication figures: distances per
+   group, distance against time, sampling timelines, minimum spanning trees,
+   allele against SNP distance, isolates by QC status and isolate QC.
 
 ![sinklink metro map](docs/images/metro_map.svg)
 
@@ -46,7 +49,7 @@ Then run every isolate, whatever its species, with one samplesheet and one
 metadata file:
 
 ```bash
-nextflow run ryanjameskennedy/sinklink -r v0.3.0 -profile singularity \
+nextflow run ryanjameskennedy/sinklink -r v0.4.0 -profile singularity \
     -c thedonkey.config -params-file thedonkey.yaml \
     --input samplesheet.csv \
     --metadata metadata.csv \

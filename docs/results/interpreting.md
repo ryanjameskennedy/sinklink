@@ -63,3 +63,26 @@ more differences than in a short outbreak even from a single persisting
 source. Check borderline pairs against their SNP distance.
 
 See also the [caveats](caveats.md).
+
+## Transmission report
+
+`report/transmission_report.html` puts the tables and figures together. Some
+things to keep in mind when reading the figures:
+
+- **Distance overview and distance against time.** Each mark is a pair. Filled
+  orange marks are within the threshold, blue ones borderline and hollow grey
+  ones above it. A diamond joins an environmental sample to a patient sample,
+  a square two environmental samples and a circle two patient samples. Above
+  20 allele differences the axis is logarithmic, so unrelated pairs fit
+  alongside the close ones.
+- **Timelines.** Each isolate is joined to the earlier isolate it is closest to,
+  when that pair is within the threshold. The line shows the closest earlier
+  match, not a proven direction of spread: an unsampled source, or a sink and a
+  patient both seeded from elsewhere, give the same picture.
+- **Minimum spanning trees.** Built from the pairwise allele differences, each
+  over the loci both isolates share. When several trees are equally short only
+  one is drawn, and missing loci can shorten links, so use the trees to see the
+  structure of a group and the pair table for the numbers.
+- **Allele against SNP distance.** The two methods should rise together. A
+  pair that is close by alleles but far by SNPs, or the other way round, is
+  worth checking in the pair table and the QC.

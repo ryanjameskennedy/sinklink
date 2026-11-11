@@ -112,6 +112,10 @@
                 ],
                 "SUMMARISE_QC": [
                     "python"
+                ],
+                "TRANSMISSION_REPORT": [
+                    "matplotlib",
+                    "python"
                 ]
             },
             [
@@ -346,6 +350,9 @@
                 "quast/S03.quast/report.txt",
                 "quast/S03.quast/transposed_report.tex",
                 "quast/S03.quast/transposed_report.txt",
+                "report",
+                "report/table1.tsv",
+                "report/transmission_report.html",
                 "snp_distances",
                 "snp_distances/gubbins",
                 "snp_distances/gubbins/paeruginosa.branch_base_reconstruction.embl",
@@ -569,6 +576,8 @@
                 "report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "transposed_report.tex:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "transposed_report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "table1.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "transmission_report.html:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "paeruginosa.branch_base_reconstruction.embl:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "paeruginosa.csv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "paeruginosa.fasta:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -597,7 +606,7 @@
                 "S03.vcf.gz.tbi:md5,d41d8cd98f00b204e9800998ecf8427e"
             ]
         ],
-        "timestamp": "2026-11-08T22:58:21.026295",
+        "timestamp": "2026-11-11T01:00:00.733632",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"
@@ -721,6 +730,10 @@
                     "snpdists"
                 ],
                 "SUMMARISE_QC": [
+                    "python"
+                ],
+                "TRANSMISSION_REPORT": [
+                    "matplotlib",
                     "python"
                 ],
                 "TRIMMOMATIC": [
@@ -965,6 +978,9 @@
                 "quast/S03.quast/report.txt",
                 "quast/S03.quast/transposed_report.tex",
                 "quast/S03.quast/transposed_report.txt",
+                "report",
+                "report/table1.tsv",
+                "report/transmission_report.html",
                 "snp_distances",
                 "snp_distances/gubbins",
                 "snp_distances/gubbins/paeruginosa.branch_base_reconstruction.embl",
@@ -1197,6 +1213,8 @@
                 "report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "transposed_report.tex:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "transposed_report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "table1.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "transmission_report.html:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "paeruginosa.branch_base_reconstruction.embl:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "paeruginosa.csv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "paeruginosa.fasta:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -1229,7 +1247,7 @@
                 "S03.vcf.gz.tbi:md5,d41d8cd98f00b204e9800998ecf8427e"
             ]
         ],
-        "timestamp": "2026-11-08T22:58:50.197225",
+        "timestamp": "2026-11-11T01:00:17.827718",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"
@@ -1292,6 +1310,10 @@
                     "skesa"
                 ],
                 "SUMMARISE_QC": [
+                    "python"
+                ],
+                "TRANSMISSION_REPORT": [
+                    "matplotlib",
                     "python"
                 ]
             },
@@ -1397,6 +1419,9 @@
                 "quast/S03.quast/report.txt",
                 "quast/S03.quast/transposed_report.tex",
                 "quast/S03.quast/transposed_report.txt",
+                "report",
+                "report/table1.tsv",
+                "report/transmission_report.html",
                 "summary",
                 "summary/allele_qc.tsv",
                 "summary/group_summary.tsv",
@@ -1480,13 +1505,15 @@
                 "report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "transposed_report.tex:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "transposed_report.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "table1.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "transmission_report.html:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "allele_qc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "group_summary.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "pairwise_distances.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "qc_summary.tsv:md5,2c23545bd1a084360ee7d94a9f45bd16"
             ]
         ],
-        "timestamp": "2026-11-08T13:25:57.52449",
+        "timestamp": "2026-11-11T01:00:31.977196",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"

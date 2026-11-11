@@ -74,6 +74,10 @@
 
   > Li H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics. 2018;34(18):3094-3100. doi: 10.1093/bioinformatics/bty191.
 
+- [Matplotlib](https://doi.org/10.1109/MCSE.2007.55)
+
+  > Hunter JD. Matplotlib: A 2D graphics environment. Comput Sci Eng. 2007;9(3):90-95. doi: 10.1109/MCSE.2007.55.
+
 - [mlst](https://github.com/tseemann/mlst)
 
   > Seemann T. mlst. https://github.com/tseemann/mlst. This publication made use of the PubMLST website (https://pubmlst.org/) developed by Keith Jolley (Jolley, Bray & Maiden 2018, Wellcome Open Res 3:124).

@@ -8,6 +8,9 @@ reads ──► READ_PREPARATION ──► ASSEMBLY ──► ASSEMBLY_QC ──
              └──► VARIANT_CALLING (Snippy or Clair3, masked pseudogenomes, Gubbins, snp-dists) ───┤
                                ASSEMBLY ──► ALLELE_CALLING (chewBBACA per schema) ──► CHECK_DISTANCES ◄┘
                                                                                       (pairs per group)
+                                                                                             │
+                                                                                     TRANSMISSION_REPORT
+                                                                                   (HTML report, figures)
 ```
 
 The workflow
@@ -31,6 +34,9 @@ Then local modules finish the run:
   transmission group, by allele differences against the species threshold, with
   the SNP distances from snp-dists alongside. See
   [interpreting the results](../results/interpreting.md).
+- `TRANSMISSION_REPORT` (`bin/transmission_report.py`) draws the transmission
+  report and the publication figures from those tables with matplotlib. See
+  [output](../output.md#transmission-report).
 
 MultiQC collects FastQC, NanoPlot, QUAST and Kraken2 results into one report.
 

@@ -1,95 +1,95 @@
-%%metro title: sinklink
+%%metro title: sinklink (Illumina / Nanopore)
 %%metro style: nfcore
 %%metro file: reads_in | FASTQ
-%%metro file: distances_out | TSV
+%%metro file: readqc_out | HTML
+%%metro file: assembly_fa | FASTA
+%%metro file: qc_out | TSV
+%%metro file: distances_tsv | TSV
 %%metro file: report_out | HTML
+%%metro line: readqc | Read QC | #8d99ae
 %%metro line: species | Species check | #e63946 | dashed
-%%metro line: variants | Variant calling: Snippy (Illumina), Clair3 (Nanopore) | #7b5ea7
-%%metro line: illumina | Illumina assembly: SKESA | #2db572
-%%metro line: nanopore | Nanopore assembly: Flye + Medaka | #f5a623
-%%metro marker: trimmomatic | square, open
-%%metro marker: filtlong | square, open
+%%metro line: qc | Assembly QC | #d99a00
+%%metro line: typing | Assembly and typing | #2db572
+%%metro line: variants | Variant calling and SNP distances | #7b5ea7
+%%metro marker: filtering | square, open
 %%metro marker: gambitcore | square, open
+%%metro marker: gubbins | square, open
 %%metro marker_legend: square, open | Optional step
 %%metro legend: bl
+%%metro y_spacing: 90
 
 graph LR
     %% Read preparation
     reads_in[ ]
     deacon[Deacon]
-    fastqc[FastQC]
-    trimmomatic[Trimmomatic]
-    nanoplot[NanoPlot]
-    filtlong[Filtlong]
+    filtering[Trimmomatic / Filtlong]
+    readqc[FastQC / NanoPlot]
+    readqc_out[ ]
 
-    reads_in -->|variants,illumina,nanopore,species| deacon
-    deacon -->|variants,illumina| fastqc
-    fastqc -->|variants,illumina| trimmomatic
-    deacon -->|variants,nanopore| nanoplot
-    nanoplot -->|variants,nanopore| filtlong
+    reads_in -->|readqc,species,qc,typing,variants| deacon
+    deacon -->|readqc,species,qc,typing,variants| filtering
+    filtering -->|readqc| readqc
+    readqc -->|readqc| readqc_out
 
     %% Species check
     kraken2[Kraken2]
     bracken[Bracken]
 
+    filtering -->|species| kraken2
     kraken2 -->|species| bracken
 
     %% Assembly
-    skesa[SKESA]
-    flye[Flye]
-    medaka[Medaka]
+    assembler[SKESA / Flye + Medaka]
+    assembly_fa[ ]
 
-    flye -->|nanopore| medaka
+    filtering -->|qc,typing| assembler
+    assembler -->|qc,typing| assembly_fa
 
     %% Assembly QC
     quast[QUAST]
     mash[Mash]
     gambitcore[gambitcore]
-    bwa[BWA-MEM]
-    minimap2[minimap2]
-    coverage[SAMtools coverage]
     mlst[mlst]
+    mapping[BWA-MEM / minimap2]
+    coverage[SAMtools coverage]
     qc_summary[QC summary]
+    qc_out[ ]
 
-    quast -->|illumina,nanopore| mash
-    mash -->|illumina,nanopore| gambitcore
-    gambitcore -->|illumina| bwa
-    gambitcore -->|nanopore| minimap2
-    bwa -->|illumina| coverage
-    minimap2 -->|nanopore| coverage
-    coverage -->|illumina,nanopore| mlst
-    mlst -->|illumina,nanopore| qc_summary
+    assembly_fa -->|qc| quast
+    quast -->|qc| mash
+    mash -->|qc| gambitcore
+    gambitcore -->|qc| mlst
+    mlst -->|qc| mapping
+    mapping -->|qc| coverage
+    coverage -->|qc| qc_summary
+    bracken -->|species| qc_summary
+    qc_summary -->|species,qc| qc_out
 
-    %% Variant calling
-    snippy[Snippy]
-    minimap2_ref[minimap2]
-    clair3[Clair3]
-    pseudogenome[Pseudogenome]
-
-    minimap2_ref -->|variants| clair3
-
-    %% Allele calling and transmission check
+    %% Typing and transmission check
     chewbbaca[chewBBACA]
     distances[Pairwise distances]
-    distances_out[ ]
-    multiqc[MultiQC]
+    distances_tsv[ ]
+    report[Transmission report]
     report_out[ ]
 
-    chewbbaca -->|illumina,nanopore| distances
-    distances -->|variants,illumina,nanopore| distances_out
-    distances -->|illumina,nanopore| multiqc
-    multiqc -->|illumina,nanopore| report_out
+    assembly_fa -->|typing| chewbbaca
+    chewbbaca -->|typing| distances
+    distances -->|typing,variants| distances_tsv
+    distances_tsv -->|typing,variants| report
+    report -->|typing,variants| report_out
 
-    %% Between groups
-    deacon -->|species| kraken2
-    trimmomatic -->|illumina| skesa
-    trimmomatic -->|variants| snippy
-    filtlong -->|nanopore| flye
-    filtlong -->|variants| minimap2_ref
-    skesa -->|illumina| quast
-    medaka -->|nanopore| quast
-    snippy -->|variants| pseudogenome
-    clair3 -->|variants| pseudogenome
-    pseudogenome -->|variants| distances
-    bracken -->|species| qc_summary
-    qc_summary -->|illumina,nanopore| chewbbaca
+    %% Variant calling and SNP distances
+    caller[Snippy / minimap2 + Clair3]
+    mosdepth[mosdepth]
+    masks[MUMmer + PhiSpy]
+    consensus[BCFtools consensus]
+    gubbins[Gubbins]
+    snpdists[snp-dists]
+
+    filtering -->|variants| caller
+    caller -->|variants| mosdepth
+    mosdepth -->|variants| masks
+    masks -->|variants| consensus
+    consensus -->|variants| gubbins
+    gubbins -->|variants| snpdists
+    snpdists -->|variants| distances

@@ -27,6 +27,8 @@ SNP distances,snp-dists,0.8.2,nf-core/snpdists
 Species check,Kraken2,2.1.6,nf-core/kraken2/kraken2
 Species check,Bracken,3.1,nf-core/bracken/bracken
 Allele calling,chewBBACA,3.5.4,nf-core/chewbbaca/allelecall (container pinned to 3.5.4)
+Transmission report,Python,3.12.7,local transmission_report
+Transmission report,Matplotlib,3.9.2,local transmission_report
 Report,MultiQC,1.32,nf-core/multiqc
 Schema prep (Makefile),chewBBACA,3.5.4,containers/Makefile
 Schema prep (Makefile),Prodigal,2.6.3,containers/Makefile
