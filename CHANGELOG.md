@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Transmission report (`report/transmission_report.html`) and publication figures (`report/figures/`) drawn with matplotlib: distances per group, distance against time, allele against SNP distance, sampling timelines, minimum spanning trees, isolates by QC status and isolate QC, plus `report/table1.tsv` with one line per transmission group
 - `--skip_report`, `--report_formats` and `--report_environment_types`
 
+### `Changed`
+
+- The metro map shows which tool's output goes into which: one track per stage with the Illumina / Nanopore tools named together, the assembly fanning out to each QC tool and chewBBACA, the masking, Gubbins and snp-dists on the SNP track, the QC summary ending in its own table and the distances feeding the transmission report
+
 ## v0.3.0 - 2026-11-11
 
 Rebuilds the SNP distances from existing tools, masking repeats, prophages,
