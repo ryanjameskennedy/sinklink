@@ -6,15 +6,17 @@
 %%metro file: qc_out | TSV
 %%metro file: distances_tsv | TSV
 %%metro file: report_out | HTML
+%%metro line: readqc | Read QC | #8d99ae
 %%metro line: species | Species check | #e63946 | dashed
+%%metro line: qc | Assembly QC | #d99a00
+%%metro line: typing | Assembly and typing | #2db572
 %%metro line: variants | Variant calling and SNP distances | #7b5ea7
-%%metro line: assembly | Assembly, QC and allele calling | #2db572
 %%metro marker: filtering | square, open
 %%metro marker: gambitcore | square, open
 %%metro marker: gubbins | square, open
 %%metro marker_legend: square, open | Optional step
 %%metro legend: bl
-%%metro off_track: readqc
+%%metro y_spacing: 90
 
 graph LR
     %% Read preparation
@@ -24,10 +26,10 @@ graph LR
     readqc[FastQC / NanoPlot]
     readqc_out[ ]
 
-    reads_in -->|species,variants,assembly| deacon
-    deacon -->|species,variants,assembly| filtering
-    filtering -->|assembly| readqc
-    readqc -->|assembly| readqc_out
+    reads_in -->|readqc,species,qc,typing,variants| deacon
+    deacon -->|readqc,species,qc,typing,variants| filtering
+    filtering -->|readqc| readqc
+    readqc -->|readqc| readqc_out
 
     %% Species check
     kraken2[Kraken2]
@@ -36,25 +38,12 @@ graph LR
     filtering -->|species| kraken2
     kraken2 -->|species| bracken
 
-    %% Variant calling and SNP distances
-    caller[Snippy / minimap2 + Clair3]
-    masks[Masks: mosdepth, MUMmer, PhiSpy]
-    consensus[BCFtools consensus]
-    gubbins[Gubbins]
-    snpdists[snp-dists]
-
-    filtering -->|variants| caller
-    caller -->|variants| masks
-    masks -->|variants| consensus
-    consensus -->|variants| gubbins
-    gubbins -->|variants| snpdists
-
     %% Assembly
     assembler[SKESA / Flye + Medaka]
     assembly_fa[ ]
 
-    filtering -->|assembly| assembler
-    assembler -->|assembly| assembly_fa
+    filtering -->|qc,typing| assembler
+    assembler -->|qc,typing| assembly_fa
 
     %% Assembly QC
     quast[QUAST]
@@ -66,30 +55,41 @@ graph LR
     qc_summary[QC summary]
     qc_out[ ]
 
-    assembly_fa -->|assembly| quast
-    assembly_fa -->|assembly| mash
-    assembly_fa -->|assembly| gambitcore
-    assembly_fa -->|assembly| mlst
-    assembly_fa -->|assembly| mapping
-    mapping -->|assembly| coverage
-    quast -->|assembly| qc_summary
-    mash -->|assembly| qc_summary
-    gambitcore -->|assembly| qc_summary
-    mlst -->|assembly| qc_summary
-    coverage -->|assembly| qc_summary
+    assembly_fa -->|qc| quast
+    quast -->|qc| mash
+    mash -->|qc| gambitcore
+    gambitcore -->|qc| mlst
+    mlst -->|qc| mapping
+    mapping -->|qc| coverage
+    coverage -->|qc| qc_summary
     bracken -->|species| qc_summary
-    qc_summary -->|species,assembly| qc_out
+    qc_summary -->|species,qc| qc_out
 
-    %% Allele calling, transmission check and report
+    %% Typing and transmission check
     chewbbaca[chewBBACA]
     distances[Pairwise distances]
     distances_tsv[ ]
     report[Transmission report]
     report_out[ ]
 
-    assembly_fa -->|assembly| chewbbaca
-    chewbbaca -->|assembly| distances
+    assembly_fa -->|typing| chewbbaca
+    chewbbaca -->|typing| distances
+    distances -->|typing,variants| distances_tsv
+    distances_tsv -->|typing,variants| report
+    report -->|typing,variants| report_out
+
+    %% Variant calling and SNP distances
+    caller[Snippy / minimap2 + Clair3]
+    mosdepth[mosdepth]
+    masks[MUMmer + PhiSpy]
+    consensus[BCFtools consensus]
+    gubbins[Gubbins]
+    snpdists[snp-dists]
+
+    filtering -->|variants| caller
+    caller -->|variants| mosdepth
+    mosdepth -->|variants| masks
+    masks -->|variants| consensus
+    consensus -->|variants| gubbins
+    gubbins -->|variants| snpdists
     snpdists -->|variants| distances
-    distances -->|variants,assembly| distances_tsv
-    distances_tsv -->|variants,assembly| report
-    report -->|variants,assembly| report_out

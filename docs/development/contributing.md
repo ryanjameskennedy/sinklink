@@ -56,9 +56,14 @@ After a change to the steps, update that file and redraw both images:
 
 ```bash
 pip install nf-metro
-nf-metro render assets/metro_map.mmd -o docs/images/metro_map.svg
-nf-metro render assets/metro_map.mmd --mode light -o docs/images/metro_map_light.png
+python3 docs/render_metro_map.py
 ```
+
+The script renders the map with nf-metro, shades the assembly QC stations
+yellow and the typing stations green, and writes `docs/images/metro_map.svg`
+and `docs/images/metro_map_light.png`. The blocks are drawn by the script
+rather than as nf-metro sections, because the map does not lay out inside
+sections; add a new QC or typing station to `BLOCKS` in the script.
 
 ## Modules
 

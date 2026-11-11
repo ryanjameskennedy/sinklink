@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Changed`
 
-- The metro map shows which tool's output goes into which: one track per stage with the Illumina / Nanopore tools named together, the assembly fanning out to each QC tool and chewBBACA, the masking, Gubbins and snp-dists on the SNP track, the QC summary ending in its own table and the distances feeding the transmission report
+- The metro map is redrawn: one track per stage with the Illumina / Nanopore tools named together, read QC on top and the SNP track at the bottom, the assembly splitting into an assembly QC track (shaded yellow) and a typing track (shaded green), and the distances feeding the transmission report; `docs/render_metro_map.py` draws it
 
 ## v0.3.0 - 2026-11-11
 
