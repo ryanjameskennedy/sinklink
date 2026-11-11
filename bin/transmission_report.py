@@ -716,7 +716,7 @@ def sample_qc_figure(figs, metadata, qc_rows, schemas, width_mm, environment_typ
 
 def qc_figure(figs, qc_rows, allele_qc, schemas, cutoffs, width_mm):
     metrics = [
-        ("mean_depth", "Read depth", {k: v for k, v in cutoffs.get("min_depth", {}).items()}),
+        ("mean_depth", "Depth (own assembly)", {k: v for k, v in cutoffs.get("min_depth", {}).items()}),
         ("expected_species_fraction", "Expected species",
          {"": cutoffs.get("min_expected_species_fraction", {}).get("illumina")}),
         ("other_genus_fraction", "Other genus",
@@ -779,6 +779,43 @@ def qc_figure(figs, qc_rows, allele_qc, schemas, cutoffs, width_mm):
     axes[0, 0].set_yticks(range(len(order)), [species_label(schemas[s]["organism"]) for s in order])
     axes[0, 0].set_ylim(-0.6, len(order) - 0.4)
     return figs.save(fig, "isolate_qc")
+
+
+ISOLATE_FIELDS = ["sample", "transmission", "schema", "platform", "reads", "mapped", "mean_depth", "breadth",
+                  "contigs", "n50", "reference_ani", "st", "loci_missing", "novel_alleles", "qc_status", "qc_flags"]
+ISOLATE_HEADERS = ["Sample", "Group", "Schema", "Platform", "Reads", "Mapped", "Depth", "Breadth", "Contigs", "N50",
+                   "ANI to ref. (aligned)", "ST", "Missing loci", "Novel alleles", "QC", "Flags"]
+
+
+def isolate_qc_rows(qc_rows, allele_qc):
+    def percent(value, digits=1):
+        number = to_float(value)
+        return "" if number is None else f"{number * 100:.{digits}f}%"
+
+    def count(value):
+        number = to_float(value)
+        return "" if number is None else f"{number:,.0f}"
+
+    alleles = {r["sample"]: r for r in allele_qc}
+    rows = []
+    for r in qc_rows:
+        a = alleles.get(r["sample"], {})
+        ani = to_float(r.get("reference_ani"))
+        aligned = to_float(r.get("reference_aligned_fraction"))
+        rows.append({
+            **r,
+            "transmission": r.get("transmission") or a.get("transmission", ""),
+            "reads": count(r.get("reads")),
+            "mapped": percent(r.get("mapped_fraction")),
+            "mean_depth": f"{to_float(r['mean_depth']):.0f}x" if to_float(r.get("mean_depth")) is not None else "",
+            "breadth": percent(r.get("breadth")),
+            "contigs": count(r.get("contigs")),
+            "n50": count(r.get("n50")),
+            "reference_ani": "" if ani is None else f"{ani:.2f}%" + ("" if aligned is None else f" ({aligned:.0f}%)"),
+            "loci_missing": a.get("loci_missing", ""),
+            "novel_alleles": a.get("novel_alleles", ""),
+        })
+    return rows
 
 
 def safe_name(text):
@@ -885,7 +922,7 @@ def html_table(rows, fields, headers=None, classes=""):
         for field in fields:
             value = row.get(field, "")
             text = value if isinstance(value, str) and value.startswith("<") else html.escape(str(value))
-            numeric = " class='num'" if re.fullmatch(r"[\d.,–-]+", str(value) or "x") else ""
+            numeric = " class='num'" if re.fullmatch(r"[\d.,–-]+[%x]?", str(value) or "?") else ""
             cells.append(f"<td{numeric}>{text}</td>")
         body.append("<tr>" + "".join(cells) + "</tr>")
     return (f"<div class='table-wrap'><table class='sortable {classes}'><thead><tr>{head}</tr></thead>"
@@ -1030,7 +1067,7 @@ def build_html(context):
         parts.append(html_table(g["pairs"], c["pair_fields"], c["pair_headers"]))
         parts.append("</section>")
 
-    if c["fig_qc"] or c["fig_sample_qc"]:
+    if c["fig_qc"] or c["fig_sample_qc"] or c["isolates"]:
         parts.append("<h2 id='qc'>Isolate QC</h2>")
         parts.append(figure_html(c["fig_sample_qc"], "Isolates by read and assembly QC status (qc_summary.tsv), per "
                                  "species and per kind of sample; the number after each bar is the total.",
@@ -1039,6 +1076,14 @@ def build_html(context):
         parts.append(figure_html(c["fig_qc"], "Mean read depth, the share of reads from the species the schema "
                                  "covers, the largest share from another genus, and the share of schema loci called, per "
                                  "isolate. Dashed lines are the QC cut-offs.", "Isolate QC"))
+    if c["isolates"]:
+        parts.append("<h3>Every isolate</h3>")
+        parts.append("<p class='note'>Reads, mapped reads, depth and breadth come from mapping each isolate's reads "
+                     "back to its own assembly. ANI is skani's, from the assembly to the schema's reference genome, "
+                     "with the share of the assembly aligned. Missing loci are schema loci without a valid call; "
+                     "novel alleles are calls not yet in the schema, and many of them in one isolate often point "
+                     "to sequencing or assembly errors rather than real differences.</p>")
+        parts.append(html_table(c["isolates"], ISOLATE_FIELDS, ISOLATE_HEADERS))
     if c["failed"]:
         parts.append("<h3>Isolates that failed QC or have no allele profile</h3>")
         parts.append(html_table(c["failed"], ["sample", "transmission", "schema", "qc", "assembly_qc", "assembly_flags"],
@@ -1137,6 +1182,7 @@ def main():
                        "threshold": threshold_text(schemas[s]).replace("threshold ", ""), "source": schemas[s].get("source", "")}
                       for s in sorted(used & set(schemas), key=lambda s: schemas[s]["organism"])]
     failed = [{**r, "transmission": r.get("transmission", "")} for r in allele_qc if r.get("qc") and r["qc"] != "pass"]
+    isolates = isolate_qc_rows(qc_rows, allele_qc)
     n_within = sum(1 for p in pairs if p["verdict"] == "within_threshold")
     n_env_patient_within = sum(1 for p in pairs if p["verdict"] == "within_threshold"
                                and pair_kind(p, environment_types) == "environment-patient")
@@ -1145,7 +1191,7 @@ def main():
                    "dates": nowrap(f"{r['first_sample']} to {r['last_sample']}") if r["first_sample"] else "",
                    "overall": badge(r["overall"]) if r["overall"] else ""} for r in table_rows]
     nav = [("summary", "Groups table"), ("overview", "Figures"), ("groups", "Each group")]
-    if fig_qc or (fig_sample_qc and qc_rows):
+    if fig_qc or (fig_sample_qc and qc_rows) or isolates:
         nav.append(("qc", "Isolate QC"))
     nav.append(("methods", "Thresholds"))
 
@@ -1179,6 +1225,7 @@ def main():
         "pair_headers": ["Sample A", "Sample B", "Type A", "Type B", "Days", "Shared loci", "Allele diffs",
                          "Threshold", "Verdict", "SNPs", "QC", "Notes"],
         "failed": failed,
+        "isolates": isolates,
         "thresholds": threshold_rows,
         "formats": ", ".join(f.upper() for f in formats),
     }
