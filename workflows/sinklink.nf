@@ -6,6 +6,7 @@
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { SUMMARISE_QC           } from '../modules/local/summarise_qc/main'
 include { CHECK_DISTANCES        } from '../modules/local/check_distances/main'
+include { TRANSMISSION_REPORT    } from '../modules/local/transmission_report/main'
 include { READ_PREPARATION       } from '../subworkflows/local/read_preparation'
 include { ASSEMBLY               } from '../subworkflows/local/assembly'
 include { ASSEMBLY_QC            } from '../subworkflows/local/assembly_qc'
@@ -141,6 +142,21 @@ workflow SINKLINK {
         ch_schema_table,
         ch_species_map
     )
+
+    //
+    // MODULE: Transmission report and publication figures
+    //
+    if (!params.skip_report) {
+        TRANSMISSION_REPORT (
+            CHECK_DISTANCES.out.pairwise,
+            CHECK_DISTANCES.out.summary,
+            CHECK_DISTANCES.out.allele_qc,
+            ch_qc_summary,
+            ch_metadata,
+            ch_schema_table,
+            ch_thresholds
+        )
+    }
 
     //
     // Collate and save software versions
