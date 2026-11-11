@@ -56,6 +56,12 @@ KINDS = {
     "environment": ("Environment", AQUA, "s"),
     "patient": ("Patient", VIOLET, "o"),
 }
+QC_STATUS = {
+    "pass": ("Pass", "#0ca30c", "#ffffff"),
+    "warn": ("Warn", "#fab219", "#0b0b0b"),
+    "fail": ("Fail", "#d03b3b", "#ffffff"),
+    "": ("Not checked", GREY, "#ffffff"),
+}
 ROMAN_WORDS = {"species", "complex", "group"}
 DISTANCE_TICKS = [0, 5, 10, 15, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000]
 MM = 1 / 25.4
@@ -643,6 +649,71 @@ def tree_figures(figs, groups, metadata, pairs_by_group, width_mm, environment_t
     return images
 
 
+def status_bars(ax, rows, counts, labels):
+    y_of = {row: i for i, row in enumerate(reversed(rows))}
+    totals = {row: sum(counts[row].values()) for row in rows}
+    longest = max(totals.values()) or 1
+    small = plt.rcParams["font.size"] - 1
+    for row in rows:
+        left = 0
+        for status, (_, colour, ink) in QC_STATUS.items():
+            n = counts[row].get(status, 0)
+            if not n:
+                continue
+            ax.barh(y_of[row], n, left=left, height=0.62, color=colour, edgecolor=SURFACE, linewidth=1.2, zorder=3)
+            if n / longest > 0.04:
+                ax.text(left + n / 2, y_of[row], str(n), ha="center", va="center", color=ink, fontsize=small, zorder=4)
+            left += n
+        ax.text(left + longest * 0.015, y_of[row], f"{totals[row]}", ha="left", va="center", color=INK2,
+                fontsize=small)
+    ax.set_yticks(range(len(rows)), [labels[r] for r in reversed(rows)])
+    ax.set_xlim(0, longest * 1.1)
+    ax.set_ylim(-0.6, len(rows) - 0.4)
+    ax.xaxis.set_major_locator(MaxNLocator(nbins=5, integer=True))
+    ax.tick_params(axis="y", length=0)
+    ax.spines["left"].set_visible(False)
+    ax.grid(axis="x")
+    ax.set_axisbelow(True)
+
+
+def sample_qc_figure(figs, metadata, qc_rows, schemas, width_mm, environment_types):
+    """Isolates by read and assembly QC status, per species and per kind of sample."""
+    if not metadata:
+        return None, {}
+    qc = {r["sample"]: r for r in qc_rows}
+    by_species, by_kind, overall = {}, {}, {}
+    for sid, sample in metadata.items():
+        row = qc.get(sid, {})
+        status = row.get("qc_status", "") if row.get("qc_status", "") in QC_STATUS else ""
+        schema = row.get("schema", "") if row.get("schema", "") in schemas else ""
+        kind = sample_kind(sample, environment_types)
+        for table, key in ((by_species, schema), (by_kind, kind)):
+            table.setdefault(key, {}).setdefault(status, 0)
+            table[key][status] += 1
+        overall[status] = overall.get(status, 0) + 1
+    species_rows = sorted((s for s in by_species if s), key=lambda s: schemas[s]["organism"])
+    if "" in by_species:
+        species_rows.append("")
+    species_labels = {s: species_label(schemas[s]["organism"]) if s else "No schema" for s in species_rows}
+    kind_rows = [k for k in KINDS if k in by_kind]
+    kind_labels = {k: KINDS[k][0] for k in kind_rows}
+    height = 0.24 * len(species_rows) + 0.75
+    fig, axes = plt.subplots(1, 2, figsize=(width_mm * MM, height), squeeze=False,
+                             gridspec_kw={"width_ratios": [3, 2], "wspace": 0.5})
+    status_bars(axes[0, 0], species_rows, by_species, species_labels)
+    status_bars(axes[0, 1], kind_rows, by_kind, kind_labels)
+    axes[0, 1].set_ylim(-0.6 - (len(species_rows) - len(kind_rows)) / 2, len(kind_rows) - 0.4
+                        + (len(species_rows) - len(kind_rows)) / 2)
+    axes[0, 0].set_title("By species", loc="left", pad=3)
+    axes[0, 1].set_title("By sample type", loc="left", pad=3)
+    for ax in axes[0]:
+        ax.set_xlabel("Isolates")
+    present = [s for s in QC_STATUS if overall.get(s)]
+    top_legend(fig, [Patch(facecolor=QC_STATUS[s][1], edgecolor=QC_STATUS[s][1], label=QC_STATUS[s][0])
+                     for s in present])
+    return figs.save(fig, "sample_qc"), overall
+
+
 def qc_figure(figs, qc_rows, allele_qc, schemas, cutoffs, width_mm):
     metrics = [
         ("mean_depth", "Read depth", {k: v for k, v in cutoffs.get("min_depth", {}).items()}),
@@ -959,8 +1030,12 @@ def build_html(context):
         parts.append(html_table(g["pairs"], c["pair_fields"], c["pair_headers"]))
         parts.append("</section>")
 
-    if c["fig_qc"]:
+    if c["fig_qc"] or c["fig_sample_qc"]:
         parts.append("<h2 id='qc'>Isolate QC</h2>")
+        parts.append(figure_html(c["fig_sample_qc"], "Isolates by read and assembly QC status (qc_summary.tsv), per "
+                                 "species and per kind of sample; the number after each bar is the total.",
+                                 "Isolates by QC status"))
+    if c["fig_qc"]:
         parts.append(figure_html(c["fig_qc"], "Mean read depth, the share of reads from the species the schema "
                                  "covers, the largest share from another genus, and the share of schema loci called, per "
                                  "isolate. Dashed lines are the QC cut-offs.", "Isolate QC"))
@@ -1028,6 +1103,7 @@ def main():
     fig_snp = snp_figure(figs, rows_by_schema, schemas, args.width_mm, environment_types) if rows_by_schema else None
     timelines = timeline_figures(figs, groups, metadata, pairs_by_group, args.width_mm, environment_types)
     trees = tree_figures(figs, groups, metadata, pairs_by_group, args.width_mm, environment_types)
+    fig_sample_qc, qc_counts = sample_qc_figure(figs, metadata, qc_rows, schemas, args.width_mm, environment_types)
     fig_qc = qc_figure(figs, qc_rows, allele_qc, schemas, cutoffs, args.width_mm)
 
     table_rows = table1(groups, summary, metadata, pairs_by_group, schemas, environment_types)
@@ -1069,7 +1145,7 @@ def main():
                    "dates": nowrap(f"{r['first_sample']} to {r['last_sample']}") if r["first_sample"] else "",
                    "overall": badge(r["overall"]) if r["overall"] else ""} for r in table_rows]
     nav = [("summary", "Groups table"), ("overview", "Figures"), ("groups", "Each group")]
-    if fig_qc:
+    if fig_qc or (fig_sample_qc and qc_rows):
         nav.append(("qc", "Isolate QC"))
     nav.append(("methods", "Thresholds"))
 
@@ -1079,6 +1155,7 @@ def main():
         "tiles": [
             (len(groups), "transmission groups"),
             (len(metadata), "isolates"),
+            (qc_counts.get("pass", 0) if qc_rows else "–", "isolates passing QC"),
             (len(pairs), "pairs with a distance"),
             (n_within, "pairs within threshold"),
             (n_env_patient_within, "environment–patient pairs within threshold"),
@@ -1095,6 +1172,7 @@ def main():
         "fig_timelines": timelines.get("_all"),
         "fig_trees": trees.get("_all"),
         "fig_qc": fig_qc,
+        "fig_sample_qc": fig_sample_qc if qc_rows else None,
         "groups": group_contexts,
         "pair_fields": ["sample_a", "sample_b", "type_a", "type_b", "days_apart", "shared_loci", "allele_diffs",
                         "threshold", "verdict_html", "snp_distance", "qc", "notes"],
