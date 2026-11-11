@@ -98,8 +98,14 @@
                 "SAMTOOLS_COVERAGE": [
                     "samtools"
                 ],
+                "SAMTOOLS_FLAGSTAT": [
+                    "samtools"
+                ],
                 "SAMTOOLS_INDEX": [
                     "samtools"
+                ],
+                "SKANI_DIST": [
+                    "skani"
                 ],
                 "SKESA": [
                     "skesa"
@@ -119,6 +125,10 @@
                 ]
             },
             [
+                "ani",
+                "ani/S01.ani.tsv",
+                "ani/S02.ani.tsv",
+                "ani/S03.ani.tsv",
                 "assembly",
                 "assembly/S01.fa",
                 "assembly/S02.fa",
@@ -147,8 +157,11 @@
                 "chewbbaca/paeruginosa/paeruginosa_results_statistics.tsv",
                 "coverage",
                 "coverage/S01.coverage.txt",
+                "coverage/S01.flagstat",
                 "coverage/S02.coverage.txt",
+                "coverage/S02.flagstat",
                 "coverage/S03.coverage.txt",
+                "coverage/S03.flagstat",
                 "fastqc",
                 "fastqc/S01.html",
                 "fastqc/S01.zip",
@@ -386,6 +399,9 @@
                 "variants/S03.vcf.gz.tbi"
             ],
             [
+                "S01.ani.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.ani.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.ani.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -408,8 +424,11 @@
                 "paeruginosa_results_contigsInfo.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "paeruginosa_results_statistics.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.coverage.txt:md5,5b5fbaf1b8a9645ab2e9d34891ae165a",
+                "S01.flagstat:md5,67394650dbae96d1a4fcc70484822159",
                 "S02.coverage.txt:md5,5b5fbaf1b8a9645ab2e9d34891ae165a",
+                "S02.flagstat:md5,67394650dbae96d1a4fcc70484822159",
                 "S03.coverage.txt:md5,5b5fbaf1b8a9645ab2e9d34891ae165a",
+                "S03.flagstat:md5,67394650dbae96d1a4fcc70484822159",
                 "S01.html:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.zip:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.html:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -606,7 +625,7 @@
                 "S03.vcf.gz.tbi:md5,d41d8cd98f00b204e9800998ecf8427e"
             ]
         ],
-        "timestamp": "2026-11-11T01:00:00.733632",
+        "timestamp": "2026-11-11T16:56:16.883957",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"
@@ -717,8 +736,14 @@
                 "SAMTOOLS_COVERAGE": [
                     "samtools"
                 ],
+                "SAMTOOLS_FLAGSTAT": [
+                    "samtools"
+                ],
                 "SAMTOOLS_INDEX": [
                     "samtools"
+                ],
+                "SKANI_DIST": [
+                    "skani"
                 ],
                 "SKESA": [
                     "skesa"
@@ -741,6 +766,10 @@
                 ]
             },
             [
+                "ani",
+                "ani/S01.ani.tsv",
+                "ani/S02.ani.tsv",
+                "ani/S03.ani.tsv",
                 "assembly",
                 "assembly/S01.fa",
                 "assembly/S02.fa",
@@ -769,8 +798,11 @@
                 "chewbbaca/paeruginosa/paeruginosa_results_statistics.tsv",
                 "coverage",
                 "coverage/S01.coverage.txt",
+                "coverage/S01.flagstat",
                 "coverage/S02.coverage.txt",
+                "coverage/S02.flagstat",
                 "coverage/S03.coverage.txt",
+                "coverage/S03.flagstat",
                 "fastqc",
                 "fastqc/S01.html",
                 "fastqc/S01.zip",
@@ -1019,6 +1051,9 @@
                 "variants/S03.vcf.gz.tbi"
             ],
             [
+                "S01.ani.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.ani.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.ani.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -1041,8 +1076,11 @@
                 "paeruginosa_results_contigsInfo.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "paeruginosa_results_statistics.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.coverage.txt:md5,5b5fbaf1b8a9645ab2e9d34891ae165a",
+                "S01.flagstat:md5,67394650dbae96d1a4fcc70484822159",
                 "S02.coverage.txt:md5,5b5fbaf1b8a9645ab2e9d34891ae165a",
+                "S02.flagstat:md5,67394650dbae96d1a4fcc70484822159",
                 "S03.coverage.txt:md5,5b5fbaf1b8a9645ab2e9d34891ae165a",
+                "S03.flagstat:md5,67394650dbae96d1a4fcc70484822159",
                 "S01.html:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.zip:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.html:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -1247,7 +1285,7 @@
                 "S03.vcf.gz.tbi:md5,d41d8cd98f00b204e9800998ecf8427e"
             ]
         ],
-        "timestamp": "2026-11-11T01:00:17.827718",
+        "timestamp": "2026-11-11T16:56:48.934918",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"
@@ -1303,6 +1341,9 @@
                 "SAMTOOLS_COVERAGE": [
                     "samtools"
                 ],
+                "SAMTOOLS_FLAGSTAT": [
+                    "samtools"
+                ],
                 "SAMTOOLS_INDEX": [
                     "samtools"
                 ],
@@ -1335,8 +1376,11 @@
                 "bracken/S03.bracken.tsv",
                 "coverage",
                 "coverage/S01.coverage.txt",
+                "coverage/S01.flagstat",
                 "coverage/S02.coverage.txt",
+                "coverage/S02.flagstat",
                 "coverage/S03.coverage.txt",
+                "coverage/S03.flagstat",
                 "fastqc",
                 "fastqc/S01.html",
                 "fastqc/S01.zip",
@@ -1442,8 +1486,11 @@
                 "S03.bracken.kraken2.report_bracken.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.bracken.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.coverage.txt:md5,5b5fbaf1b8a9645ab2e9d34891ae165a",
+                "S01.flagstat:md5,67394650dbae96d1a4fcc70484822159",
                 "S02.coverage.txt:md5,5b5fbaf1b8a9645ab2e9d34891ae165a",
+                "S02.flagstat:md5,67394650dbae96d1a4fcc70484822159",
                 "S03.coverage.txt:md5,5b5fbaf1b8a9645ab2e9d34891ae165a",
+                "S03.flagstat:md5,67394650dbae96d1a4fcc70484822159",
                 "S01.html:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.zip:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.html:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -1513,7 +1560,7 @@
                 "qc_summary.tsv:md5,2c23545bd1a084360ee7d94a9f45bd16"
             ]
         ],
-        "timestamp": "2026-11-11T01:00:31.977196",
+        "timestamp": "2026-11-11T16:57:31.265192",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"
