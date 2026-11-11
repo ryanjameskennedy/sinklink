@@ -3,7 +3,11 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## v0.4.0 - 2026-11-11
+
+Adds a transmission report with publication figures and redraws the metro map.
+The report has run on the first VASK data on thedonkey; the SNP steps have
+still only run as stubs.
 
 ### `Added`
 
