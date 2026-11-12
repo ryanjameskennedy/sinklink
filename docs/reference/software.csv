@@ -12,8 +12,10 @@ Completeness,gambitcore,0.0.2,local/gambitcore
 Read depth,BWA,0.7.19,nf-core/bwa/mem
 Read depth,minimap2,2.30,nf-core/minimap2/align
 Read depth,SAMtools,1.24,nf-core/samtools/coverage
+Read counts and mapped reads,SAMtools,1.25,nf-core/samtools/flagstat
 7-gene MLST,mlst,2.25.0,nf-core/mlst
 Distance to reference,Mash,2.3,nf-core/mash/dist
+ANI to reference,skani,0.2.2,nf-core/skani/dist
 Illumina variant calling,Snippy (BWA and FreeBayes),4.6.0,nf-core/snippy/run
 Nanopore variant calling,minimap2,2.30,nf-core/minimap2/align
 Nanopore variant calling,Clair3,2.0.0,nf-core/clair3

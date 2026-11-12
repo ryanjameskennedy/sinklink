@@ -8,7 +8,7 @@
 | Seed genome      | NZ_CP100388.1 (used to train Prodigal)                                                                                                      |
 | Reference genome | [GCF_019048245.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_019048245.1/) (FDAARGOS 1433) (used for QUAST, Mash and variant calling) |
 | Threshold        | ≤12 alleles                                                                                                                                 |
-| Lab labels       | `enterobacter_cloacae`, `enterobacter_cloacae_complex`                                                                                      |
+| Lab labels       | `enterobacter_hormaechei`                                                                                                                   |
 
 ## Threshold
 
@@ -24,18 +24,14 @@ The schema accepts _E. hormaechei_ only.
 | `species_pattern`               | `^Enterobacter hormaechei$` |
 | `genera`                        | Enterobacter                |
 | Expected genome size            | 4.4–5.4 Mb                  |
-
-## In the VASK study
-
-Transmission_1 (59 days).
+| `mlst_scheme`                   | `ecloacae`                  |
 
 ## Notes
 
-- There is no cgmlst.org scheme for the whole _E. cloacae_ complex, only for
-  _E. hormaechei_. Isolates labelled _E. cloacae_ are run against it, which is
-  only valid once the genome confirms _E. hormaechei_: an isolate that Bracken
-  calls _E. cloacae_ or _E. asburiae_ fails with `species_mismatch`.
-- A 2026 preprint describing an _E. cloacae_ complex cgMLST found
-  epidemiologically linked isolates 0–3 alleles apart.
+- Isolates labelled _E. cloacae_ or _E. cloacae_ complex use the
+  [scheme for the whole complex](ecloacae.md) instead, since the lab label
+  rarely says which member of the complex it is. An isolate labelled
+  _E. hormaechei_ that Bracken calls _E. cloacae_ or _E. asburiae_ fails with
+  `species_mismatch`.
 
 Full citations are in the [references](../reference/references.md).

@@ -12,7 +12,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 
 - [Read preparation](#read-preparation) - Human read removal with Deacon, optional Trimmomatic or Filtlong, then FastQC or NanoPlot
 - [Assembly](#assembly) - SKESA (Illumina), Flye and Medaka (Nanopore)
-- [Assembly QC](#assembly-qc) - QUAST and Mash against the reference genome, gambitcore, read depth and 7-gene MLST
+- [Assembly QC](#assembly-qc) - QUAST, Mash and skani ANI against the reference genome, gambitcore, reads and depth, and 7-gene MLST
 - [Species check](#species-check) - Kraken2 and Bracken on the reads
 - [Variant calling](#variant-calling) - Snippy (Illumina) or minimap2 and Clair3 (Nanopore) against the reference genome
 - [Allele calling](#allele-calling) - chewBBACA AlleleCall per schema
@@ -56,9 +56,11 @@ Illumina reads are assembled with SKESA. Nanopore reads are assembled with Flye 
 
 - `quast/<sample>.quast/`: QUAST report (`report.tsv`, `report.html`, ...), including genome fraction and aligned statistics against the schema's reference genome.
 - `mash/<sample>.mash.txt`: Mash distance from the assembly to the schema's reference genome.
+- `ani/<sample>.ani.tsv`: skani ANI from the assembly to the schema's reference genome, with the aligned fraction of each (no row below about 80% ANI).
 - `gambitcore/<sample>.gambitcore.tsv`: closest species, completeness and a green/amber/red call (with `--gambit_db`).
 - `coverage/<sample>.coverage.txt`: `samtools coverage` of the reads mapped back to the isolate's own assembly.
-- `mlst/<sample>.mlst.tsv`: 7-gene MLST scheme and sequence type.
+- `coverage/<sample>.flagstat`: `samtools flagstat` of the same mapping: reads and how many mapped.
+- `mlst/<sample>.mlst.tsv`: 7-gene MLST scheme and sequence type, typed with the schema's `mlst_scheme` from `assets/schemas.tsv` (detected by mlst for isolates without a schema).
 
 </details>
 
@@ -115,8 +117,8 @@ One AlleleCall job per schema, run with `--no-inferred` so the schemas are never
 <details markdown="1">
 <summary>Output files</summary>
 
-- `summary/qc_summary.tsv`: read and assembly QC per isolate with `qc_status` (`pass`, `warn` or `fail`) and `qc_flags`.
-- `summary/allele_qc.tsv`: loci called per isolate and its assembly QC status.
+- `summary/qc_summary.tsv`: read and assembly QC per isolate (reads, mapped share, depth, breadth, assembly statistics, ANI to the reference, species and MLST) with `qc_status` (`pass`, `warn` or `fail`) and `qc_flags`.
+- `summary/allele_qc.tsv`: loci called and missing, novel alleles and the assembly QC status per isolate.
 - `summary/pairwise_distances.tsv`: every pair within each transmission group: sample IDs, LIMS IDs, sample types and patients, days apart, schema, loci shared, allele differences, threshold, verdict, SNP distance and whether recombination was removed, pair QC and notes.
 - `summary/group_summary.tsv`: one line per transmission group, with the smallest and largest allele and SNP distances.
 
@@ -129,16 +131,16 @@ See [quality control](pipeline/qc.md) for the QC flags and [interpreting the res
 <details markdown="1">
 <summary>Output files</summary>
 
-- `report/transmission_report.html`: one self-contained page with the figures, a table of the transmission groups, a section for each group with its timeline, tree and pairs, the isolate QC and the thresholds used. Open it in a browser; it needs no internet connection.
+- `report/transmission_report.html`: one self-contained page with the figures, a table of the transmission groups, a section for each group with its timeline, tree and pairs, the isolate QC (with a table of every isolate's reads, depth, ANI, missing loci and novel alleles) and the thresholds used. Hover over any point in a figure to see the isolate or pair it stands for and its values. Open it in a browser; it needs no internet connection.
 - `report/table1.tsv`: one line per transmission group (species, isolates, environment and patient samples, patients, first and last sample, days, allele and SNP distance ranges, verdict and QC), ready to become Table 1 of a paper.
-- `report/figures/`: every figure as PDF, SVG and PNG (`--report_formats`):
+- `report/figures/`: every figure as PDF, SVG and PNG (`--report_formats`); the SVGs keep the hover labels:
   - `distance_overview`: the allele differences of every pair, one row per group and one panel per species, with the threshold and borderline range;
   - `distance_vs_time`: allele differences against the days between the two samples, one panel per species;
   - `allele_vs_snp`: allele differences against SNP differences, one panel per species (only when variant calling ran);
   - `timeline_<group>` and `timelines`: when and where each isolate was sampled, with each isolate joined to the earlier isolate it is closest to when that pair is within the threshold;
   - `tree_<group>` and `trees`: a minimum spanning tree of each group with three or more isolates;
   - `sample_qc`: how many isolates passed, warned or failed read and assembly QC, per species and per kind of sample;
-  - `isolate_qc`: read depth, species purity, contamination and loci called per isolate against the QC cut-offs.
+  - `isolate_qc`: read depth, species purity, contamination and loci called per isolate against the QC cut-offs, coloured by QC status, with Illumina and Nanopore isolates drawn as circles and triangles when both are present.
 
 </details>
 

@@ -1,7 +1,7 @@
 //
-// Assembly QC: QUAST statistics and Mash distance against the schema's reference
-// genome (when there is one), gambitcore completeness, read depth over the
-// isolate's own assembly and 7-gene MLST
+// Assembly QC: QUAST statistics, Mash distance and skani ANI against the schema's
+// reference genome (when there is one), gambitcore completeness, read counts and
+// depth from mapping the reads to the isolate's own assembly, and 7-gene MLST
 //
 
 include { QUAST             } from '../../../modules/nf-core/quast/main'
@@ -11,6 +11,8 @@ include { BWA_MEM           } from '../../../modules/nf-core/bwa/mem/main'
 include { MINIMAP2_ALIGN    } from '../../../modules/nf-core/minimap2/align/main'
 include { SAMTOOLS_INDEX    } from '../../../modules/nf-core/samtools/index/main'
 include { SAMTOOLS_COVERAGE } from '../../../modules/nf-core/samtools/coverage/main'
+include { SAMTOOLS_FLAGSTAT } from '../../../modules/nf-core/samtools/flagstat/main'
+include { SKANI_DIST        } from '../../../modules/nf-core/skani/dist/main'
 include { MLST              } from '../../../modules/nf-core/mlst/main'
 include { MASH_DIST         } from '../../../modules/nf-core/mash/dist/main'
 
@@ -42,6 +44,15 @@ workflow ASSEMBLY_QC {
         }
         .set { ch_mash }
     MASH_DIST ( ch_mash.assembly, ch_mash.reference )
+
+    ch_assembly
+        .join(ch_reference)
+        .multiMap { meta, fasta, reference ->
+            assembly : [ meta, fasta ]
+            reference: [ [ id: meta.reference ], reference[0] ]
+        }
+        .set { ch_skani }
+    SKANI_DIST ( ch_skani.assembly, ch_skani.reference )
     MLST ( ch_assembly )
 
     ch_gambitcore = channel.empty()
@@ -83,12 +94,16 @@ workflow ASSEMBLY_QC {
         .mix(MINIMAP2_ALIGN.out.bam.join(MINIMAP2_ALIGN.out.index))
         .set { ch_bam }
     SAMTOOLS_COVERAGE ( ch_bam, [ [:], [], [] ] )
+    SAMTOOLS_FLAGSTAT ( ch_bam )
 
     emit:
     quast         = QUAST.out.tsv                 // channel: [ val(meta), path(tsv) ]
     coverage      = SAMTOOLS_COVERAGE.out.coverage // channel: [ val(meta), path(txt) ]
+    flagstat      = SAMTOOLS_FLAGSTAT.out.flagstat // channel: [ val(meta), path(flagstat) ]
     gambitcore    = ch_gambitcore                 // channel: [ val(meta), path(tsv) ]
     mlst          = MLST.out.tsv                  // channel: [ val(meta), path(tsv) ]
     mash          = MASH_DIST.out.dist            // channel: [ val(meta), path(txt) ]
-    multiqc_files = QUAST.out.tsv.map { _meta, tsv -> tsv } // channel: [ path ]
+    ani           = SKANI_DIST.out.dist           // channel: [ val(meta), path(tsv) ]
+    multiqc_files = QUAST.out.tsv.map { _meta, tsv -> tsv }
+        .mix(SAMTOOLS_FLAGSTAT.out.flagstat.map { _meta, txt -> txt }) // channel: [ path ]
 }

@@ -57,6 +57,7 @@ lineages.
 | `species_pattern`               | `^Stenotrophomonas` |
 | `genera`                        | Stenotrophomonas    |
 | Expected genome size            | 4.1–5.4 Mb          |
+| `mlst_scheme`                   | `smaltophilia`      |
 
 ## In the VASK study
 

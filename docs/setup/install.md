@@ -54,6 +54,7 @@ make check ASSETS_DIR=/mnt/cache/dbs
 - [Schemas](schemas.md): what `make schemas` does and what to do when a
   download fails.
 - [Databases](databases.md): reference genomes, Deacon, GAMBIT, and how to
-  download the Kraken2/Bracken database, which `make install` leaves out.
+  download the Kraken2/Bracken database with `make kraken_db`, which
+  `make install` leaves out.
 
 Then [run the pipeline](../usage.md).

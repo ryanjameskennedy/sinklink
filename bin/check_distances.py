@@ -53,24 +53,29 @@ def schema_of_alleles(path):
 
 
 def load_profiles(path):
+    """Return (loci in schema, {sample: {locus: allele}}, {sample: novel allele count}).
+
+    Novel alleles are the calls chewBBACA inferred in this run (INF-).
+    """
     if not path:
-        return None, {}
+        return None, {}, {}
     with open(path, newline="") as handle:
         reader = csv.reader(handle, delimiter="\t")
         header = next(reader)
         loci = header[1:]
-        profiles = {}
+        profiles, novel = {}, {}
         for row in reader:
             sample = row[0]
             for ext in (".fasta", ".fna", ".fa"):
                 if sample.endswith(ext):
                     sample = sample[: -len(ext)]
+            novel[sample] = sum(1 for v in row[1:] if v.strip().startswith("INF-"))
             profiles[sample] = {
                 locus: allele
                 for locus, allele in zip(loci, (normalise_call(v) for v in row[1:]))
                 if allele is not None
             }
-    return len(loci), profiles
+    return len(loci), profiles, novel
 
 
 def load_snp_dists(paths):
@@ -149,9 +154,9 @@ def main():
     with open(args.samplesheet, newline="", encoding="utf-8-sig") as handle:
         samples = list(csv.DictReader(handle))
 
-    profiles, n_loci = {}, {}
+    profiles, n_loci, novel = {}, {}, {}
     for schema in schemas:
-        n_loci[schema], profiles[schema] = load_profiles(allele_files.get(schema))
+        n_loci[schema], profiles[schema], novel[schema] = load_profiles(allele_files.get(schema))
 
     qc_rows, sample_info = [], {}
     for sample in samples:
@@ -188,8 +193,10 @@ def main():
             "growth": sample["growth"],
             "schema": schema,
             "loci_called": called,
+            "loci_missing": n_loci[schema] - called if profile is not None and n_loci[schema] else "",
             "loci_in_schema": n_loci.get(schema) or "",
             "fraction_called": f"{fraction:.3f}",
+            "novel_alleles": novel.get(schema, {}).get(sid, "") if profile is not None else "",
             "qc": qc,
             "assembly_qc": sample_info[sid]["assembly_qc"],
             "assembly_flags": sample_info[sid]["assembly_flags"],

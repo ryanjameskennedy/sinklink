@@ -3,6 +3,24 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased]
+
+### `Added`
+
+- An _Enterobacter cloacae_ complex schema (`ecloacae`): the Miller et al. 2026 cgMLST from Chewie-NS (1,812 loci), threshold ≤3 alleles, borderline ≤5, with GCF_905331265.2 as reference; `make ecloacae_all` unpacks the ready-to-use schema without PrepExternalSchema
+- `make kraken_db` downloads the full Kraken2 Standard database (85 GB), or another one with `KRAKEN_DB` and `KRAKEN_DB_DATE`
+- skani ANI from each assembly to its schema's reference genome (`ani/`), checked against 95% (`distant_reference`); the Mash distance is only checked when there is no ANI
+- Reads, the share mapped back to the own assembly (`samtools flagstat`, warns below 90% as `low_mapped_reads`) and breadth in `qc_summary.tsv`
+- Missing loci and novel alleles per isolate in `allele_qc.tsv`
+- A table of every isolate's reads, depth, ANI, missing loci and novel alleles in the transmission report
+- Hover labels on every point in the report's figures (pair, distances, days and sample types; isolate, sample type and date; QC values and flags), also in the SVG files; the report now embeds the figures as inline SVG
+
+### `Changed`
+
+- `enterobacter_cloacae` and `enterobacter_cloacae_complex` isolates are typed with `ecloacae` instead of `ehormaechei`; `enterobacter_hormaechei` maps to `ehormaechei`
+- The isolate QC figure labels depth as over the isolate's own assembly, colours isolates by QC status, marks Nanopore isolates with triangles, keeps nearby points apart, zooms the percentage axes to the data and moves the cut-off labels into the legend
+- mlst types each isolate with its schema's scheme (`mlst_scheme` in `assets/schemas.tsv`, passed as `--scheme`) instead of detecting it; `ecloacae` and `ehormaechei` use the PubMLST _E. cloacae_ scheme, which covers the complex
+
 ## v0.4.0 - 2026-11-11
 
 Adds a transmission report with publication figures and redraws the metro map.

@@ -111,7 +111,9 @@ thedonkey's config then resizes the labels themselves towards the JASEN values:
 | samtools index                               | `process_low`    | 2 CPUs, 12 GB            | 16 CPUs, 2 GB   | 2 CPUs, 4 GB             |
 | samtools coverage                            | `process_single` | 1 CPU, 6 GB              | 2 CPUs, 2 GB    | 1 CPU, 2 GB              |
 | mlst                                         | `process_low`    | 2 CPUs, 12 GB            | 2 CPUs, 2 GB    | 2 CPUs, 4 GB             |
+| samtools flagstat                            | `process_single` | 1 CPU, 6 GB              | –               | 1 CPU, 2 GB              |
 | Mash                                         | `process_low`    | 2 CPUs, 12 GB            | –               | 2 CPUs, 4 GB             |
+| skani                                        | `process_high`   | 12 CPUs, 72 GB           | –               | 15 CPUs, 32 GB           |
 | Snippy                                       | `process_high`   | 12 CPUs, 72 GB           | 16 CPUs, 32 GB  | 15 CPUs, 32 GB           |
 | minimap2 to the reference                    | `process_medium` | 6 CPUs, 36 GB            | 4 CPUs, 12 GB   | 4 CPUs, 12 GB            |
 | Clair3                                       | `process_high`   | 12 CPUs, 72 GB           | 8 CPUs, 16 GB   | 15 CPUs, 32 GB           |
