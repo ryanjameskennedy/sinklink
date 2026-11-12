@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `enterobacter_cloacae` and `enterobacter_cloacae_complex` isolates are typed with `ecloacae` instead of `ehormaechei`; `enterobacter_hormaechei` maps to `ehormaechei`
 - The isolate QC figure labels depth as over the isolate's own assembly
+- mlst types each isolate with its schema's scheme (`mlst_scheme` in `assets/schemas.tsv`, passed as `--scheme`) instead of detecting it; `ecloacae` and `ehormaechei` use the PubMLST _E. cloacae_ scheme, which covers the complex
 
 ## v0.4.0 - 2026-11-11
 

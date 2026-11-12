@@ -25,6 +25,7 @@ The schema accepts _P. aeruginosa_.
 | `species_pattern`               | `^Pseudomonas aeruginosa$` |
 | `genera`                        | Pseudomonas                |
 | Expected genome size            | 5.5–7.8 Mb                 |
+| `mlst_scheme`                   | `paeruginosa`              |
 
 ## In the VASK study
 

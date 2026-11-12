@@ -60,7 +60,7 @@ Illumina reads are assembled with SKESA. Nanopore reads are assembled with Flye 
 - `gambitcore/<sample>.gambitcore.tsv`: closest species, completeness and a green/amber/red call (with `--gambit_db`).
 - `coverage/<sample>.coverage.txt`: `samtools coverage` of the reads mapped back to the isolate's own assembly.
 - `coverage/<sample>.flagstat`: `samtools flagstat` of the same mapping: reads and how many mapped.
-- `mlst/<sample>.mlst.tsv`: 7-gene MLST scheme and sequence type.
+- `mlst/<sample>.mlst.tsv`: 7-gene MLST scheme and sequence type, typed with the schema's `mlst_scheme` from `assets/schemas.tsv` (detected by mlst for isolates without a schema).
 
 </details>
 

@@ -24,6 +24,7 @@ The schema accepts _E. hormaechei_ only.
 | `species_pattern`               | `^Enterobacter hormaechei$` |
 | `genera`                        | Enterobacter                |
 | Expected genome size            | 4.4–5.4 Mb                  |
+| `mlst_scheme`                   | `ecloacae`                  |
 
 ## Notes
 

@@ -235,7 +235,8 @@ def annotateSample(meta, metadata, species_map, schema_table) {
         growth      : growth,
         schema      : schema,
         genome_size : genome_size,
-        reference   : schema ? (schema_table[schema].reference ?: '') : ''
+        reference   : schema ? (schema_table[schema].reference ?: '') : '',
+        mlst_scheme : schema ? (schema_table[schema].mlst_scheme ?: '') : ''
     ]
 }
 

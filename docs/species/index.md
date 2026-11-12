@@ -70,7 +70,7 @@ species page lists what its schema accepts.
    URL, archive name and seed genome (or `READY_<schema> := yes` for a
    ready-to-use schema from Chewie-NS), and run `make <schema>_all`.
 2. Add a row to `assets/schemas.tsv` with the threshold, the accepted species,
-   genera and genome size range, and the source.
+   genera and genome size range, the mlst scheme (`mlst --list`) and the source.
 3. Map the laboratory labels to it in `assets/species_map.tsv`.
 4. Add a page here.
 

@@ -47,6 +47,7 @@ The schema accepts any _Enterobacter_ species.
 | `species_pattern`               | `^Enterobacter\b` |
 | `genera`                        | Enterobacter      |
 | Expected genome size            | 4.3–5.8 Mb        |
+| `mlst_scheme`                   | `ecloacae`        |
 
 ## In the VASK study
 
