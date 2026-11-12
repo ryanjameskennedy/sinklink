@@ -42,7 +42,7 @@ template:
   name: sinklink
   description: Sink-to-patient transmission checks with read QC, assembly, assembly QC and cgMLST/wgMLST allele distances
   author: Ryan Kennedy
-  version: 0.4.0
+  version: 0.5.0dev
   force: true
   outdir: .
   skip_features:
