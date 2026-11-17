@@ -3,7 +3,13 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## v0.5.0 - 2026-11-18
+
+Adds ANI, read and allele QC, a species call from type strains, an
+_E. cloacae_ complex schema and a download of the full Kraken2 database, and
+keeps SNP distances from stopping a run when Gubbins cannot run. The ANI, read
+QC and `ecloacae` steps have run on real data on thedonkey; the Gubbins
+changes and the species call have only run as stubs and on test inputs.
 
 ### `Added`
 
