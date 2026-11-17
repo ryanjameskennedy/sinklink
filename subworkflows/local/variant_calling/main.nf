@@ -18,6 +18,7 @@ include { BCFTOOLS_VIEW                             } from '../../../modules/nf-
 include { BCFTOOLS_CONSENSUS                        } from '../../../modules/nf-core/bcftools/consensus/main'
 include { GAWK as GAWK_PSEUDOGENOME                 } from '../../../modules/nf-core/gawk/main'
 include { GAWK as GAWK_ALIGNMENT                    } from '../../../modules/nf-core/gawk/main'
+include { GAWK as GAWK_ALIGNMENT_MISSING            } from '../../../modules/nf-core/gawk/main'
 include { GUBBINS                                   } from '../../../modules/nf-core/gubbins/main'
 include { SNPDISTS                                  } from '../../../modules/nf-core/snpdists/main'
 
@@ -135,7 +136,8 @@ workflow VARIANT_CALLING {
 
     //
     // Per schema: the pseudogenomes and the reference chromosome in one alignment,
-    // recombination removed with Gubbins (3 or more sequences), then snp-dists
+    // recombination removed with Gubbins when 3 or more sequences are at most
+    // 25% missing (Gubbins' own cut-off), then snp-dists
     //
     GAWK_PSEUDOGENOME.out.output
         .map { meta, fasta -> [ [ id: meta.schema, reference: meta.reference ], fasta ] }
@@ -152,9 +154,21 @@ workflow VARIANT_CALLING {
         false
     )
 
+    GAWK_ALIGNMENT_MISSING (
+        GAWK_ALIGNMENT.out.output.map { meta, alignment -> [ meta, alignment, 'tsv' ] },
+        file("${projectDir}/assets/awk/alignment_missing.awk", checkIfExists: true),
+        false
+    )
     GAWK_ALIGNMENT.out.output
+        .join(GAWK_ALIGNMENT_MISSING.out.output)
+        .map { meta, alignment, missing ->
+            // stub runs leave the table empty
+            def usable = workflow.stubRun ? meta.sequences :
+                missing.splitCsv(sep: '\t', header: true).count { row -> (row.missing_percent as double) <= 25 }
+            [ meta + [ usable: usable ], alignment ]
+        }
         .branch { meta, _alignment ->
-            recombination: meta.sequences >= 3
+            recombination: meta.usable >= 3
             direct: true
         }
         .set { ch_aligned }

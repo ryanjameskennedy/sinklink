@@ -39,6 +39,9 @@
                 "GAWK_ALIGNMENT": [
                     "gawk"
                 ],
+                "GAWK_ALIGNMENT_MISSING": [
+                    "gawk"
+                ],
                 "GAWK_PSEUDOGENOME": [
                     "gawk"
                 ],
@@ -382,6 +385,7 @@
                 "snp_distances/masks/GCF_000006765.1.phispy.tsv",
                 "snp_distances/paeruginosa.aln",
                 "snp_distances/paeruginosa.gubbins.snp_dists.tsv",
+                "snp_distances/paeruginosa.missing.tsv",
                 "summary",
                 "summary/allele_qc.tsv",
                 "summary/group_summary.tsv",
@@ -610,6 +614,7 @@
                 "GCF_000006765.1.phispy.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "paeruginosa.aln:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "paeruginosa.gubbins.snp_dists.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.missing.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "allele_qc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "group_summary.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "pairwise_distances.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -625,7 +630,7 @@
                 "S03.vcf.gz.tbi:md5,d41d8cd98f00b204e9800998ecf8427e"
             ]
         ],
-        "timestamp": "2026-11-11T16:56:16.883957",
+        "timestamp": "2026-11-17T14:12:31.1494",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"
@@ -675,6 +680,9 @@
                     "gambitcore"
                 ],
                 "GAWK_ALIGNMENT": [
+                    "gawk"
+                ],
+                "GAWK_ALIGNMENT_MISSING": [
                     "gawk"
                 ],
                 "GAWK_PSEUDOGENOME": [
@@ -1029,6 +1037,7 @@
                 "snp_distances/masks/GCF_000006765.1.phispy.tsv",
                 "snp_distances/paeruginosa.aln",
                 "snp_distances/paeruginosa.gubbins.snp_dists.tsv",
+                "snp_distances/paeruginosa.missing.tsv",
                 "summary",
                 "summary/allele_qc.tsv",
                 "summary/group_summary.tsv",
@@ -1266,6 +1275,7 @@
                 "GCF_000006765.1.phispy.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "paeruginosa.aln:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "paeruginosa.gubbins.snp_dists.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "paeruginosa.missing.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "allele_qc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "group_summary.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "pairwise_distances.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -1285,7 +1295,7 @@
                 "S03.vcf.gz.tbi:md5,d41d8cd98f00b204e9800998ecf8427e"
             ]
         ],
-        "timestamp": "2026-11-11T16:56:48.934918",
+        "timestamp": "2026-11-17T14:12:47.91327",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"

@@ -5,7 +5,7 @@ For every pair of isolates in a group, counts allele differences over the loci
 called in both isolates and compares the count with the species threshold in
 assets/schemas.tsv. When both isolates are in a snp-dists matrix for their
 schema (masked pseudogenomes, recombination removed with Gubbins when there were
-enough isolates), their SNP distance is added; there is no SNP threshold, so
+enough usable isolates), their SNP distance is added; there is no SNP threshold, so
 these are for information only. Read and assembly QC from qc_summary.tsv
 (summarise_qc.py)
 is carried into each pair. Writes allele_qc.tsv, pairwise_distances.tsv and
