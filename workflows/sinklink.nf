@@ -163,7 +163,9 @@ workflow SINKLINK {
             ch_qc_summary,
             ch_metadata,
             ch_schema_table,
-            ch_thresholds
+            ch_thresholds,
+            ch_type_strain_table,
+            ASSEMBLY_QC.out.group_ani.map { _meta, tsv -> tsv }.collect().ifEmpty([])
         )
     }
 

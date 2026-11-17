@@ -25,8 +25,10 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 from matplotlib.lines import Line2D
-from matplotlib.patches import Patch
+from matplotlib.patches import Patch, Rectangle
 from matplotlib.ticker import FixedLocator, MaxNLocator, NullLocator
 
 logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
@@ -56,6 +58,13 @@ KINDS = {
     "environment": ("Environment", AQUA, "s"),
     "patient": ("Patient", VIOLET, "o"),
 }
+SPECIES_ANI = 95
+ANI_FLOOR = 80
+PANEL_SHOWN = 10
+PANEL_CLOSEST = 3
+ANI_COLOURS = LinearSegmentedColormap.from_list(
+    "ani", [(0.0, "#f4f3ee"), (0.749, "#c4d3e0"), (0.75, "#79abd0"), (1.0, "#123f63")])
+ANI_NORM = Normalize(ANI_FLOOR, 100)
 QC_STATUS = {
     "pass": ("Pass", "#0ca30c", "#ffffff"),
     "warn": ("Warn", "#fab219", "#0b0b0b"),
@@ -739,6 +748,184 @@ def tree_figures(figs, groups, metadata, pairs_by_group, width_mm, environment_t
     return images
 
 
+def genome_id(path):
+    return re.sub(r"\.(fasta|fna|fa)(\.gz)?$", "", Path(path).name)
+
+
+def load_group_ani(directory):
+    """{group: {(genome_a, genome_b): (ANI, (aligned share of a, of b))}} from skani triangle --sparse."""
+    groups = {}
+    if not directory or not Path(directory).is_dir():
+        return groups
+    for path in sorted(Path(directory).glob("*.tsv")):
+        pairs = {}
+        for row in read_tsv(path):
+            a, b = genome_id(row.get("Ref_file", "")), genome_id(row.get("Query_file", ""))
+            ani = to_float(row.get("ANI"))
+            if a and b and a != b and ani is not None:
+                aligned = (to_float(row.get("Align_fraction_ref")), to_float(row.get("Align_fraction_query")))
+                pairs[(a, b)] = (ani, aligned)
+                pairs[(b, a)] = (ani, aligned[::-1])
+        groups[path.name[:-len(".tsv")]] = pairs
+    return groups
+
+
+def upgma(n, distance):
+    """Average-linkage tree over n leaves; each join's height is the mean distance between its two sides."""
+    nodes = {i: {"leaf": i, "height": 0.0, "size": 1} for i in range(n)}
+    dist = {frozenset((i, j)): distance(i, j) for i in range(n) for j in range(i + 1, n)}
+    next_id = n
+    while len(nodes) > 1:
+        pair = min(dist, key=lambda k: (dist[k], sorted(k)))
+        i, j = sorted(pair)
+        a, b = nodes.pop(i), nodes.pop(j)
+        merged = {"children": [a, b], "height": dist[pair], "size": a["size"] + b["size"]}
+        for k in nodes:
+            dist[frozenset((next_id, k))] = ((dist[frozenset((i, k))] * a["size"] + dist[frozenset((j, k))] * b["size"])
+                                             / merged["size"])
+        dist = {key: value for key, value in dist.items() if i not in key and j not in key}
+        nodes[next_id] = merged
+        next_id += 1
+    return next(iter(nodes.values()))
+
+
+def tree_leaves(node):
+    return [node["leaf"]] if "leaf" in node else [leaf for child in node["children"] for leaf in tree_leaves(child)]
+
+
+def draw_dendrogram(ax, node, y_of):
+    if "leaf" in node:
+        return y_of[node["leaf"]]
+    ys = [draw_dendrogram(ax, child, y_of) for child in node["children"]]
+    for child, y in zip(node["children"], ys):
+        ax.plot([child["height"], node["height"]], [y, y], color=INK2, linewidth=0.7, solid_capstyle="butt")
+    ax.plot([node["height"], node["height"]], ys, color=INK2, linewidth=0.7, solid_capstyle="butt")
+    return sum(ys) / 2
+
+
+def species_panel(sample_ids, pairs, strains, schemas_in_group):
+    """The isolates and type strains to draw for one group, and how many type strains are left out."""
+    present = {a for a, _ in pairs}
+    isolates = [s for s in sample_ids if s in present]
+    panel = [acc for acc, row in strains.items()
+             if {s.strip() for s in row.get("schema", "").split(",")} & schemas_in_group or
+             (not schemas_in_group and acc in present)]
+    if not isolates or not panel:
+        return isolates, [], 0
+    if len(panel) <= PANEL_SHOWN:
+        return isolates, panel, 0
+    closest = {acc for s in isolates
+               for acc in sorted(panel, key=lambda acc: -pairs.get((s, acc), (0,))[0])[:PANEL_CLOSEST]
+               if (s, acc) in pairs}
+    shown = [acc for acc in panel if acc in closest]
+    return isolates, shown, len(panel) - len(shown)
+
+
+def strain_label(row, accession):
+    species = row.get("species", "")
+    strain = row.get("strain", "") or accession
+    return f"{species_label(species)} {strain}" + r"$^{\mathrm{T}}$" if species else accession
+
+
+def species_figure(figs, group, isolates, type_strains, pairs, strains, metadata, environment_types):
+    ids = isolates + type_strains
+    n = len(ids)
+    plain = {g: (f"{strains[g].get('species', '')} {strains[g].get('strain', '')}".strip() if g in strains else g)
+             for g in ids}
+
+    def ani(i, j):
+        return 100.0 if i == j else pairs.get((ids[i], ids[j]), (None, (None, None)))[0]
+
+    tree = upgma(n, lambda i, j: 100 - (ani(i, j) if ani(i, j) is not None else ANI_FLOOR - 5))
+    order = tree_leaves(tree)
+    y_of = {leaf: row for row, leaf in enumerate(order)}
+    side = n * 0.2
+    tree_width, gap, labels, bottom, top_margin = 1.0, 0.04, 2.6, 0.85, 0.1
+    width, height = tree_width + gap + side + labels, bottom + side + top_margin
+    fig = plt.figure(figsize=(width, height))
+    ax_tree = fig.add_axes([0, bottom / height, tree_width / width, side / height])
+    ax_map = fig.add_axes([(tree_width + gap) / width, bottom / height, side / width, side / height])
+    cax = fig.add_axes([(tree_width + gap) / width, 0.25 / height, max(side, 2.2) / width, 0.09 / height])
+
+    if n > 1:
+        draw_dendrogram(ax_tree, tree, y_of)
+    top = max(tree["height"], 100 - SPECIES_ANI) * 1.08
+    ax_tree.axvline(100 - SPECIES_ANI, color=INK2, linewidth=0.6, linestyle=(0, (3, 2)))
+    ax_tree.set_xlim(top, 0)
+    ax_tree.set_ylim(n - 0.5, -0.5)
+    ax_tree.xaxis.set_major_locator(MaxNLocator(nbins=3, integer=True))
+    ax_tree.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{100 - v:g}"))
+    ax_tree.set_xlabel("ANI (%)")
+    ax_tree.set_yticks([])
+    for spine in ("left", "right", "top"):
+        ax_tree.spines[spine].set_visible(False)
+
+    annotate = n <= 12
+    for i in range(n):
+        for j in range(n):
+            value = ani(i, j)
+            x, y = y_of[j], y_of[i]
+            if value is None:
+                rect = Rectangle((x - 0.5, y - 0.5), 1, 1, facecolor=SURFACE, edgecolor=AXIS, hatch="////",
+                                 linewidth=0)
+            else:
+                rect = Rectangle((x - 0.5, y - 0.5), 1, 1, facecolor=ANI_COLOURS(ANI_NORM(max(value, ANI_FLOOR))),
+                                 edgecolor=SURFACE, linewidth=0.5)
+            ax_map.add_patch(rect)
+            if i != j:
+                aligned = pairs.get((ids[i], ids[j]), (None, (None, None)))[1]
+                figs.tip(rect, [
+                    f"{plain[ids[i]]} – {plain[ids[j]]}",
+                    f"{value:.2f}% ANI" if value is not None else f"below about {ANI_FLOOR}% ANI (not reported by skani)",
+                    f"{aligned[0]:.0f}% and {aligned[1]:.0f}% aligned" if value is not None and None not in aligned else "",
+                ])
+            if annotate and i != j and value is not None:
+                ax_map.text(x, y, f"{value:.1f}", ha="center", va="center", fontsize=5,
+                            color=SURFACE if value >= SPECIES_ANI else INK)
+    ax_map.set_xlim(-0.5, n - 0.5)
+    ax_map.set_ylim(n - 0.5, -0.5)
+    ax_map.set_xticks([])
+    ax_map.yaxis.tick_right()
+    labels = []
+    for leaf in order:
+        genome = ids[leaf]
+        labels.append(strain_label(strains[genome], genome) if genome in strains else genome)
+    ax_map.set_yticks(range(n), labels)
+    ax_map.tick_params(axis="y", length=0, pad=3)
+    for tick, leaf in zip(ax_map.get_yticklabels(), order):
+        genome = ids[leaf]
+        if genome in metadata:
+            tick.set_color(KINDS[sample_kind(metadata[genome], environment_types)][1])
+    for spine in ax_map.spines.values():
+        spine.set_visible(False)
+
+    bar = fig.colorbar(ScalarMappable(norm=ANI_NORM, cmap=ANI_COLOURS), cax=cax, orientation="horizontal")
+    bar.set_ticks([ANI_FLOOR, 85, 90, SPECIES_ANI, 100])
+    bar.set_label("ANI (%); species boundary at 95%")
+    bar.outline.set_visible(False)
+    handles = [Line2D([], [], linestyle="none", marker="s", markersize=5, markerfacecolor=colour,
+                      markeredgecolor=colour, label=f"{label} isolate") for label, colour, _ in KINDS.values()]
+    handles.append(Patch(facecolor=SURFACE, edgecolor=AXIS, hatch="////", label=f"<{ANI_FLOOR}%"))
+    top_legend(fig, handles)
+    return figs.save(fig, f"species_{safe_name(group)}")
+
+
+def species_figures(figs, groups, group_ani, strains, qc_by_sample, metadata, environment_types):
+    images = {}
+    for group, sample_ids in groups.items():
+        pairs = group_ani.get(group)
+        if not pairs:
+            continue
+        schemas_in_group = {qc_by_sample.get(s, {}).get("schema", "") for s in sample_ids} - {""}
+        isolates, type_strains, hidden = species_panel(sorted(sample_ids, key=natural_key), pairs, strains,
+                                                       schemas_in_group)
+        if not isolates:
+            continue
+        images[group] = (species_figure(figs, group, isolates, type_strains, pairs, strains, metadata,
+                                        environment_types), hidden)
+    return images
+
+
 def status_bars(ax, rows, counts, labels):
     y_of = {row: i for i, row in enumerate(reversed(rows))}
     totals = {row: sum(counts[row].values()) for row in rows}
@@ -1258,6 +1445,15 @@ def build_html(context):
                                  "when within the threshold.", f"{g['name']} timeline"))
         parts.append(figure_html(g["tree"], "Minimum spanning tree from the pairwise allele differences.",
                                  f"{g['name']} tree", "narrow"))
+        species_svg, hidden = g["species_fig"]
+        parts.append(figure_html(species_svg, "ANI (skani) between the group's isolates and the type strains of the "
+                                 "species its schema covers, clustered by average linkage (UPGMA) on the same ANI; "
+                                 "the dashed line on the tree and the dark cells mark the 95% species boundary. "
+                                 "Isolates are coloured by kind of sample and type strains are marked <sup>T</sup>. "
+                                 + (f"Only each isolate's {PANEL_CLOSEST} closest type strains are shown; "
+                                    f"{plural(hidden, 'other')} further from every isolate are left out. "
+                                    if hidden else "")
+                                 + "Hover over a cell to see the pair.", f"{g['name']} species"))
         parts.append(html_table(g["pairs"], c["pair_fields"], c["pair_headers"]))
         parts.append("</section>")
 
@@ -1317,6 +1513,8 @@ def main():
     parser.add_argument("--environment-types", default="environment",
                         help="comma-separated sample_type values that are environmental samples")
     parser.add_argument("--pipeline-version", default="")
+    parser.add_argument("--type-strains", help="assets/type_strains.tsv")
+    parser.add_argument("--group-ani", help="folder of skani triangle --sparse output, one <group>.tsv per group")
     parser.add_argument("--database", action="append", default=[], metavar="NAME=PATH",
                         help="a database the run used, listed in the report; repeat for each")
     args = parser.parse_args()
@@ -1354,6 +1552,9 @@ def main():
     fig_snp = snp_figure(figs, rows_by_schema, schemas, args.width_mm, environment_types) if rows_by_schema else None
     timelines = timeline_figures(figs, groups, metadata, pairs_by_group, args.width_mm, environment_types)
     trees = tree_figures(figs, groups, metadata, pairs_by_group, args.width_mm, environment_types)
+    strains = {row["accession"]: row for row in read_tsv(args.type_strains)}
+    species_images = species_figures(figs, groups, load_group_ani(args.group_ani), strains, qc_by_sample, metadata,
+                                     environment_types)
     fig_sample_qc, qc_counts = sample_qc_figure(figs, metadata, qc_rows, schemas, args.width_mm, environment_types)
     fig_qc = qc_figure(figs, qc_rows, allele_qc, schemas, cutoffs, args.width_mm)
 
@@ -1380,6 +1581,7 @@ def main():
             "line": html.escape(line) + species_counts(groups[name], metadata),
             "timeline": timelines.get(name),
             "tree": trees.get(name),
+            "species_fig": species_images.get(name, (None, 0)),
             "pairs": pair_rows,
         })
 

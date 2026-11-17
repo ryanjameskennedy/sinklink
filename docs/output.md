@@ -58,6 +58,7 @@ Illumina reads are assembled with SKESA. Nanopore reads are assembled with Flye 
 - `mash/<sample>.mash.txt`: Mash distance from the assembly to the schema's reference genome.
 - `ani/<sample>.ani.tsv`: skani ANI from the assembly to the schema's reference genome, with the aligned fraction of each (no row below about 80% ANI).
 - `ani/<sample>.type_strains.tsv`: skani ANI from the assembly to each type strain of the species its schema covers (`assets/type_strains.tsv`), for the species call.
+- `ani/groups/<group>.tsv`: skani ANI between every two genomes of a transmission group's isolates and its schema's type strains (`skani triangle --sparse`), for the group's species figure.
 - `gambitcore/<sample>.gambitcore.tsv`: closest species, completeness and a green/amber/red call (with `--gambit_db`).
 - `coverage/<sample>.coverage.txt`: `samtools coverage` of the reads mapped back to the isolate's own assembly.
 - `coverage/<sample>.flagstat`: `samtools flagstat` of the same mapping: reads and how many mapped.
@@ -141,6 +142,7 @@ See [quality control](pipeline/qc.md) for the QC flags and [interpreting the res
   - `allele_vs_snp`: allele differences against SNP differences, one panel per species, with the schema's number of loci on the axis (only when variant calling ran);
   - `timeline_<group>` and `timelines`: when and where each isolate was sampled, with each isolate joined to the earlier isolate it is closest to when that pair is within the threshold;
   - `tree_<group>` and `trees`: a minimum spanning tree of each group with three or more isolates;
+  - `species_<group>`: for groups whose schema has type strains, the ANI between every two of the group's isolates and the type strains as a heatmap, with a tree from average-linkage (UPGMA) clustering on the same ANI; the 95% species boundary is marked on both. With more than 10 type strains in the panel, only each isolate's 3 closest are shown;
   - `sample_qc`: how many isolates passed, warned or failed read and assembly QC, per species and per kind of sample;
   - `isolate_qc`: read depth, species purity, contamination and loci called per isolate against the QC cut-offs, with each schema's number of loci under the species, coloured by QC status, with Illumina and Nanopore isolates drawn as circles and triangles when both are present.
 

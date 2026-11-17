@@ -77,6 +77,13 @@ splits the reads of one isolate between species whose genomes share most of
 their sequence, and many genomes in RefSeq still carry the name of the species
 they were split from.
 
+Each transmission group with type strains also gets an all-against-all skani
+comparison of its isolates and the type strains, drawn in the report as a
+heatmap with a tree clustered on the same ANI (`species_<group>`). It shows
+whether the group's isolates belong to one species, and how clearly each is
+separated from the next closest species. The tree groups genomes by ANI; it is
+not a phylogeny.
+
 The species and genome size expectations for each schema are the
 `species_pattern`, `genera`, `genome_size_min_mb` and `genome_size_max_mb`
 columns of `assets/schemas.tsv`, listed on each

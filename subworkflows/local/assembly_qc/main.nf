@@ -1,7 +1,8 @@
 //
 // Assembly QC: QUAST statistics, Mash distance and skani ANI against the schema's
 // reference genome (when there is one), skani ANI against the type strains of the
-// species the schema covers, gambitcore completeness, read counts and depth from
+// species the schema covers (per isolate, and all against all per transmission
+// group with the group's isolates), gambitcore completeness, read counts and depth from
 // mapping the reads to the isolate's own assembly, and 7-gene MLST
 //
 
@@ -15,6 +16,7 @@ include { SAMTOOLS_COVERAGE } from '../../../modules/nf-core/samtools/coverage/m
 include { SAMTOOLS_FLAGSTAT } from '../../../modules/nf-core/samtools/flagstat/main'
 include { SKANI_DIST        } from '../../../modules/nf-core/skani/dist/main'
 include { SKANI_DIST as SKANI_TYPE_STRAINS } from '../../../modules/nf-core/skani/dist/main'
+include { SKANI_TRIANGLE    } from '../../../modules/nf-core/skani/triangle/main'
 include { MLST              } from '../../../modules/nf-core/mlst/main'
 include { MASH_DIST         } from '../../../modules/nf-core/mash/dist/main'
 
@@ -65,6 +67,14 @@ workflow ASSEMBLY_QC {
         }
         .set { ch_type_strain_ani }
     SKANI_TYPE_STRAINS ( ch_type_strain_ani.assembly, ch_type_strain_ani.type_strains )
+
+    ch_assembly
+        .join(ch_type_strains)
+        .map { meta, fasta, type_strains -> [ meta.transmission, fasta, type_strains ] }
+        .groupTuple()
+        .map { group, fastas, type_strains -> [ [ id: group ], fastas + type_strains.flatten().unique() ] }
+        .set { ch_group_genomes }
+    SKANI_TRIANGLE ( ch_group_genomes )
     MLST ( ch_assembly )
 
     ch_gambitcore = channel.empty()
@@ -117,6 +127,7 @@ workflow ASSEMBLY_QC {
     mash          = MASH_DIST.out.dist            // channel: [ val(meta), path(txt) ]
     ani           = SKANI_DIST.out.dist           // channel: [ val(meta), path(tsv) ]
     type_strains  = SKANI_TYPE_STRAINS.out.dist   // channel: [ val(meta), path(tsv) ]
+    group_ani     = SKANI_TRIANGLE.out.triangle   // channel: [ val(meta), path(tsv) ]
     multiqc_files = QUAST.out.tsv.map { _meta, tsv -> tsv }
         .mix(SAMTOOLS_FLAGSTAT.out.flagstat.map { _meta, txt -> txt }) // channel: [ path ]
 }
