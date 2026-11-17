@@ -7,7 +7,7 @@ assets/schemas.tsv. When both isolates are in a snp-dists matrix for their
 schema (masked pseudogenomes, recombination removed with Gubbins when there were
 enough usable isolates), their SNP distance is added; there is no SNP threshold, so
 these are for information only. Read and assembly QC from qc_summary.tsv
-(summarise_qc.py)
+(summarise_qc.py), with the species call from the type strains,
 is carried into each pair. Writes allele_qc.tsv, pairwise_distances.tsv and
 group_summary.tsv.
 """
@@ -185,6 +185,7 @@ def main():
             "assembly_flags": aqc.get("qc_flags", ""),
             "platform": aqc.get("platform", ""),
             "st": aqc.get("st", ""),
+            "species_call": aqc.get("species_call", ""),
         }
         qc_rows.append({
             "sample": sid,
@@ -220,6 +221,8 @@ def main():
                 "type_b": b.get("sample_type", ""),
                 "patient_a": a.get("studypatientnumber", ""),
                 "patient_b": b.get("studypatientnumber", ""),
+                "species_a": a["species_call"],
+                "species_b": b["species_call"],
                 "days_apart": "",
                 "schema": a["schema"] if a["schema"] == b["schema"] else f"{a['schema']}/{b['schema']}",
                 "shared_loci": "",
@@ -245,6 +248,8 @@ def main():
             if a["platform"] and b["platform"] and a["platform"] != b["platform"]:
                 notes.add(f"mixed platforms ({a['platform']}/{b['platform']}); "
                           "sequencing errors can add allele differences")
+            if a["species_call"] and b["species_call"] and a["species_call"] != b["species_call"]:
+                notes.add(f"different species ({a['species_call']} vs {b['species_call']})")
             if a["st"] not in ("", "-") and b["st"] not in ("", "-") and a["st"] != b["st"]:
                 notes.add(f"different MLST ST ({a['st']} vs {b['st']})")
             statuses = {s["assembly_qc"] for s in (a, b)}

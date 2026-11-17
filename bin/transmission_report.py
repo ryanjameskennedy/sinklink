@@ -16,6 +16,7 @@ import io
 import logging
 import math
 import re
+from collections import Counter
 from datetime import date, datetime
 from pathlib import Path
 
@@ -217,15 +218,31 @@ def inline_svg(svg, name):
                   lambda m: f"{m.group(1)}{prefix}-{m.group(2)}" if m.group(2) in ids else m.group(0), svg)
 
 
+SPECIES_FIELDS = ["species_call", "type_strain_species", "type_strain", "type_strain_ani"]
+
+
+def species_text(sample):
+    species = sample.get("type_strain_species", "")
+    ani = to_float(sample.get("type_strain_ani"))
+    if not species or ani is None:
+        return ""
+    strain = sample.get("type_strain", "")
+    if sample.get("species_call"):
+        return f"{species} ({ani:.1f}% ANI to {strain})"
+    return f"no species call: closest is {species} {strain} at {ani:.1f}%"
+
+
 def pair_tip(pair):
     days = to_int(pair.get("days_apart"))
     types = " – ".join(t for t in (pair.get("type_a", ""), pair.get("type_b", "")) if t)
+    species = (pair.get("species_a", ""), pair.get("species_b", ""))
     return [
         f"{pair['sample_a']} – {pair['sample_b']} ({pair['transmission']})",
         f"{plural(pair['diffs'], 'allele difference')}, {VERDICTS[pair['verdict']][0].lower()}",
         f"{plural(pair['snps'], 'SNP')}" if pair.get("snps") is not None else "",
         f"{plural(days, 'day')} apart" if days is not None else "",
         types,
+        f"Different species: {species[0]} – {species[1]}" if all(species) and species[0] != species[1] else "",
     ]
 
 
@@ -235,6 +252,7 @@ def isolate_tip(sid, sample):
     return [
         f"{sid} ({sample.get('transmission', '')})" if sample.get("transmission") else sid,
         " · ".join(x for x in (sample.get("sample_type", "").strip(), f"Study patient number {number}" if number else "") if x),
+        species_text(sample),
         f"sampled {sampled.date().isoformat()}" if sampled else "",
     ]
 
@@ -860,6 +878,7 @@ def qc_figure(figs, qc_rows, allele_qc, schemas, cutoffs, width_mm):
                     f"{r['sample']} ({PLATFORMS.get(platform, (platform,))[0]})" if platform else r["sample"],
                     f"{label}: {qc_value_text(field, value)}",
                     f"QC {QC_STATUS[status][0].lower()}" + (f": {flags}" if flags else ""),
+                    species_text(r),
                 ])
         if field == "fraction_called":
             for schema in order:
@@ -987,6 +1006,19 @@ def prepare_pairs(rows):
             "filtered": row.get("snp_recombination_filtered", ""),
         })
     return pairs
+
+
+def species_counts(sample_ids, metadata):
+    """The species called in a group, e.g. "Species: 2 E. asburiae, 1 not called.", or nothing when
+    its isolates were not compared with type strains."""
+    samples = [metadata[s] for s in sample_ids if s in metadata]
+    if not any(s.get("type_strain_species") for s in samples):
+        return ""
+    counts = Counter(s.get("species_call", "") for s in samples)
+    parts = [f"{n} {species_html(name)}" for name, n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])) if name]
+    if counts.get(""):
+        parts.append(f"{counts['']} not called")
+    return " Species: " + ", ".join(parts) + "."
 
 
 def span_text(values):
@@ -1304,6 +1336,9 @@ def main():
     summary = {r["transmission"]: r for r in read_tsv(args.groups)}
     allele_qc = read_tsv(args.allele_qc)
     qc_rows = read_tsv(args.qc_summary)
+    qc_by_sample = {r["sample"]: r for r in qc_rows}
+    for sid, sample in metadata.items():
+        sample.update({field: qc_by_sample.get(sid, {}).get(field, "") for field in SPECIES_FIELDS})
 
     groups = {}
     for sid, sample in metadata.items():
@@ -1342,7 +1377,7 @@ def main():
             "name": name,
             "species": species_html(row["species"]) if row["species"] else "",
             "overall": row["overall"],
-            "line": html.escape(line),
+            "line": html.escape(line) + species_counts(groups[name], metadata),
             "timeline": timelines.get(name),
             "tree": trees.get(name),
             "pairs": pair_rows,

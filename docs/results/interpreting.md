@@ -19,8 +19,12 @@ locus. Missing or ambiguous calls (`LNF`, `PLOT3`, `PLOT5`, `ASM`, `ALM`,
 differences. Novel alleles keep their `*` prefix so they never match a schema
 allele with the same number.
 
-The `notes` column lists QC flags of either isolate, different 7-gene STs and
-pairs sequenced on different platforms.
+The `notes` column lists QC flags of either isolate, different 7-gene STs,
+pairs sequenced on different platforms and pairs whose isolates were called as
+different species from the type strains (see
+[QC](../pipeline/qc.md#species-call)). Isolates of different species are not
+the same strain whatever their allele count; the verdict still follows the
+threshold, so read it together with this note.
 
 ## SNP distances
 
