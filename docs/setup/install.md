@@ -34,26 +34,28 @@ The containers are built with `singularity` and saved under the names Nextflow
 uses in its Singularity/Apptainer cache,
 and the chewBBACA and SAMtools images are the ones the pipeline runs. Use the
 same folder for `CONTAINERS_DIR` as `singularity.cacheDir` in your server config
-(on thedonkey, `/mnt/cache/singularity`) and the pipeline reuses those two
+and the pipeline reuses those two
 instead of downloading them again; it pulls the rest itself on its first run.
 
 ```bash
-make install ASSETS_DIR=/mnt/cache/dbs CONTAINERS_DIR=/mnt/cache/singularity
+make install ASSETS_DIR=/path/to/dbs CONTAINERS_DIR=/path/to/singularity
 ```
 
 or step by step:
 
 ```bash
-make -C containers all CONTAINERS_DIR=/mnt/cache/singularity
-make databases ASSETS_DIR=/mnt/cache/dbs
-make references ASSETS_DIR=/mnt/cache/dbs CONTAINERS_DIR=/mnt/cache/singularity
-make schemas ASSETS_DIR=/mnt/cache/dbs CONTAINERS_DIR=/mnt/cache/singularity
-make check ASSETS_DIR=/mnt/cache/dbs
+make -C containers all CONTAINERS_DIR=/path/to/singularity
+make databases ASSETS_DIR=/path/to/dbs
+make references ASSETS_DIR=/path/to/dbs CONTAINERS_DIR=/path/to/singularity
+make type_strains ASSETS_DIR=/path/to/dbs CONTAINERS_DIR=/path/to/singularity
+make schemas ASSETS_DIR=/path/to/dbs CONTAINERS_DIR=/path/to/singularity
+make check ASSETS_DIR=/path/to/dbs
 ```
 
 - [Schemas](schemas.md): what `make schemas` does and what to do when a
   download fails.
 - [Databases](databases.md): reference genomes, Deacon, GAMBIT, and how to
-  download the Kraken2/Bracken database, which `make install` leaves out.
+  download the Kraken2/Bracken database with `make kraken_db`, which
+  `make install` leaves out.
 
 Then [run the pipeline](../usage.md).

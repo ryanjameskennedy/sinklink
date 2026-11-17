@@ -24,6 +24,7 @@ The schema accepts _C. freundii_.
 | `species_pattern`               | `^Citrobacter freundii$` |
 | `genera`                        | Citrobacter              |
 | Expected genome size            | 4.7–5.9 Mb               |
+| `mlst_scheme`                   | `cfreundii`              |
 
 ## In the VASK study
 

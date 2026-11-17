@@ -16,8 +16,12 @@
   genome; sinklink does not do this. Only the chromosome is compared.
 - **Recombination filtering needs isolates.** Gubbins finds recombination by
   comparing many isolates of a species on a tree. With only a few isolates per
-  species it has little power, and with fewer than 3 sequences it does not
-  run; check `snp_recombination_filtered`.
+  species it has little power. It needs 4 sequences that are at most 25% `N`
+  or gap (the reference counts as one, so 3 isolates); with fewer, or if it
+  fails, the SNP distances are given without it. When it runs, an isolate above 25% is left
+  out and gets no SNP distance. Check `snp_recombination_filtered` and
+  `snp_distances/<schema>.missing.tsv`; an isolate of another species than the
+  reference can be 30% or more missing.
 - **Mixed-platform SNP distances** compare Snippy (Illumina) calls with Clair3
   (Nanopore) calls. Clair3 matches Illumina accuracy for SNPs on recent ONT
   data (Hall et al. 2024), but the masking differs with the depth on each

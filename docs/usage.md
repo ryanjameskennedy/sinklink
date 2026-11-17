@@ -114,9 +114,9 @@ a config (see [running on a server](setup/servers.md)):
 
 ```bash
 nextflow run ryanjameskennedy/sinklink -r v0.4.0 -profile singularity \
-    -c thedonkey.config -params-file thedonkey.yaml \
-    --input samplesheet.csv --metadata vask_colonisation_hidden.csv \
-    --outdir /media/Lagring/$USER/vask
+    -c server.config -params-file server.yaml \
+    --input samplesheet.csv --metadata metadata.csv \
+    --outdir results
 ```
 
 All options are listed under [parameters](reference/parameters.md). Nextflow
@@ -206,7 +206,7 @@ Specify the path to a specific config file (this is a core Nextflow command). Se
 
 ### Resource requests
 
-Each step requests CPUs, memory and time through its nf-core label. A step that runs out of memory or time is retried once with double the memory and time. To change the requests, or cap them at what your machine has, use a `-c` config; [running on a server](setup/servers.md) lists every tool with its label and the thedonkey settings.
+Each step requests CPUs, memory and time through its nf-core label. A step that runs out of memory or time is retried once with double the memory and time. To change the requests, or cap them at what your machine has, use a `-c` config; [running on a server](setup/servers.md) lists every tool with its label and our recommended settings.
 
 ### Custom Containers
 

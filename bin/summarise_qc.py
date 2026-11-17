@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
 """Summarise read and assembly QC for one isolate and check it against thresholds.
 
-Reads QUAST, samtools coverage, gambitcore, Kraken2/Bracken, mlst and Mash output
-for one isolate, checks them against assets/qc_thresholds.tsv and the species,
+Reads QUAST, samtools coverage and flagstat, gambitcore, Kraken2/Bracken, mlst,
+Mash and skani output for one isolate (skani also against the type strains of the species
+its schema covers, to name its species), checks them against assets/qc_thresholds.tsv and the species,
 genome size and reference genome expectations for its schema in
 assets/schemas.tsv, and writes a one-row TSV. Rows from all isolates are concatenated into qc_summary.tsv.
 """
 
 import argparse
 import csv
+import os
 import re
 import sys
 
 
 FIELDS = [
     "sample", "transmission", "growth", "schema", "platform",
-    "assembly_length", "contigs", "n50", "gc", "mean_depth",
-    "reference", "reference_distance", "genome_fraction",
+    "assembly_length", "contigs", "n50", "gc",
+    "reads", "mapped_fraction", "mean_depth", "breadth",
+    "reference", "reference_length", "reference_ani", "reference_aligned_fraction", "reference_distance", "genome_fraction",
+    "species_call", "type_strain_species", "type_strain", "type_strain_ani", "type_strain_aligned_fraction",
     "gambit_species", "completeness", "gambit_qc",
     "species_source", "top_species", "top_species_fraction",
     "expected_species_fraction", "other_genus_fraction",
@@ -54,20 +58,87 @@ def quast_metrics(path):
         "n50": to_float(metrics.get("N50")),
         "gc": to_float(metrics.get("GC (%)")),
         "genome_fraction": to_float(metrics.get("Genome fraction (%)")),
+        "reference_length": to_float(metrics.get("Reference length")),
     }
 
 
-def mean_depth(path):
+def coverage_metrics(path):
+    """Length-weighted mean depth and the share of assembly bases covered, from samtools coverage."""
     if not path:
-        return None
-    total_length = weighted = 0.0
+        return None, None
+    total_length = weighted = covered = 0.0
     for row in read_tsv(path):
         length = to_float(row.get("endpos"))
         depth = to_float(row.get("meandepth"))
+        bases = to_float(row.get("covbases"))
         if length and depth is not None:
             total_length += length
             weighted += length * depth
-    return weighted / total_length if total_length else None
+            covered += bases or 0.0
+    if not total_length:
+        return None, None
+    return weighted / total_length, covered / total_length
+
+
+def flagstat_metrics(path):
+    """Primary reads and the share of them mapped, from samtools flagstat."""
+    if not path:
+        return None, None
+    counts = {}
+    with open(path) as handle:
+        for line in handle:
+            match = re.match(r"(\d+) \+ (\d+) (.+?)(?: \(|$)", line.strip())
+            if match:
+                counts[match.group(3).strip()] = int(match.group(1)) + int(match.group(2))
+    if "primary" in counts:
+        reads, mapped = counts["primary"], counts.get("primary mapped")
+    elif "in total (QC-passed reads + QC-failed reads)" in counts:
+        extra = counts.get("secondary", 0) + counts.get("supplementary", 0)
+        reads = counts["in total (QC-passed reads + QC-failed reads)"] - extra
+        mapped = counts["mapped"] - extra if "mapped" in counts else None
+    else:
+        return None, None
+    return reads, (mapped / reads if reads and mapped is not None else None)
+
+
+def skani_ani(path):
+    """(ANI %, aligned fraction of the assembly %) from skani dist, or (None, None) when skani
+    reports no hit, which it does below about 80% ANI."""
+    if not path:
+        return None, None
+    rows = read_tsv(path)
+    if not rows:
+        return None, None
+    return to_float(rows[0].get("ANI")), to_float(rows[0].get("Align_fraction_query"))
+
+
+SPECIES_ANI = 95
+
+
+def closest_type_strain(path, table):
+    """The type strain with the highest skani ANI to the assembly, and its species when the ANI is
+    at least the 95% species boundary."""
+    if not path or not table:
+        return {}
+    strains = {row["accession"]: row for row in read_tsv(table)}
+    best = None
+    for row in read_tsv(path):
+        ani = to_float(row.get("ANI"))
+        if ani is not None and (best is None or ani > best[0]):
+            accession = re.sub(r"\.(fasta|fna|fa)(\.gz)?$", "", os.path.basename(row.get("Ref_file", "")))
+            best = (ani, to_float(row.get("Align_fraction_query")), accession)
+    if best is None:
+        return {}
+    ani, aligned, accession = best
+    strain = strains.get(accession, {})
+    species = strain.get("species", "")
+    return {
+        "species_call": species if ani >= SPECIES_ANI else "",
+        "type_strain_species": species,
+        "type_strain": strain.get("strain", accession),
+        "type_strain_ani": ani,
+        "type_strain_aligned_fraction": aligned,
+    }
 
 
 def gambitcore_metrics(path):
@@ -138,11 +209,15 @@ def main():
     parser.add_argument("--assembly")
     parser.add_argument("--quast", help="QUAST report.tsv")
     parser.add_argument("--coverage", help="samtools coverage output")
+    parser.add_argument("--flagstat", help="samtools flagstat output")
     parser.add_argument("--gambitcore")
     parser.add_argument("--bracken", help="Bracken species-level output")
     parser.add_argument("--kraken-report")
     parser.add_argument("--mlst", help="mlst TSV output")
     parser.add_argument("--mash", help="mash dist output, reference against assembly")
+    parser.add_argument("--ani", help="skani dist output, assembly against reference")
+    parser.add_argument("--type-strains", help="skani dist output, assembly against the schema's type strains")
+    parser.add_argument("--type-strain-table", help="assets/type_strains.tsv")
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
@@ -160,7 +235,10 @@ def main():
             flags.append((severity, name))
 
     quast = quast_metrics(args.quast)
-    depth = mean_depth(args.coverage)
+    depth, breadth = coverage_metrics(args.coverage)
+    reads, mapped_fraction = flagstat_metrics(args.flagstat)
+    ani, ani_aligned = skani_ani(args.ani)
+    type_strain = closest_type_strain(args.type_strains, args.type_strain_table)
     gambit = gambitcore_metrics(args.gambitcore)
     source, fractions = species_fractions(args.bracken, args.kraken_report)
     mlst_scheme, st = mlst_result(args.mlst)
@@ -175,6 +253,10 @@ def main():
         check("warn", "depth_not_measured", has_assembly)
     elif value is not None:
         check(severity, f"low_depth({depth:.0f}x<{value:g}x)", depth < value)
+
+    value, severity = limit("min_mapped_fraction")
+    if mapped_fraction is not None and value is not None:
+        check(severity, f"low_mapped_reads({mapped_fraction:.2f}<{value:g})", mapped_fraction < value)
 
     value, severity = limit("max_contigs")
     contigs = quast.get("contigs")
@@ -200,9 +282,16 @@ def main():
     if completeness is not None and value is not None:
         check(severity, f"low_completeness({completeness:.1f}%<{value:g}%)", completeness < value)
 
-    value, severity = limit("max_reference_distance")
-    if ref_distance is not None and value is not None:
-        check(severity, f"distant_reference({ref_distance:.3f}>{value:g})", ref_distance > value)
+    value, severity = limit("min_reference_ani")
+    if args.ani and value is not None:
+        if ani is None:
+            check(severity, "distant_reference(ANI<80%)", True)
+        else:
+            check(severity, f"distant_reference(ANI {ani:.2f}%<{value:g}%)", ani < value)
+    else:
+        value, severity = limit("max_reference_distance")
+        if ref_distance is not None and value is not None:
+            check(severity, f"distant_reference({ref_distance:.3f}>{value:g})", ref_distance > value)
 
     top_species = top_fraction = expected_fraction = other_genus = None
     if fractions:
@@ -244,10 +333,21 @@ def main():
         "contigs": fmt(contigs),
         "n50": fmt(n50),
         "gc": fmt(quast.get("gc"), 2),
+        "reads": fmt(reads),
+        "mapped_fraction": fmt(mapped_fraction, 3),
         "mean_depth": fmt(depth, 1),
+        "breadth": fmt(breadth, 3),
         "reference": args.reference,
+        "reference_length": fmt(quast.get("reference_length")),
+        "reference_ani": fmt(ani, 2),
+        "reference_aligned_fraction": fmt(ani_aligned, 1),
         "reference_distance": fmt(ref_distance, 4),
         "genome_fraction": fmt(quast.get("genome_fraction"), 2),
+        "species_call": type_strain.get("species_call", ""),
+        "type_strain_species": type_strain.get("type_strain_species", ""),
+        "type_strain": type_strain.get("type_strain", ""),
+        "type_strain_ani": fmt(type_strain.get("type_strain_ani"), 2),
+        "type_strain_aligned_fraction": fmt(type_strain.get("type_strain_aligned_fraction"), 1),
         "gambit_species": gambit.get("gambit_species", ""),
         "completeness": fmt(completeness, 2),
         "gambit_qc": gambit.get("gambit_qc", ""),

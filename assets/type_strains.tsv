@@ -1,0 +1,43 @@
+schema	species	strain	accession
+smarcescens	Serratia marcescens	ATCC 13880	GCF_017654245.1
+smarcescens	Serratia marcescens subsp. sakuensis	KCTC 42172	GCF_003428265.1
+smarcescens	Serratia ureilytica	JCM 16474	GCF_039523675.1
+smarcescens	Serratia sarumanii	K-M0706	GCF_029962605.1
+smarcescens	Serratia bockelmannii	S3	GCF_008011855.1
+smarcescens	Serratia nevei	LMG 31536	GCF_037948395.1
+smarcescens	Serratia nematodiphila	DSM 21420	GCF_000738675.1
+smarcescens	Serratia montpellierensis	PsyLou2A	GCF_020858655.1
+ecloacae,ehormaechei	Enterobacter adelaidei	ECC3473	GCF_041937165.1
+ecloacae,ehormaechei	Enterobacter asburiae	ATCC 35953	GCF_001521715.1
+ecloacae,ehormaechei	Enterobacter bugandensis	EB-247	GCF_900324475.1
+ecloacae,ehormaechei	Enterobacter cancerogenus	DSM 17580	GCF_019047785.1
+ecloacae,ehormaechei	Enterobacter chengduensis	WCHECl-C4	GCF_001984825.2
+ecloacae,ehormaechei	Enterobacter chinensis	170198	GCF_034008295.1
+ecloacae,ehormaechei	Enterobacter chuandaensis	090028	GCF_003594915.1
+ecloacae,ehormaechei	Enterobacter cloacae subsp. cloacae	ATCC 13047	GCF_000025565.1
+ecloacae,ehormaechei	Enterobacter cloacae subsp. dissolvens	ATCC 23373	GCF_009660455.1
+ecloacae,ehormaechei	Enterobacter dykesii	E1	GCF_008364625.2
+ecloacae,ehormaechei	Enterobacter hoffmannii subsp. nototheniae	CCM 8629	GCF_052922205.1
+ecloacae,ehormaechei	Enterobacter hormaechei subsp. hormaechei	DSM 12409	GCF_019048245.1
+ecloacae,ehormaechei	Enterobacter hormaechei subsp. hoffmannii	DSM 14563	GCF_001729745.1
+ecloacae,ehormaechei	Enterobacter hormaechei subsp. oharae	DSM 16687	GCF_001729705.1
+ecloacae,ehormaechei	Enterobacter hormaechei subsp. steigerwaltii	DSM 16691	GCF_001729725.1
+ecloacae,ehormaechei	Enterobacter hormaechei subsp. xiangfangensis	LMG 27195	GCF_001729785.1
+ecloacae,ehormaechei	Enterobacter huaxiensis	090008	GCF_003594935.2
+ecloacae,ehormaechei	Enterobacter intestinihominis	CLA-AC-H004	GCF_040096145.1
+ecloacae,ehormaechei	Enterobacter kobei	DSM 13645	GCF_001729765.1
+ecloacae,ehormaechei	Enterobacter ludwigii	EN-119	GCF_001750725.1
+ecloacae,ehormaechei	Enterobacter mori	LMG 25706	GCF_000211415.1
+ecloacae,ehormaechei	Enterobacter nematophilus	E-TC7	GCF_026344075.1
+ecloacae,ehormaechei	Enterobacter oligotrophicus	CCA6	GCF_009176645.1
+ecloacae,ehormaechei	Enterobacter pasteurii	A-8	GCF_028890245.1
+ecloacae,ehormaechei	Enterobacter pseudoroggenkampii	155092	GCF_026420145.1
+ecloacae,ehormaechei	Enterobacter quasihormaechei	WCHEQ120003	GCF_004331385.1
+ecloacae,ehormaechei	Enterobacter quasimori	090044	GCF_003964905.1
+ecloacae,ehormaechei	Enterobacter quasiroggenkampii	WCHECL1060	GCF_001039365.2
+ecloacae,ehormaechei	Enterobacter roggenkampii	DSM 16690	GCF_001729805.1
+ecloacae,ehormaechei	Enterobacter rongchengensis	170250	GCF_034008275.1
+ecloacae,ehormaechei	Enterobacter sichuanensis	WCHECL1597	GCF_025002605.1
+ecloacae,ehormaechei	Enterobacter soli	ATCC BAA-2102	GCF_001654845.1
+ecloacae,ehormaechei	Enterobacter vonholyi	E13	GCF_008364555.1
+ecloacae,ehormaechei	Enterobacter wuhouensis	WCHEW120002	GCF_004331265.1

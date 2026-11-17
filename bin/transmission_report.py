@@ -10,13 +10,13 @@ without rerunning the pipeline.
 """
 
 import argparse
-import base64
 import csv
 import html
 import io
 import logging
 import math
 import re
+from collections import Counter
 from datetime import date, datetime
 from pathlib import Path
 
@@ -25,8 +25,10 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 from matplotlib.lines import Line2D
-from matplotlib.patches import Patch
+from matplotlib.patches import Patch, Rectangle
 from matplotlib.ticker import FixedLocator, MaxNLocator, NullLocator
 
 logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
@@ -56,13 +58,20 @@ KINDS = {
     "environment": ("Environment", AQUA, "s"),
     "patient": ("Patient", VIOLET, "o"),
 }
+SPECIES_ANI = 95
+ANI_FLOOR = 80
+PANEL_SHOWN = 10
+PANEL_CLOSEST = 3
+ANI_COLOURS = LinearSegmentedColormap.from_list(
+    "ani", [(0.0, "#f4f3ee"), (0.749, "#c4d3e0"), (0.75, "#79abd0"), (1.0, "#123f63")])
+ANI_NORM = Normalize(ANI_FLOOR, 100)
 QC_STATUS = {
     "pass": ("Pass", "#0ca30c", "#ffffff"),
     "warn": ("Warn", "#fab219", "#0b0b0b"),
     "fail": ("Fail", "#d03b3b", "#ffffff"),
     "": ("Not checked", GREY, "#ffffff"),
 }
-ROMAN_WORDS = {"species", "complex", "group"}
+ROMAN_WORDS = {"species", "complex", "group", "subsp."}
 DISTANCE_TICKS = [0, 5, 10, 15, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000]
 MM = 1 / 25.4
 
@@ -166,19 +175,95 @@ def style(font_size):
 
 
 class Figures:
+    """Saves figures, and gives every point tagged with tip() a hover label in the SVG."""
+
     def __init__(self, outdir, formats, dpi):
         self.dir = Path(outdir) / "figures"
         self.dir.mkdir(parents=True, exist_ok=True)
         self.formats = formats
         self.dpi = dpi
+        self.tips = {}
+        self.count = 0
+
+    def tip(self, artist, lines):
+        self.count += 1
+        gid = f"tip-{self.count}"
+        artist.set_gid(gid)
+        self.tips[gid] = "\n".join(line for line in lines if line)
 
     def save(self, fig, name):
-        for fmt in self.formats:
-            fig.savefig(self.dir / f"{name}.{fmt}", dpi=self.dpi, bbox_inches="tight")
-        buffer = io.BytesIO()
+        buffer = io.StringIO()
         fig.savefig(buffer, format="svg", bbox_inches="tight")
+        svg = add_tips(buffer.getvalue(), self.tips)
+        self.tips = {}
+        for fmt in self.formats:
+            path = self.dir / f"{name}.{fmt}"
+            if fmt == "svg":
+                path.write_text(svg, encoding="utf-8")
+            else:
+                fig.savefig(path, dpi=self.dpi, bbox_inches="tight")
         plt.close(fig)
-        return f"data:image/svg+xml;base64,{base64.b64encode(buffer.getvalue()).decode()}"
+        return inline_svg(svg, name)
+
+
+def add_tips(svg, tips):
+    def label(match):
+        text = tips.get(match.group(1))
+        if text is None:
+            return match.group(0)
+        return f'<g id="{match.group(1)}" class="pt"{match.group(2)}><title>{html.escape(text)}</title>'
+    return re.sub(r'<g id="(tip-\d+)"([^>]*)>', label, svg)
+
+
+def inline_svg(svg, name):
+    """The SVG ready to place in the HTML: no XML prolog, ids unique to this figure and a scalable size."""
+    svg = svg[svg.index("<svg"):]
+    svg = re.sub(r"<style[^>]*>.*?</style>", "", svg, flags=re.S)
+    svg = re.sub(r'(<svg[^>]*?)\s(?:width|height)="[^"]*"', r"\1", svg, count=1)
+    svg = re.sub(r'(<svg[^>]*?)\s(?:width|height)="[^"]*"', r"\1", svg, count=1)
+    ids = set(re.findall(r'\bid="([^"]+)"', svg))
+    prefix = re.sub(r"[^\w-]", "_", name)
+    return re.sub(r'(\bid="|url\(#|href="#)([^")]+)',
+                  lambda m: f"{m.group(1)}{prefix}-{m.group(2)}" if m.group(2) in ids else m.group(0), svg)
+
+
+SPECIES_FIELDS = ["species_call", "type_strain_species", "type_strain", "type_strain_ani"]
+
+
+def species_text(sample):
+    species = sample.get("type_strain_species", "")
+    ani = to_float(sample.get("type_strain_ani"))
+    if not species or ani is None:
+        return ""
+    strain = sample.get("type_strain", "")
+    if sample.get("species_call"):
+        return f"{species} ({ani:.1f}% ANI to {strain})"
+    return f"no species call: closest is {species} {strain} at {ani:.1f}%"
+
+
+def pair_tip(pair):
+    days = to_int(pair.get("days_apart"))
+    types = " – ".join(t for t in (pair.get("type_a", ""), pair.get("type_b", "")) if t)
+    species = (pair.get("species_a", ""), pair.get("species_b", ""))
+    return [
+        f"{pair['sample_a']} – {pair['sample_b']} ({pair['transmission']})",
+        f"{plural(pair['diffs'], 'allele difference')}, {VERDICTS[pair['verdict']][0].lower()}",
+        f"{plural(pair['snps'], 'SNP')}" if pair.get("snps") is not None else "",
+        f"{plural(days, 'day')} apart" if days is not None else "",
+        types,
+        f"Different species: {species[0]} – {species[1]}" if all(species) and species[0] != species[1] else "",
+    ]
+
+
+def isolate_tip(sid, sample):
+    number = sample.get("studypatientnumber", "").strip()
+    sampled = parse_date(sample.get("date"))
+    return [
+        f"{sid} ({sample.get('transmission', '')})" if sample.get("transmission") else sid,
+        " · ".join(x for x in (sample.get("sample_type", "").strip(), f"Study patient number {number}" if number else "") if x),
+        species_text(sample),
+        f"sampled {sampled.date().isoformat()}" if sampled else "",
+    ]
 
 
 def sample_kind(sample, environment_types):
@@ -213,7 +298,7 @@ def distance_axis(ax, axis, values, thresholds):
 def verdict_marker(ax, x, y, verdict, kind, size=34, zorder=3):
     _, colour, filled = VERDICTS[verdict]
     marker = PAIR_KINDS[kind][1]
-    ax.scatter(
+    return ax.scatter(
         x, y, s=size, marker=marker, zorder=zorder,
         facecolors=colour if filled else SURFACE,
         edgecolors=SURFACE if filled else colour,
@@ -300,7 +385,8 @@ def overview_figure(figs, rows_by_schema, schemas, width_mm, environment_types):
                 kind = pair_kind(pair, environment_types)
                 verdicts.add(pair["verdict"])
                 kinds.add(kind)
-                verdict_marker(ax, pair["diffs"], y_of[group] + offset, pair["verdict"], kind)
+                figs.tip(verdict_marker(ax, pair["diffs"], y_of[group] + offset, pair["verdict"], kind),
+                         pair_tip(pair))
         ax.set_yticks(range(len(groups)), groups)
         ax.set_ylim(-0.6, len(groups) - 0.4)
         ax.tick_params(axis="y", length=0)
@@ -308,11 +394,17 @@ def overview_figure(figs, rows_by_schema, schemas, width_mm, environment_types):
         ax.grid(axis="x", zorder=0)
         ax.set_axisbelow(True)
         ax.set_title(species_label(info["organism"]), loc="left", pad=3)
-        ax.set_title(threshold_text(info), loc="right", pad=3, color=INK2)
+        ax.set_title(" · ".join(t for t in (loci_text(info), threshold_text(info)) if t), loc="right", pad=3,
+                     color=INK2)
         distance_axis(ax, "x", all_values, all_thresholds)
     axes[-1, 0].set_xlabel("Allele differences")
     verdict_legend(fig, verdicts, kinds)
     return figs.save(fig, "distance_overview")
+
+
+def loci_text(info):
+    loci = to_int(info.get("loci"))
+    return f"{loci:,} loci" if loci else ""
 
 
 def threshold_text(info):
@@ -346,16 +438,21 @@ def time_figure(figs, rows_by_schema, schemas, width_mm, environment_types):
             kind = pair_kind(pair, environment_types)
             verdicts.add(pair["verdict"])
             kinds.add(kind)
-            verdict_marker(ax, pair["days"], pair["diffs"], pair["verdict"], kind, size=26)
+            figs.tip(verdict_marker(ax, pair["days"], pair["diffs"], pair["verdict"], kind, size=26), pair_tip(pair))
         distance_axis(ax, "y", [p["diffs"] for p in pairs], [info["borderline"] or info["threshold"]])
         days_axis(ax, max(p["days"] for p in pairs))
         ax.grid(axis="y")
         ax.set_axisbelow(True)
         ax.set_title(species_label(info["organism"]), loc="left", pad=3)
         ax.set_xlabel("Days between samples")
-        ax.set_ylabel("Allele differences")
+        ax.set_ylabel(allele_label(info))
     verdict_legend(fig, verdicts, kinds)
     return figs.save(fig, "distance_vs_time")
+
+
+def allele_label(info):
+    loci = loci_text(info)
+    return f"Allele differences ({loci})" if loci else "Allele differences"
 
 
 def days_axis(ax, longest):
@@ -380,7 +477,7 @@ def snp_figure(figs, rows_by_schema, schemas, width_mm, environment_types):
             kind = pair_kind(pair, environment_types)
             verdicts.add(pair["verdict"])
             kinds.add(kind)
-            verdict_marker(ax, pair["diffs"], pair["snps"], pair["verdict"], kind, size=26)
+            figs.tip(verdict_marker(ax, pair["diffs"], pair["snps"], pair["verdict"], kind, size=26), pair_tip(pair))
         distance_axis(ax, "x", [p["diffs"] for p in pairs], [info["borderline"] or info["threshold"]])
         distance_axis(ax, "y", [p["snps"] for p in pairs], [])
         ax.grid(True)
@@ -388,7 +485,7 @@ def snp_figure(figs, rows_by_schema, schemas, width_mm, environment_types):
         filtered = {p["filtered"] for p in pairs}
         note = " (Gubbins)" if filtered == {"yes"} else ""
         ax.set_title(species_label(info["organism"]), loc="left", pad=3)
-        ax.set_xlabel("Allele differences")
+        ax.set_xlabel(allele_label(info))
         ax.set_ylabel(f"SNP differences{note}")
     verdict_legend(fig, verdicts, kinds)
     return figs.save(fig, "allele_vs_snp")
@@ -407,7 +504,7 @@ def isolate_rows(isolates, environment_types):
     return {sid: y_of[label] for sid, (_, label) in keys.items()}, [label for _, label in order]
 
 
-def draw_timeline(ax, group, isolates, links, environment_types, show_xlabel=True):
+def draw_timeline(figs, ax, group, isolates, links, environment_types, show_xlabel=True):
     dated = [s for s in isolates if parse_date(s.get("date"))]
     row_of, labels = isolate_rows(dated, environment_types)
     x_of = {s["sample"]: mdates.date2num(parse_date(s["date"])) for s in dated}
@@ -437,7 +534,8 @@ def draw_timeline(ax, group, isolates, links, environment_types, show_xlabel=Tru
         kind = sample_kind(sample, environment_types)
         _, colour, marker = KINDS[kind]
         x, y = x_of[sid], row_of[sid]
-        ax.scatter(x, y, s=34, marker=marker, facecolors=colour, edgecolors=SURFACE, linewidths=0.6, zorder=3)
+        figs.tip(ax.scatter(x, y, s=34, marker=marker, facecolors=colour, edgecolors=SURFACE, linewidths=0.6,
+                            zorder=3), isolate_tip(sid, sample))
         close = y in last and span and (x - last[y][0]) < 0.08 * span
         below = close and not last[y][1]
         last[y] = (x, below)
@@ -505,7 +603,7 @@ def timeline_figures(figs, groups, metadata, pairs_by_group, width_mm, environme
         n_rows = len(isolate_rows([s for s in isolates if parse_date(s.get("date"))], environment_types)[1])
         height = 0.34 * n_rows + 0.85
         fig, ax = plt.subplots(figsize=(width_mm * MM, height))
-        draw_timeline(ax, group, isolates, links, environment_types)
+        draw_timeline(figs, ax, group, isolates, links, environment_types)
         timeline_legend(fig, links)
         images[group] = figs.save(fig, f"timeline_{safe_name(group)}")
         panels.append((group, isolates, links, n_rows))
@@ -514,7 +612,7 @@ def timeline_figures(figs, groups, metadata, pairs_by_group, width_mm, environme
         fig, axes = plt.subplots(len(panels), 1, figsize=(width_mm * MM, sum(heights) + 0.3), squeeze=False,
                                  gridspec_kw={"height_ratios": heights, "hspace": 0.9})
         for ax, (group, isolates, links, _) in zip(axes[:, 0], panels):
-            draw_timeline(ax, group, isolates, links, environment_types, show_xlabel=False)
+            draw_timeline(figs, ax, group, isolates, links, environment_types, show_xlabel=False)
         axes[-1, 0].set_xlabel("Sampling date")
         timeline_legend(fig, [link for p in panels for link in p[2]])
         images["_all"] = figs.save(fig, "timelines")
@@ -569,7 +667,7 @@ def radial_layout(root, edges):
     return pos, parent
 
 
-def draw_tree(ax, group, isolates, pairs, environment_types):
+def draw_tree(figs, ax, group, isolates, pairs, environment_types):
     nodes = sorted({p[s] for p in pairs for s in ("sample_a", "sample_b")}, key=natural_key)
     distance, verdict_of = {}, {}
     for p in pairs:
@@ -597,7 +695,8 @@ def draw_tree(ax, group, isolates, pairs, environment_types):
         kind = sample_kind(by_id.get(node, {}), environment_types)
         _, colour, marker = KINDS[kind]
         x, y = pos[node]
-        ax.scatter(x, y, s=70, marker=marker, facecolors=colour, edgecolors=SURFACE, linewidths=0.8, zorder=3)
+        figs.tip(ax.scatter(x, y, s=70, marker=marker, facecolors=colour, edgecolors=SURFACE, linewidths=0.8,
+                            zorder=3), isolate_tip(node, by_id.get(node, {})))
         if node in parent:
             px, py = pos[parent[node]]
             angle = math.atan2(y - py, x - px) + math.pi / 2
@@ -636,16 +735,194 @@ def tree_figures(figs, groups, metadata, pairs_by_group, width_mm, environment_t
         isolates = [metadata[s] for s in groups[group] if s in metadata]
         size = width_mm * MM / 2
         fig, ax = plt.subplots(figsize=(size, size))
-        draw_tree(ax, group, isolates, pairs, environment_types)
+        draw_tree(figs, ax, group, isolates, pairs, environment_types)
         tree_legend(fig, {p["verdict"] for p in pairs})
         images[group] = figs.save(fig, f"tree_{safe_name(group)}")
         panels.append((group, isolates, pairs))
     if len(panels) > 1:
         fig, axes = small_multiples(len(panels), width_mm, width_mm * MM / 4)
         for ax, (group, isolates, pairs) in zip(axes, panels):
-            draw_tree(ax, group, isolates, pairs, environment_types)
+            draw_tree(figs, ax, group, isolates, pairs, environment_types)
         tree_legend(fig, {p["verdict"] for _, _, ps in panels for p in ps})
         images["_all"] = figs.save(fig, "trees")
+    return images
+
+
+def genome_id(path):
+    return re.sub(r"\.(fasta|fna|fa)(\.gz)?$", "", Path(path).name)
+
+
+def load_group_ani(directory):
+    """{group: {(genome_a, genome_b): (ANI, (aligned share of a, of b))}} from skani triangle --sparse."""
+    groups = {}
+    if not directory or not Path(directory).is_dir():
+        return groups
+    for path in sorted(Path(directory).glob("*.tsv")):
+        pairs = {}
+        for row in read_tsv(path):
+            a, b = genome_id(row.get("Ref_file", "")), genome_id(row.get("Query_file", ""))
+            ani = to_float(row.get("ANI"))
+            if a and b and a != b and ani is not None:
+                aligned = (to_float(row.get("Align_fraction_ref")), to_float(row.get("Align_fraction_query")))
+                pairs[(a, b)] = (ani, aligned)
+                pairs[(b, a)] = (ani, aligned[::-1])
+        groups[path.name[:-len(".tsv")]] = pairs
+    return groups
+
+
+def upgma(n, distance):
+    """Average-linkage tree over n leaves; each join's height is the mean distance between its two sides."""
+    nodes = {i: {"leaf": i, "height": 0.0, "size": 1} for i in range(n)}
+    dist = {frozenset((i, j)): distance(i, j) for i in range(n) for j in range(i + 1, n)}
+    next_id = n
+    while len(nodes) > 1:
+        pair = min(dist, key=lambda k: (dist[k], sorted(k)))
+        i, j = sorted(pair)
+        a, b = nodes.pop(i), nodes.pop(j)
+        merged = {"children": [a, b], "height": dist[pair], "size": a["size"] + b["size"]}
+        for k in nodes:
+            dist[frozenset((next_id, k))] = ((dist[frozenset((i, k))] * a["size"] + dist[frozenset((j, k))] * b["size"])
+                                             / merged["size"])
+        dist = {key: value for key, value in dist.items() if i not in key and j not in key}
+        nodes[next_id] = merged
+        next_id += 1
+    return next(iter(nodes.values()))
+
+
+def tree_leaves(node):
+    return [node["leaf"]] if "leaf" in node else [leaf for child in node["children"] for leaf in tree_leaves(child)]
+
+
+def draw_dendrogram(ax, node, y_of):
+    if "leaf" in node:
+        return y_of[node["leaf"]]
+    ys = [draw_dendrogram(ax, child, y_of) for child in node["children"]]
+    for child, y in zip(node["children"], ys):
+        ax.plot([child["height"], node["height"]], [y, y], color=INK2, linewidth=0.7, solid_capstyle="butt")
+    ax.plot([node["height"], node["height"]], ys, color=INK2, linewidth=0.7, solid_capstyle="butt")
+    return sum(ys) / 2
+
+
+def species_panel(sample_ids, pairs, strains, schemas_in_group):
+    """The isolates and type strains to draw for one group, and how many type strains are left out."""
+    present = {a for a, _ in pairs}
+    isolates = [s for s in sample_ids if s in present]
+    panel = [acc for acc, row in strains.items()
+             if {s.strip() for s in row.get("schema", "").split(",")} & schemas_in_group or
+             (not schemas_in_group and acc in present)]
+    if not isolates or not panel:
+        return isolates, [], 0
+    if len(panel) <= PANEL_SHOWN:
+        return isolates, panel, 0
+    closest = {acc for s in isolates
+               for acc in sorted(panel, key=lambda acc: -pairs.get((s, acc), (0,))[0])[:PANEL_CLOSEST]
+               if (s, acc) in pairs}
+    shown = [acc for acc in panel if acc in closest]
+    return isolates, shown, len(panel) - len(shown)
+
+
+def strain_label(row, accession):
+    species = row.get("species", "")
+    strain = row.get("strain", "") or accession
+    return f"{species_label(species)} {strain}" + r"$^{\mathrm{T}}$" if species else accession
+
+
+def species_figure(figs, group, isolates, type_strains, pairs, strains, metadata, environment_types):
+    ids = isolates + type_strains
+    n = len(ids)
+    plain = {g: (f"{strains[g].get('species', '')} {strains[g].get('strain', '')}".strip() if g in strains else g)
+             for g in ids}
+
+    def ani(i, j):
+        return 100.0 if i == j else pairs.get((ids[i], ids[j]), (None, (None, None)))[0]
+
+    tree = upgma(n, lambda i, j: 100 - (ani(i, j) if ani(i, j) is not None else ANI_FLOOR - 5))
+    order = tree_leaves(tree)
+    y_of = {leaf: row for row, leaf in enumerate(order)}
+    side = n * 0.2
+    tree_width, gap, labels, bottom, top_margin = 1.0, 0.04, 2.6, 0.85, 0.1
+    width, height = tree_width + gap + side + labels, bottom + side + top_margin
+    fig = plt.figure(figsize=(width, height))
+    ax_tree = fig.add_axes([0, bottom / height, tree_width / width, side / height])
+    ax_map = fig.add_axes([(tree_width + gap) / width, bottom / height, side / width, side / height])
+    cax = fig.add_axes([(tree_width + gap) / width, 0.25 / height, max(side, 2.2) / width, 0.09 / height])
+
+    if n > 1:
+        draw_dendrogram(ax_tree, tree, y_of)
+    top = max(tree["height"], 100 - SPECIES_ANI) * 1.08
+    ax_tree.axvline(100 - SPECIES_ANI, color=INK2, linewidth=0.6, linestyle=(0, (3, 2)))
+    ax_tree.set_xlim(top, 0)
+    ax_tree.set_ylim(n - 0.5, -0.5)
+    ax_tree.xaxis.set_major_locator(MaxNLocator(nbins=3, integer=True))
+    ax_tree.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{100 - v:g}"))
+    ax_tree.set_xlabel("ANI (%)")
+    ax_tree.set_yticks([])
+    for spine in ("left", "right", "top"):
+        ax_tree.spines[spine].set_visible(False)
+
+    annotate = n <= 12
+    for i in range(n):
+        for j in range(n):
+            value = ani(i, j)
+            x, y = y_of[j], y_of[i]
+            if value is None:
+                rect = Rectangle((x - 0.5, y - 0.5), 1, 1, facecolor=SURFACE, edgecolor=AXIS, hatch="////",
+                                 linewidth=0)
+            else:
+                rect = Rectangle((x - 0.5, y - 0.5), 1, 1, facecolor=ANI_COLOURS(ANI_NORM(max(value, ANI_FLOOR))),
+                                 edgecolor=SURFACE, linewidth=0.5)
+            ax_map.add_patch(rect)
+            if i != j:
+                aligned = pairs.get((ids[i], ids[j]), (None, (None, None)))[1]
+                figs.tip(rect, [
+                    f"{plain[ids[i]]} – {plain[ids[j]]}",
+                    f"{value:.2f}% ANI" if value is not None else f"below about {ANI_FLOOR}% ANI (not reported by skani)",
+                    f"{aligned[0]:.0f}% and {aligned[1]:.0f}% aligned" if value is not None and None not in aligned else "",
+                ])
+            if annotate and i != j and value is not None:
+                ax_map.text(x, y, f"{value:.1f}", ha="center", va="center", fontsize=5,
+                            color=SURFACE if value >= SPECIES_ANI else INK)
+    ax_map.set_xlim(-0.5, n - 0.5)
+    ax_map.set_ylim(n - 0.5, -0.5)
+    ax_map.set_xticks([])
+    ax_map.yaxis.tick_right()
+    labels = []
+    for leaf in order:
+        genome = ids[leaf]
+        labels.append(strain_label(strains[genome], genome) if genome in strains else genome)
+    ax_map.set_yticks(range(n), labels)
+    ax_map.tick_params(axis="y", length=0, pad=3)
+    for tick, leaf in zip(ax_map.get_yticklabels(), order):
+        genome = ids[leaf]
+        if genome in metadata:
+            tick.set_color(KINDS[sample_kind(metadata[genome], environment_types)][1])
+    for spine in ax_map.spines.values():
+        spine.set_visible(False)
+
+    bar = fig.colorbar(ScalarMappable(norm=ANI_NORM, cmap=ANI_COLOURS), cax=cax, orientation="horizontal")
+    bar.set_ticks([ANI_FLOOR, 85, 90, SPECIES_ANI, 100])
+    bar.set_label("ANI (%); species boundary at 95%")
+    bar.outline.set_visible(False)
+    handles = [Line2D([], [], linestyle="none", marker="s", markersize=5, markerfacecolor=colour,
+                      markeredgecolor=colour, label=f"{label} isolate") for label, colour, _ in KINDS.values()]
+    handles.append(Patch(facecolor=SURFACE, edgecolor=AXIS, hatch="////", label=f"<{ANI_FLOOR}%"))
+    top_legend(fig, handles)
+    return figs.save(fig, f"species_{safe_name(group)}")
+
+
+def species_figures(figs, groups, group_ani, strains, qc_by_sample, metadata, environment_types):
+    images = {}
+    for group, sample_ids in groups.items():
+        pairs = group_ani.get(group)
+        if not pairs:
+            continue
+        schemas_in_group = {qc_by_sample.get(s, {}).get("schema", "") for s in sample_ids} - {""}
+        isolates, type_strains, hidden = species_panel(sorted(sample_ids, key=natural_key), pairs, strains,
+                                                       schemas_in_group)
+        if not isolates:
+            continue
+        images[group] = (species_figure(figs, group, isolates, type_strains, pairs, strains, metadata,
+                                        environment_types), hidden)
     return images
 
 
@@ -714,9 +991,28 @@ def sample_qc_figure(figs, metadata, qc_rows, schemas, width_mm, environment_typ
     return figs.save(fig, "sample_qc"), overall
 
 
+PLATFORMS = {"illumina": ("Illumina", "o", (0, (3, 2))), "nanopore": ("Nanopore", "^", (0, (1, 1.5)))}
+
+
+def swarm(values, span, step=0.13, limit=0.4, tolerance=0.035):
+    """Vertical offsets that keep points at nearly the same value from covering each other."""
+    slots = [0.0] + [sign * k * step for k in range(1, int(limit / step) + 1) for sign in (1, -1)]
+    offsets, placed = [0.0] * len(values), []
+    for i in sorted(range(len(values)), key=lambda i: values[i]):
+        near = [offsets[j] for j in placed if abs(values[j] - values[i]) <= tolerance * span]
+        free = [o for o in slots if all(abs(o - n) > step / 2 for n in near)]
+        offsets[i] = free[0] if free else slots[len(near) % len(slots)]
+        placed.append(i)
+    return offsets
+
+
+def qc_value_text(field, value):
+    return f"{value:.0f}×" if field == "mean_depth" else f"{value * 100:.1f}%"
+
+
 def qc_figure(figs, qc_rows, allele_qc, schemas, cutoffs, width_mm):
     metrics = [
-        ("mean_depth", "Read depth", {k: v for k, v in cutoffs.get("min_depth", {}).items()}),
+        ("mean_depth", "Depth (own assembly)", cutoffs.get("min_depth", {})),
         ("expected_species_fraction", "Expected species",
          {"": cutoffs.get("min_expected_species_fraction", {}).get("illumina")}),
         ("other_genus_fraction", "Other genus",
@@ -737,48 +1033,130 @@ def qc_figure(figs, qc_rows, allele_qc, schemas, cutoffs, width_mm):
     present = [m for m in metrics if any(to_float(r.get(m[0])) is not None for r in rows)]
     if not present:
         return None
-    height = 0.22 * len(order) + 0.8
+    platforms = sorted({r.get("platform", "") for r in rows} & set(PLATFORMS))
+    mixed = len(platforms) > 1
+    height = 0.3 * len(order) + 0.9
     fig, axes = plt.subplots(1, len(present), figsize=(width_mm * MM, height), sharey=True, squeeze=False,
                              gridspec_kw={"wspace": 0.18})
-    platforms = {r.get("platform", "") for r in rows}
     for ax, (field, label, lines) in zip(axes[0], present):
+        values = [to_float(r.get(field)) for r in rows]
+        lines = {k: float(v) for k, v in lines.items() if v not in (None, "") and (not k or k in platforms)}
+        limits = [v for v in values if v is not None] + list(lines.values())
+        if field == "fraction_called":
+            limits += [to_float(schemas[s].get("min_called_fraction")) or 1 for s in order]
+        if field == "mean_depth":
+            low, high = 0, max(limits) * 1.05
+        elif field == "other_genus_fraction":
+            low, high = 0, max(limits + [0.05]) * 1.6
+        else:
+            low = max(0.0, math.floor((min(limits) - 0.02) * 20) / 20)
+            high = 1.0
         for schema in order:
-            values = sorted(v for v in (to_float(r.get(field)) for r in rows if r["schema"] == schema) if v is not None)
-            offsets = [((i % 5) - 2) * 0.07 for i in range(len(values))]
-            ax.scatter(values, [y_of[schema] + o for o in offsets], s=12, facecolors=BLUE, edgecolors=SURFACE,
-                       linewidths=0.4, zorder=3)
+            members = [(r, v) for r, v in zip(rows, values) if r["schema"] == schema and v is not None]
+            offsets = swarm([v for _, v in members], high - low)
+            for (r, value), offset in zip(members, offsets):
+                status = r.get("qc_status", "") if r.get("qc_status", "") in QC_STATUS else ""
+                platform = r.get("platform", "")
+                marker = PLATFORMS[platform][1] if mixed and platform in PLATFORMS else "o"
+                point = ax.scatter(value, y_of[schema] + offset, s=14, marker=marker, facecolors=QC_STATUS[status][1],
+                                   edgecolors=SURFACE, linewidths=0.4, zorder=3)
+                flags = r.get("qc_flags", "")
+                figs.tip(point, [
+                    f"{r['sample']} ({PLATFORMS.get(platform, (platform,))[0]})" if platform else r["sample"],
+                    f"{label}: {qc_value_text(field, value)}",
+                    f"QC {QC_STATUS[status][0].lower()}" + (f": {flags}" if flags else ""),
+                    species_text(r),
+                ])
         if field == "fraction_called":
             for schema in order:
                 cutoff = to_float(schemas[schema].get("min_called_fraction"))
                 if cutoff is not None:
-                    ax.plot([cutoff, cutoff], [y_of[schema] - 0.4, y_of[schema] + 0.4], color=INK2,
+                    ax.plot([cutoff, cutoff], [y_of[schema] - 0.42, y_of[schema] + 0.42], color=INK2,
                             linewidth=0.8, linestyle=(0, (3, 2)), zorder=2)
         for platform, value in lines.items():
-            if value is None or (platform and platform not in platforms):
-                continue
-            ax.axvline(float(value), color=INK2, linewidth=0.8, linestyle=(0, (3, 2)), zorder=2)
-            if platform and len(platforms) > 1:
-                ax.text(float(value), len(order) - 0.45, platform, rotation=90, ha="right", va="top",
-                        fontsize=plt.rcParams["font.size"] - 2, color=INK2)
+            style_ = PLATFORMS[platform][2] if mixed and platform else (0, (3, 2))
+            ax.axvline(value, color=INK2, linewidth=0.8, linestyle=style_, zorder=2)
         ax.set_title(label, loc="left", pad=3)
         ax.grid(axis="x")
         ax.set_axisbelow(True)
         ax.tick_params(axis="y", length=0)
         ax.spines["left"].set_visible(False)
-        if field == "other_genus_fraction":
-            top = max([to_float(r.get(field)) or 0 for r in rows] + [float(v) for v in lines.values() if v] + [0.05])
-            ax.set_xlim(-0.004, top * 1.6)
-            step = next(st for st in (0.01, 0.02, 0.05, 0.1, 0.2, 0.25) if top * 1.6 / st <= 5)
-            ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(step))
-            ax.xaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0, decimals=0))
-        elif field != "mean_depth":
-            ax.set_xlim(-0.03, 1.03)
-            ax.xaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0, decimals=0))
+        pad = (high - low) * 0.04
+        ax.set_xlim(low - pad, high + pad)
+        if field == "mean_depth":
+            ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+            ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}×"))
         else:
-            ax.set_xlim(left=0)
-    axes[0, 0].set_yticks(range(len(order)), [species_label(schemas[s]["organism"]) for s in order])
+            ax.xaxis.set_major_locator(MaxNLocator(nbins=4, steps=[1, 2, 2.5, 5, 10]))
+            ax.xaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0, decimals=0))
+    axes[0, 0].set_yticks(range(len(order)), ["\n".join(t for t in (species_label(schemas[s]["organism"]),
+                                                                      loci_text(schemas[s])) if t) for s in order])
     axes[0, 0].set_ylim(-0.6, len(order) - 0.4)
+    statuses = [s for s in QC_STATUS if any((r.get("qc_status", "") if r.get("qc_status", "") in QC_STATUS else "")
+                                            == s for r in rows)]
+    handles = [Patch(facecolor=QC_STATUS[s][1], edgecolor=QC_STATUS[s][1], label=QC_STATUS[s][0]) for s in statuses]
+    if mixed:
+        for platform in platforms:
+            name, marker, style_ = PLATFORMS[platform]
+            handles.append(Line2D([], [], linestyle="none", marker=marker, markersize=4, markerfacecolor=INK2,
+                                  markeredgecolor=INK2, label=name))
+        for platform in platforms:
+            name, _, style_ = PLATFORMS[platform]
+            handles.append(Line2D([], [], color=INK2, linewidth=0.8, linestyle=style_, label=f"{name} cut-off"))
+    else:
+        handles.append(Line2D([], [], color=INK2, linewidth=0.8, linestyle=(0, (3, 2)), label="QC cut-off"))
+    top_legend(fig, handles)
     return figs.save(fig, "isolate_qc")
+
+
+ISOLATE_FIELDS = ["sample", "transmission", "schema", "platform", "reads", "mapped", "mean_depth", "breadth",
+                  "contigs", "n50", "assembly_length", "reference_length", "reference_ani",
+                  "closest_type_strain", "st", "loci_missing", "novel_alleles", "qc_status", "qc_flags"]
+ISOLATE_HEADERS = ["Sample", "Group", "Schema", "Platform", "Reads", "Mapped", "Depth", "Breadth", "Contigs", "N50",
+                   "Assembly size", "Reference size", "ANI to ref. (aligned)",
+                   "Closest type strain (ANI)", "ST", "Missing loci", "Novel alleles", "QC", "Flags"]
+
+
+def isolate_qc_rows(qc_rows, allele_qc):
+    def percent(value, digits=1):
+        number = to_float(value)
+        return "" if number is None else f"{number * 100:.{digits}f}%"
+
+    def count(value):
+        number = to_float(value)
+        return "" if number is None else f"{number:,.0f}"
+
+    def megabases(value):
+        number = to_float(value)
+        return "" if number is None else f"{number / 1e6:.2f} Mb"
+
+    alleles = {r["sample"]: r for r in allele_qc}
+    rows = []
+    for r in qc_rows:
+        a = alleles.get(r["sample"], {})
+        ani = to_float(r.get("reference_ani"))
+        aligned = to_float(r.get("reference_aligned_fraction"))
+        type_ani = to_float(r.get("type_strain_ani"))
+        type_species = r.get("type_strain_species", "")
+        type_strain = " ".join(t for t in (species_html(type_species) if type_species else "",
+                                           html.escape(r.get("type_strain", ""))) if t)
+        rows.append({
+            **r,
+            "transmission": r.get("transmission") or a.get("transmission", ""),
+            "reads": count(r.get("reads")),
+            "mapped": percent(r.get("mapped_fraction")),
+            "mean_depth": f"{to_float(r['mean_depth']):.0f}x" if to_float(r.get("mean_depth")) is not None else "",
+            "breadth": percent(r.get("breadth")),
+            "contigs": count(r.get("contigs")),
+            "n50": count(r.get("n50")),
+            "assembly_length": megabases(r.get("assembly_length")),
+            "reference_length": megabases(r.get("reference_length")),
+            "reference_ani": "" if ani is None else f"{ani:.2f}%" + ("" if aligned is None else f" ({aligned:.0f}%)"),
+            "closest_type_strain": f"{type_strain} ({type_ani:.2f}%)" if type_strain and type_ani is not None else "",
+            "loci_missing": a.get("loci_missing", ""),
+            "novel_alleles": a.get("novel_alleles", ""),
+        })
+    return rows
 
 
 def safe_name(text):
@@ -815,6 +1193,19 @@ def prepare_pairs(rows):
             "filtered": row.get("snp_recombination_filtered", ""),
         })
     return pairs
+
+
+def species_counts(sample_ids, metadata):
+    """The species called in a group, e.g. "Species: 2 E. asburiae, 1 not called.", or nothing when
+    its isolates were not compared with type strains."""
+    samples = [metadata[s] for s in sample_ids if s in metadata]
+    if not any(s.get("type_strain_species") for s in samples):
+        return ""
+    counts = Counter(s.get("species_call", "") for s in samples)
+    parts = [f"{n} {species_html(name)}" for name, n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])) if name]
+    if counts.get(""):
+        parts.append(f"{counts['']} not called")
+    return " Species: " + ", ".join(parts) + "."
 
 
 def span_text(values):
@@ -885,7 +1276,7 @@ def html_table(rows, fields, headers=None, classes=""):
         for field in fields:
             value = row.get(field, "")
             text = value if isinstance(value, str) and value.startswith("<") else html.escape(str(value))
-            numeric = " class='num'" if re.fullmatch(r"[\d.,–-]+", str(value) or "x") else ""
+            numeric = " class='num'" if re.fullmatch(r"[\d.,–-]+(?:[%x]| Mb)?", str(value) or "?") else ""
             cells.append(f"<td{numeric}>{text}</td>")
         body.append("<tr>" + "".join(cells) + "</tr>")
     return (f"<div class='table-wrap'><table class='sortable {classes}'><thead><tr>{head}</tr></thead>"
@@ -900,10 +1291,10 @@ def nowrap(text):
     return f"<span class='nowrap'>{html.escape(text)}</span>"
 
 
-def figure_html(src, caption, alt, cls=""):
-    if not src:
+def figure_html(svg, caption, alt, cls=""):
+    if not svg:
         return ""
-    return (f"<figure class='{cls}'><img src='{src}' alt='{html.escape(alt)}'>"
+    return (f"<figure class='{cls}'><div class='plot' role='img' aria-label='{html.escape(alt)}'>{svg}</div>"
             f"<figcaption>{caption}</figcaption></figure>")
 
 
@@ -933,7 +1324,13 @@ h3 { font-size: 15px; margin: 28px 0 8px; }
 .tile { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
 .tile .value { font-size: 24px; font-weight: 600; } .tile .label { color: var(--ink2); font-size: 13px; }
 figure { margin: 16px 0; background: #ffffff; border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
-figure img { display: block; width: 100%; height: auto; margin: 0 auto; }
+figure .plot svg { display: block; width: 100%; height: auto; margin: 0 auto; }
+figure .plot svg * { stroke-linejoin: round; stroke-linecap: butt; }
+.pt { cursor: default; }
+.pt:hover use, .pt:hover path { stroke: #0b0b0b !important; stroke-width: 1.4px !important; }
+.tip { position: fixed; z-index: 10; pointer-events: none; max-width: 320px; padding: 6px 9px; border-radius: 6px;
+  background: var(--ink); color: var(--page); font-size: 12px; line-height: 1.4; white-space: pre-line;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); }
 figcaption { color: #52514e; font-size: 13px; margin-top: 8px; }
 .table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
@@ -957,6 +1354,26 @@ a { color: var(--borderline); }
 """
 
 JS = """
+const tip = document.createElement('div');
+tip.className = 'tip';
+tip.hidden = true;
+document.body.appendChild(tip);
+const place = event => {
+  const x = Math.min(event.clientX + 14, window.innerWidth - tip.offsetWidth - 8);
+  const y = event.clientY + 14 + tip.offsetHeight > window.innerHeight
+    ? event.clientY - tip.offsetHeight - 10 : event.clientY + 14;
+  tip.style.left = `${Math.max(8, x)}px`;
+  tip.style.top = `${Math.max(8, y)}px`;
+};
+document.querySelectorAll('.plot .pt').forEach(point => {
+  const title = point.querySelector('title');
+  if (!title) return;
+  const text = title.textContent;
+  title.remove();
+  point.addEventListener('pointerenter', event => { tip.textContent = text; tip.hidden = false; place(event); });
+  point.addEventListener('pointermove', place);
+  point.addEventListener('pointerleave', () => { tip.hidden = true; });
+});
 document.querySelectorAll('table.sortable').forEach(table => {
   table.querySelectorAll('th').forEach((th, index) => {
     th.addEventListener('click', () => {
@@ -1005,7 +1422,8 @@ def build_html(context):
     parts.append("<h2 id='overview'>Distances</h2>")
     parts.append(figure_html(c["fig_overview"], "Allele differences for every pair of isolates in each transmission "
                              "group. Dashed lines mark the species threshold; the shaded band is the borderline range. "
-                             "Shape shows which kinds of sample the pair joins.", "Allele differences per group"))
+                             "Shape shows which kinds of sample the pair joins. Hover over a point to see the pair.",
+                             "Allele differences per group"))
     parts.append(figure_html(c["fig_time"], "Allele differences against the days between the two samples of each "
                              "pair, per species.", "Allele differences against time"))
     parts.append(figure_html(c["fig_snp"], "Allele differences against SNP differences from the masked "
@@ -1027,29 +1445,53 @@ def build_html(context):
                                  "when within the threshold.", f"{g['name']} timeline"))
         parts.append(figure_html(g["tree"], "Minimum spanning tree from the pairwise allele differences.",
                                  f"{g['name']} tree", "narrow"))
+        species_svg, hidden = g["species_fig"]
+        parts.append(figure_html(species_svg, "ANI (skani) between the group's isolates and the type strains of the "
+                                 "species its schema covers, clustered by average linkage (UPGMA) on the same ANI; "
+                                 "the dashed line on the tree and the dark cells mark the 95% species boundary. "
+                                 "Isolates are coloured by kind of sample and type strains are marked <sup>T</sup>. "
+                                 + (f"Only each isolate's {PANEL_CLOSEST} closest type strains are shown; "
+                                    f"{plural(hidden, 'other')} further from every isolate are left out. "
+                                    if hidden else "")
+                                 + "Hover over a cell to see the pair.", f"{g['name']} species"))
         parts.append(html_table(g["pairs"], c["pair_fields"], c["pair_headers"]))
         parts.append("</section>")
 
-    if c["fig_qc"] or c["fig_sample_qc"]:
+    if c["fig_qc"] or c["fig_sample_qc"] or c["isolates"]:
         parts.append("<h2 id='qc'>Isolate QC</h2>")
         parts.append(figure_html(c["fig_sample_qc"], "Isolates by read and assembly QC status (qc_summary.tsv), per "
                                  "species and per kind of sample; the number after each bar is the total.",
                                  "Isolates by QC status"))
     if c["fig_qc"]:
-        parts.append(figure_html(c["fig_qc"], "Mean read depth, the share of reads from the species the schema "
-                                 "covers, the largest share from another genus, and the share of schema loci called, per "
-                                 "isolate. Dashed lines are the QC cut-offs.", "Isolate QC"))
+        parts.append(figure_html(c["fig_qc"], "Mean read depth over the isolate's own assembly, the share of reads "
+                                 "from the species the schema covers, the largest share from another genus, and the "
+                                 "share of schema loci called, per isolate, coloured by QC status. Dashed lines are the "
+                                 "QC cut-offs. Hover over a point to see the isolate.", "Isolate QC"))
+    if c["isolates"]:
+        parts.append("<h3>Every isolate</h3>")
+        parts.append("<p class='note'>Reads, mapped reads, depth and breadth come from mapping each isolate's reads "
+                     "back to its own assembly. ANI is skani's, from the assembly to the schema's reference genome, "
+                     "with the share of the assembly aligned; the reference size is that genome's length. The "
+                     "closest type strain is the type strain, among the species the schema covers, with the highest "
+                     "skani ANI to the assembly; at 95% or more the isolate belongs to that species. Missing loci "
+                     "are schema loci without a valid call; "
+                     "novel alleles are calls not yet in the schema, and many of them in one isolate often point "
+                     "to sequencing or assembly errors rather than real differences.</p>")
+        parts.append(html_table(c["isolates"], ISOLATE_FIELDS, ISOLATE_HEADERS))
     if c["failed"]:
         parts.append("<h3>Isolates that failed QC or have no allele profile</h3>")
         parts.append(html_table(c["failed"], ["sample", "transmission", "schema", "qc", "assembly_qc", "assembly_flags"],
                                 ["Sample", "Group", "Schema", "Allele QC", "Assembly QC", "Assembly flags"]))
 
     parts.append("<h2 id='methods'>Thresholds</h2>")
-    parts.append(html_table(c["thresholds"], ["species", "scheme", "threshold", "source"],
-                            ["Species", "Scheme", "Threshold (alleles)", "Source"]))
+    parts.append(html_table(c["thresholds"], ["species", "scheme", "loci", "threshold", "source"],
+                            ["Species", "Scheme", "Loci", "Threshold (alleles)", "Source"]))
     parts.append(f"<p class='note'>Figures are in <code>figures/</code> as {html.escape(c['formats'])}. "
                  "The minimum spanning trees use the pairwise distances over loci shared by each pair; where several "
                  "trees are equally short, one is shown.</p>")
+    if c["databases"]:
+        parts.append("<h2 id='databases'>Databases</h2>")
+        parts.append(html_table(c["databases"], ["database", "path"], ["Database", "Path"]))
     parts.append(f"<script>{JS}</script></main></body></html>")
     return "\n".join(parts)
 
@@ -1071,6 +1513,10 @@ def main():
     parser.add_argument("--environment-types", default="environment",
                         help="comma-separated sample_type values that are environmental samples")
     parser.add_argument("--pipeline-version", default="")
+    parser.add_argument("--type-strains", help="assets/type_strains.tsv")
+    parser.add_argument("--group-ani", help="folder of skani triangle --sparse output, one <group>.tsv per group")
+    parser.add_argument("--database", action="append", default=[], metavar="NAME=PATH",
+                        help="a database the run used, listed in the report; repeat for each")
     args = parser.parse_args()
 
     formats = [f.strip().lower() for f in args.formats.split(",") if f.strip()]
@@ -1088,6 +1534,9 @@ def main():
     summary = {r["transmission"]: r for r in read_tsv(args.groups)}
     allele_qc = read_tsv(args.allele_qc)
     qc_rows = read_tsv(args.qc_summary)
+    qc_by_sample = {r["sample"]: r for r in qc_rows}
+    for sid, sample in metadata.items():
+        sample.update({field: qc_by_sample.get(sid, {}).get(field, "") for field in SPECIES_FIELDS})
 
     groups = {}
     for sid, sample in metadata.items():
@@ -1103,6 +1552,9 @@ def main():
     fig_snp = snp_figure(figs, rows_by_schema, schemas, args.width_mm, environment_types) if rows_by_schema else None
     timelines = timeline_figures(figs, groups, metadata, pairs_by_group, args.width_mm, environment_types)
     trees = tree_figures(figs, groups, metadata, pairs_by_group, args.width_mm, environment_types)
+    strains = {row["accession"]: row for row in read_tsv(args.type_strains)}
+    species_images = species_figures(figs, groups, load_group_ani(args.group_ani), strains, qc_by_sample, metadata,
+                                     environment_types)
     fig_sample_qc, qc_counts = sample_qc_figure(figs, metadata, qc_rows, schemas, args.width_mm, environment_types)
     fig_qc = qc_figure(figs, qc_rows, allele_qc, schemas, cutoffs, args.width_mm)
 
@@ -1126,17 +1578,20 @@ def main():
             "name": name,
             "species": species_html(row["species"]) if row["species"] else "",
             "overall": row["overall"],
-            "line": html.escape(line),
+            "line": html.escape(line) + species_counts(groups[name], metadata),
             "timeline": timelines.get(name),
             "tree": trees.get(name),
+            "species_fig": species_images.get(name, (None, 0)),
             "pairs": pair_rows,
         })
 
     used = {p["schema"] for p in pairs} | {s for r in summary.values() for s in r.get("schema", "").split(",") if s}
     threshold_rows = [{"species": species_html(schemas[s]["organism"]), "scheme": schemas[s].get("scheme", ""),
+                       "loci": f"{to_int(schemas[s].get('loci')):,}" if to_int(schemas[s].get("loci")) else "",
                        "threshold": threshold_text(schemas[s]).replace("threshold ", ""), "source": schemas[s].get("source", "")}
                       for s in sorted(used & set(schemas), key=lambda s: schemas[s]["organism"])]
     failed = [{**r, "transmission": r.get("transmission", "")} for r in allele_qc if r.get("qc") and r["qc"] != "pass"]
+    isolates = isolate_qc_rows(qc_rows, allele_qc)
     n_within = sum(1 for p in pairs if p["verdict"] == "within_threshold")
     n_env_patient_within = sum(1 for p in pairs if p["verdict"] == "within_threshold"
                                and pair_kind(p, environment_types) == "environment-patient")
@@ -1145,9 +1600,13 @@ def main():
                    "dates": nowrap(f"{r['first_sample']} to {r['last_sample']}") if r["first_sample"] else "",
                    "overall": badge(r["overall"]) if r["overall"] else ""} for r in table_rows]
     nav = [("summary", "Groups table"), ("overview", "Figures"), ("groups", "Each group")]
-    if fig_qc or (fig_sample_qc and qc_rows):
+    if fig_qc or (fig_sample_qc and qc_rows) or isolates:
         nav.append(("qc", "Isolate QC"))
     nav.append(("methods", "Thresholds"))
+    databases = [dict(zip(("database", "path"), (part.strip() for part in item.split("=", 1))))
+                 for item in args.database if "=" in item]
+    if databases:
+        nav.append(("databases", "Databases"))
 
     context = {
         "version": args.pipeline_version or "",
@@ -1179,7 +1638,9 @@ def main():
         "pair_headers": ["Sample A", "Sample B", "Type A", "Type B", "Days", "Shared loci", "Allele diffs",
                          "Threshold", "Verdict", "SNPs", "QC", "Notes"],
         "failed": failed,
+        "isolates": isolates,
         "thresholds": threshold_rows,
+        "databases": [{**d, "path": f"<code>{html.escape(d['path'])}</code>"} for d in databases],
         "formats": ", ".join(f.upper() for f in formats),
     }
     (outdir / "transmission_report.html").write_text(build_html(context), encoding="utf-8")

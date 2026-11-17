@@ -9,7 +9,7 @@
 # pipeline's Singularity/Apptainer cacheDir the pipeline reuses them instead of pulling
 # them again. The pipeline pulls its other containers itself on the first run.
 #
-#   make all CONTAINERS_DIR=/mnt/cache/singularity
+#   make all CONTAINERS_DIR=/path/to/singularity
 SHELL := /bin/bash
 
 SRC_DIR := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))

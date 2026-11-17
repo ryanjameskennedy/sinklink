@@ -3,6 +3,29 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased]
+
+### `Added`
+
+- A species call within schemas that cover several close species: skani ANI from each assembly to the type strains in `assets/type_strains.tsv` (`ani/<sample>.type_strains.tsv`), with the closest type strain, its ANI and the species at 95% or more in `qc_summary.tsv` and the report, the species in the isolate hover labels and each group's summary line, pairs of different species flagged in `pairwise_distances.tsv` (`species_a`, `species_b` and a note) and their hover labels, and a species figure per transmission group: a heatmap of skani ANI between every two of its isolates and type strains (`ani/groups/<group>.tsv`, nf-core `skani/triangle`) with a tree clustered on the same ANI; `make type_strains` downloads them (part of `make install`), for the _Serratia marcescens_ complex (8 genomes) and the _Enterobacter cloacae_ complex and its close relatives (34 genomes, for `ecloacae` and `ehormaechei`)
+- An _Enterobacter cloacae_ complex schema (`ecloacae`): the Miller et al. 2026 cgMLST from Chewie-NS (1,812 loci), threshold ≤3 alleles, borderline ≤5, with GCF_905331265.2 as reference; `make ecloacae_all` unpacks the ready-to-use schema without PrepExternalSchema
+- `make kraken_db` downloads the full Kraken2 Standard database (85 GB), or another one with `KRAKEN_DB` and `KRAKEN_DB_DATE`
+- skani ANI from each assembly to its schema's reference genome (`ani/`), checked against 95% (`distant_reference`); the Mash distance is only checked when there is no ANI
+- Reads, the share mapped back to the own assembly (`samtools flagstat`, warns below 90% as `low_mapped_reads`) and breadth in `qc_summary.tsv`
+- Missing loci and novel alleles per isolate in `allele_qc.tsv`
+- A table of every isolate's reads, depth, ANI, missing loci and novel alleles in the transmission report
+- The report's table of every isolate gives the assembly size and the reference genome's size, which `qc_summary.tsv` now has as `reference_length` (from QUAST)
+- The report lists the paths of the databases the run used, and the figures and thresholds table give each schema's number of loci
+- Hover labels on every point in the report's figures (pair, distances, days and sample types; isolate, sample type and date; QC values and flags), also in the SVG files; the report now embeds the figures as inline SVG
+
+### `Changed`
+
+- Gubbins is skipped unless 4 or more sequences in a schema's alignment are at most 25% `N` or gap (its own cut-off, and the 4 RAxML needs for a tree), and a schema whose Gubbins run fails gets SNP distances without recombination removed, instead of stopping the run; the share missing per sequence is in `snp_distances/<schema>.missing.tsv`
+- `enterobacter_cloacae` and `enterobacter_cloacae_complex` isolates are typed with `ecloacae` instead of `ehormaechei`; `enterobacter_hormaechei` maps to `ehormaechei`
+- The isolate QC figure labels depth as over the isolate's own assembly, colours isolates by QC status, marks Nanopore isolates with triangles, keeps nearby points apart, zooms the percentage axes to the data and moves the cut-off labels into the legend
+- mlst types each isolate with its schema's scheme (`mlst_scheme` in `assets/schemas.tsv`, passed as `--scheme`) instead of detecting it; `ecloacae` and `ehormaechei` use the PubMLST _E. cloacae_ scheme, which covers the complex
+- The docs no longer hold settings for our own servers, which live in [ryanjameskennedy/configs](https://github.com/ryanjameskennedy/configs); the server docs give general recommendations instead, including how much memory to reserve for Kraken2 with the full Standard database
+
 ## v0.4.0 - 2026-11-11
 
 Adds a transmission report with publication figures and redraws the metro map.

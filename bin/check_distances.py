@@ -5,9 +5,9 @@ For every pair of isolates in a group, counts allele differences over the loci
 called in both isolates and compares the count with the species threshold in
 assets/schemas.tsv. When both isolates are in a snp-dists matrix for their
 schema (masked pseudogenomes, recombination removed with Gubbins when there were
-enough isolates), their SNP distance is added; there is no SNP threshold, so
+enough usable isolates), their SNP distance is added; there is no SNP threshold, so
 these are for information only. Read and assembly QC from qc_summary.tsv
-(summarise_qc.py)
+(summarise_qc.py), with the species call from the type strains,
 is carried into each pair. Writes allele_qc.tsv, pairwise_distances.tsv and
 group_summary.tsv.
 """
@@ -53,24 +53,29 @@ def schema_of_alleles(path):
 
 
 def load_profiles(path):
+    """Return (loci in schema, {sample: {locus: allele}}, {sample: novel allele count}).
+
+    Novel alleles are the calls chewBBACA inferred in this run (INF-).
+    """
     if not path:
-        return None, {}
+        return None, {}, {}
     with open(path, newline="") as handle:
         reader = csv.reader(handle, delimiter="\t")
         header = next(reader)
         loci = header[1:]
-        profiles = {}
+        profiles, novel = {}, {}
         for row in reader:
             sample = row[0]
             for ext in (".fasta", ".fna", ".fa"):
                 if sample.endswith(ext):
                     sample = sample[: -len(ext)]
+            novel[sample] = sum(1 for v in row[1:] if v.strip().startswith("INF-"))
             profiles[sample] = {
                 locus: allele
                 for locus, allele in zip(loci, (normalise_call(v) for v in row[1:]))
                 if allele is not None
             }
-    return len(loci), profiles
+    return len(loci), profiles, novel
 
 
 def load_snp_dists(paths):
@@ -149,9 +154,9 @@ def main():
     with open(args.samplesheet, newline="", encoding="utf-8-sig") as handle:
         samples = list(csv.DictReader(handle))
 
-    profiles, n_loci = {}, {}
+    profiles, n_loci, novel = {}, {}, {}
     for schema in schemas:
-        n_loci[schema], profiles[schema] = load_profiles(allele_files.get(schema))
+        n_loci[schema], profiles[schema], novel[schema] = load_profiles(allele_files.get(schema))
 
     qc_rows, sample_info = [], {}
     for sample in samples:
@@ -180,6 +185,7 @@ def main():
             "assembly_flags": aqc.get("qc_flags", ""),
             "platform": aqc.get("platform", ""),
             "st": aqc.get("st", ""),
+            "species_call": aqc.get("species_call", ""),
         }
         qc_rows.append({
             "sample": sid,
@@ -188,8 +194,10 @@ def main():
             "growth": sample["growth"],
             "schema": schema,
             "loci_called": called,
+            "loci_missing": n_loci[schema] - called if profile is not None and n_loci[schema] else "",
             "loci_in_schema": n_loci.get(schema) or "",
             "fraction_called": f"{fraction:.3f}",
+            "novel_alleles": novel.get(schema, {}).get(sid, "") if profile is not None else "",
             "qc": qc,
             "assembly_qc": sample_info[sid]["assembly_qc"],
             "assembly_flags": sample_info[sid]["assembly_flags"],
@@ -213,6 +221,8 @@ def main():
                 "type_b": b.get("sample_type", ""),
                 "patient_a": a.get("studypatientnumber", ""),
                 "patient_b": b.get("studypatientnumber", ""),
+                "species_a": a["species_call"],
+                "species_b": b["species_call"],
                 "days_apart": "",
                 "schema": a["schema"] if a["schema"] == b["schema"] else f"{a['schema']}/{b['schema']}",
                 "shared_loci": "",
@@ -238,6 +248,8 @@ def main():
             if a["platform"] and b["platform"] and a["platform"] != b["platform"]:
                 notes.add(f"mixed platforms ({a['platform']}/{b['platform']}); "
                           "sequencing errors can add allele differences")
+            if a["species_call"] and b["species_call"] and a["species_call"] != b["species_call"]:
+                notes.add(f"different species ({a['species_call']} vs {b['species_call']})")
             if a["st"] not in ("", "-") and b["st"] not in ("", "-") and a["st"] != b["st"]:
                 notes.add(f"different MLST ST ({a['st']} vs {b['st']})")
             statuses = {s["assembly_qc"] for s in (a, b)}

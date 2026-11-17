@@ -25,6 +25,7 @@ The schema accepts _K. pneumoniae_, _K. quasipneumoniae_, _K. variicola_, _K. qu
 | `species_pattern`               | `^Klebsiella (pneumoniae\|quasipneumoniae\|variicola\|quasivariicola\|africana)$` |
 | `genera`                        | Klebsiella                                                                        |
 | Expected genome size            | 5.0–6.5 Mb                                                                        |
+| `mlst_scheme`                   | `klebsiella`                                                                      |
 
 ## In the VASK study
 
