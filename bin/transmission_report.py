@@ -367,11 +367,17 @@ def overview_figure(figs, rows_by_schema, schemas, width_mm, environment_types):
         ax.grid(axis="x", zorder=0)
         ax.set_axisbelow(True)
         ax.set_title(species_label(info["organism"]), loc="left", pad=3)
-        ax.set_title(threshold_text(info), loc="right", pad=3, color=INK2)
+        ax.set_title(" · ".join(t for t in (loci_text(info), threshold_text(info)) if t), loc="right", pad=3,
+                     color=INK2)
         distance_axis(ax, "x", all_values, all_thresholds)
     axes[-1, 0].set_xlabel("Allele differences")
     verdict_legend(fig, verdicts, kinds)
     return figs.save(fig, "distance_overview")
+
+
+def loci_text(info):
+    loci = to_int(info.get("loci"))
+    return f"{loci:,} loci" if loci else ""
 
 
 def threshold_text(info):
@@ -412,9 +418,14 @@ def time_figure(figs, rows_by_schema, schemas, width_mm, environment_types):
         ax.set_axisbelow(True)
         ax.set_title(species_label(info["organism"]), loc="left", pad=3)
         ax.set_xlabel("Days between samples")
-        ax.set_ylabel("Allele differences")
+        ax.set_ylabel(allele_label(info))
     verdict_legend(fig, verdicts, kinds)
     return figs.save(fig, "distance_vs_time")
+
+
+def allele_label(info):
+    loci = loci_text(info)
+    return f"Allele differences ({loci})" if loci else "Allele differences"
 
 
 def days_axis(ax, longest):
@@ -447,7 +458,7 @@ def snp_figure(figs, rows_by_schema, schemas, width_mm, environment_types):
         filtered = {p["filtered"] for p in pairs}
         note = " (Gubbins)" if filtered == {"yes"} else ""
         ax.set_title(species_label(info["organism"]), loc="left", pad=3)
-        ax.set_xlabel("Allele differences")
+        ax.set_xlabel(allele_label(info))
         ax.set_ylabel(f"SNP differences{note}")
     verdict_legend(fig, verdicts, kinds)
     return figs.save(fig, "allele_vs_snp")
@@ -872,7 +883,8 @@ def qc_figure(figs, qc_rows, allele_qc, schemas, cutoffs, width_mm):
         else:
             ax.xaxis.set_major_locator(MaxNLocator(nbins=4, steps=[1, 2, 2.5, 5, 10]))
             ax.xaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0, decimals=0))
-    axes[0, 0].set_yticks(range(len(order)), [species_label(schemas[s]["organism"]) for s in order])
+    axes[0, 0].set_yticks(range(len(order)), ["\n".join(t for t in (species_label(schemas[s]["organism"]),
+                                                                      loci_text(schemas[s])) if t) for s in order])
     axes[0, 0].set_ylim(-0.6, len(order) - 0.4)
     statuses = [s for s in QC_STATUS if any((r.get("qc_status", "") if r.get("qc_status", "") in QC_STATUS else "")
                                             == s for r in rows)]
@@ -1228,11 +1240,14 @@ def build_html(context):
                                 ["Sample", "Group", "Schema", "Allele QC", "Assembly QC", "Assembly flags"]))
 
     parts.append("<h2 id='methods'>Thresholds</h2>")
-    parts.append(html_table(c["thresholds"], ["species", "scheme", "threshold", "source"],
-                            ["Species", "Scheme", "Threshold (alleles)", "Source"]))
+    parts.append(html_table(c["thresholds"], ["species", "scheme", "loci", "threshold", "source"],
+                            ["Species", "Scheme", "Loci", "Threshold (alleles)", "Source"]))
     parts.append(f"<p class='note'>Figures are in <code>figures/</code> as {html.escape(c['formats'])}. "
                  "The minimum spanning trees use the pairwise distances over loci shared by each pair; where several "
                  "trees are equally short, one is shown.</p>")
+    if c["databases"]:
+        parts.append("<h2 id='databases'>Databases</h2>")
+        parts.append(html_table(c["databases"], ["database", "path"], ["Database", "Path"]))
     parts.append(f"<script>{JS}</script></main></body></html>")
     return "\n".join(parts)
 
@@ -1254,6 +1269,8 @@ def main():
     parser.add_argument("--environment-types", default="environment",
                         help="comma-separated sample_type values that are environmental samples")
     parser.add_argument("--pipeline-version", default="")
+    parser.add_argument("--database", action="append", default=[], metavar="NAME=PATH",
+                        help="a database the run used, listed in the report; repeat for each")
     args = parser.parse_args()
 
     formats = [f.strip().lower() for f in args.formats.split(",") if f.strip()]
@@ -1317,6 +1334,7 @@ def main():
 
     used = {p["schema"] for p in pairs} | {s for r in summary.values() for s in r.get("schema", "").split(",") if s}
     threshold_rows = [{"species": species_html(schemas[s]["organism"]), "scheme": schemas[s].get("scheme", ""),
+                       "loci": f"{to_int(schemas[s].get('loci')):,}" if to_int(schemas[s].get("loci")) else "",
                        "threshold": threshold_text(schemas[s]).replace("threshold ", ""), "source": schemas[s].get("source", "")}
                       for s in sorted(used & set(schemas), key=lambda s: schemas[s]["organism"])]
     failed = [{**r, "transmission": r.get("transmission", "")} for r in allele_qc if r.get("qc") and r["qc"] != "pass"]
@@ -1332,6 +1350,10 @@ def main():
     if fig_qc or (fig_sample_qc and qc_rows) or isolates:
         nav.append(("qc", "Isolate QC"))
     nav.append(("methods", "Thresholds"))
+    databases = [dict(zip(("database", "path"), (part.strip() for part in item.split("=", 1))))
+                 for item in args.database if "=" in item]
+    if databases:
+        nav.append(("databases", "Databases"))
 
     context = {
         "version": args.pipeline_version or "",
@@ -1365,6 +1387,7 @@ def main():
         "failed": failed,
         "isolates": isolates,
         "thresholds": threshold_rows,
+        "databases": [{**d, "path": f"<code>{html.escape(d['path'])}</code>"} for d in databases],
         "formats": ", ".join(f.upper() for f in formats),
     }
     (outdir / "transmission_report.html").write_text(build_html(context), encoding="utf-8")
