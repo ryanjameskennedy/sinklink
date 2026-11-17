@@ -62,31 +62,29 @@ bacteria, viral, plasmid, human and UniVec_Core, 2026-06-26 release) from the
 so check the disk first:
 
 ```bash
-make kraken_db ASSETS_DIR=/mnt/cache/dbs
+make kraken_db ASSETS_DIR=/path/to/dbs
 ```
 
 Pick another database or release with `KRAKEN_DB` and `KRAKEN_DB_DATE`, using
 the names on the index page, e.g. `make kraken_db KRAKEN_DB=pluspf` (adds
 protozoa and fungi) or `KRAKEN_DB=standard_16_GB`. sinklink runs Kraken2 with
 `--memory-mapping`, which reads the database from disk instead of loading it
-into memory, so the full database runs on any of our servers; it is slower than
-a database that fits in memory, mostly on the first sample.
+into memory, so the full database also runs on a server with less memory than
+the database; it is slower than a database that fits in memory, mostly on the
+first sample. See [running on a server](servers.md) for how much memory to
+reserve for it.
 
 Standard-16 is the same database capped at 16 GB. The cap drops some k-mers,
 which costs a little sensitivity, most for close relatives within a genus such
 as the members of the _E. cloacae_ complex; a cultured isolate has plenty of
-reads from one species, so this matters less than for metagenomes. thedonkey
-has the 2026-06-26 release of Standard-16, downloaded by hand:
+reads from one species, so this matters less than for metagenomes. The Standard-16
+archive is 12 GB:
 
 ```bash
-mkdir -p /mnt/cache/dbs/kraken2/standard_16gb_20260626
-cd /mnt/cache/dbs/kraken2/standard_16gb_20260626
-wget https://genome-idx.s3.amazonaws.com/kraken/k2_standard_16_GB_20260626.tar.gz
-tar -xzf k2_standard_16_GB_20260626.tar.gz
-rm k2_standard_16_GB_20260626.tar.gz
+make kraken_db KRAKEN_DB=standard_16_GB ASSETS_DIR=/path/to/dbs
 ```
 
-That archive is 12 GB. Unpacked, either folder holds the Kraken2 files
+Unpacked, either folder holds the Kraken2 files
 (`hash.k2d`, `opts.k2d`, `taxo.k2d`) and the Bracken k-mer distributions
 (`database<length>mers.kmer_distrib`) for a range of read lengths. Pass the
 folder with `--kraken_db`. For a newer release, take the file name from the

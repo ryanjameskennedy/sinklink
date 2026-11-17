@@ -42,7 +42,7 @@ Set up the schemas, reference genomes and databases once:
 
 ```bash
 git clone git@github.com:ryanjameskennedy/sinklink.git && cd sinklink
-make install ASSETS_DIR=/mnt/cache/dbs CONTAINERS_DIR=/mnt/cache/singularity
+make install ASSETS_DIR=/path/to/dbs CONTAINERS_DIR=/path/to/singularity
 ```
 
 Then run every isolate, whatever its species, with one samplesheet and one
@@ -50,7 +50,7 @@ metadata file:
 
 ```bash
 nextflow run ryanjameskennedy/sinklink -r v0.4.0 -profile singularity \
-    -c thedonkey.config -params-file thedonkey.yaml \
+    -c server.config -params-file server.yaml \
     --input samplesheet.csv \
     --metadata metadata.csv \
     --outdir results
