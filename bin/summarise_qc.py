@@ -17,7 +17,7 @@ FIELDS = [
     "sample", "transmission", "growth", "schema", "platform",
     "assembly_length", "contigs", "n50", "gc",
     "reads", "mapped_fraction", "mean_depth", "breadth",
-    "reference", "reference_ani", "reference_aligned_fraction", "reference_distance", "genome_fraction",
+    "reference", "reference_length", "reference_ani", "reference_aligned_fraction", "reference_distance", "genome_fraction",
     "gambit_species", "completeness", "gambit_qc",
     "species_source", "top_species", "top_species_fraction",
     "expected_species_fraction", "other_genus_fraction",
@@ -55,6 +55,7 @@ def quast_metrics(path):
         "n50": to_float(metrics.get("N50")),
         "gc": to_float(metrics.get("GC (%)")),
         "genome_fraction": to_float(metrics.get("Genome fraction (%)")),
+        "reference_length": to_float(metrics.get("Reference length")),
     }
 
 
@@ -302,6 +303,7 @@ def main():
         "mean_depth": fmt(depth, 1),
         "breadth": fmt(breadth, 3),
         "reference": args.reference,
+        "reference_length": fmt(quast.get("reference_length")),
         "reference_ani": fmt(ani, 2),
         "reference_aligned_fraction": fmt(ani_aligned, 1),
         "reference_distance": fmt(ref_distance, 4),

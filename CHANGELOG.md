@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reads, the share mapped back to the own assembly (`samtools flagstat`, warns below 90% as `low_mapped_reads`) and breadth in `qc_summary.tsv`
 - Missing loci and novel alleles per isolate in `allele_qc.tsv`
 - A table of every isolate's reads, depth, ANI, missing loci and novel alleles in the transmission report
+- The report's table of every isolate gives the assembly size and the reference genome's size, which `qc_summary.tsv` now has as `reference_length` (from QUAST)
 - The report lists the paths of the databases the run used, and the figures and thresholds table give each schema's number of loci
 - Hover labels on every point in the report's figures (pair, distances, days and sample types; isolate, sample type and date; QC values and flags), also in the SVG files; the report now embeds the figures as inline SVG
 

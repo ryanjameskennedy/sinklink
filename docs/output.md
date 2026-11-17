@@ -118,7 +118,7 @@ One AlleleCall job per schema, run with `--no-inferred` so the schemas are never
 <details markdown="1">
 <summary>Output files</summary>
 
-- `summary/qc_summary.tsv`: read and assembly QC per isolate (reads, mapped share, depth, breadth, assembly statistics, ANI to the reference, species and MLST) with `qc_status` (`pass`, `warn` or `fail`) and `qc_flags`.
+- `summary/qc_summary.tsv`: read and assembly QC per isolate (reads, mapped share, depth, breadth, assembly statistics, the reference genome's length (`reference_length`, from QUAST), ANI to the reference, species and MLST) with `qc_status` (`pass`, `warn` or `fail`) and `qc_flags`.
 - `summary/allele_qc.tsv`: loci called and missing, novel alleles and the assembly QC status per isolate.
 - `summary/pairwise_distances.tsv`: every pair within each transmission group: sample IDs, LIMS IDs, sample types and patients, days apart, schema, loci shared, allele differences, threshold, verdict, SNP distance and whether recombination was removed, pair QC and notes.
 - `summary/group_summary.tsv`: one line per transmission group, with the smallest and largest allele and SNP distances.
@@ -132,7 +132,7 @@ See [quality control](pipeline/qc.md) for the QC flags and [interpreting the res
 <details markdown="1">
 <summary>Output files</summary>
 
-- `report/transmission_report.html`: one self-contained page with the figures, a table of the transmission groups, a section for each group with its timeline, tree and pairs, the isolate QC (with a table of every isolate's reads, depth, ANI, missing loci and novel alleles), the thresholds and the number of loci in each schema, and the paths of the databases the run used (Kraken2 and Bracken, Deacon, GAMBIT, the reference genomes and the chewBBACA schemas). Hover over any point in a figure to see the isolate or pair it stands for and its values. Open it in a browser; it needs no internet connection.
+- `report/transmission_report.html`: one self-contained page with the figures, a table of the transmission groups, a section for each group with its timeline, tree and pairs, the isolate QC (with a table of every isolate's reads, depth, assembly and reference genome size, ANI, missing loci and novel alleles), the thresholds and the number of loci in each schema, and the paths of the databases the run used (Kraken2 and Bracken, Deacon, GAMBIT, the reference genomes and the chewBBACA schemas). Hover over any point in a figure to see the isolate or pair it stands for and its values. Open it in a browser; it needs no internet connection.
 - `report/table1.tsv`: one line per transmission group (species, isolates, environment and patient samples, patients, first and last sample, days, allele and SNP distance ranges, verdict and QC), ready to become Table 1 of a paper.
 - `report/figures/`: every figure as PDF, SVG and PNG (`--report_formats`); the SVGs keep the hover labels:
   - `distance_overview`: the allele differences of every pair, one row per group and one panel per species, with the schema's number of loci, the threshold and the borderline range;

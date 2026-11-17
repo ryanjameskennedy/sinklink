@@ -904,9 +904,9 @@ def qc_figure(figs, qc_rows, allele_qc, schemas, cutoffs, width_mm):
 
 
 ISOLATE_FIELDS = ["sample", "transmission", "schema", "platform", "reads", "mapped", "mean_depth", "breadth",
-                  "contigs", "n50", "reference_ani", "st", "loci_missing", "novel_alleles", "qc_status", "qc_flags"]
+                  "contigs", "n50", "assembly_length", "reference_length", "reference_ani", "st", "loci_missing", "novel_alleles", "qc_status", "qc_flags"]
 ISOLATE_HEADERS = ["Sample", "Group", "Schema", "Platform", "Reads", "Mapped", "Depth", "Breadth", "Contigs", "N50",
-                   "ANI to ref. (aligned)", "ST", "Missing loci", "Novel alleles", "QC", "Flags"]
+                   "Assembly size", "Reference size", "ANI to ref. (aligned)", "ST", "Missing loci", "Novel alleles", "QC", "Flags"]
 
 
 def isolate_qc_rows(qc_rows, allele_qc):
@@ -917,6 +917,10 @@ def isolate_qc_rows(qc_rows, allele_qc):
     def count(value):
         number = to_float(value)
         return "" if number is None else f"{number:,.0f}"
+
+    def megabases(value):
+        number = to_float(value)
+        return "" if number is None else f"{number / 1e6:.2f} Mb"
 
     alleles = {r["sample"]: r for r in allele_qc}
     rows = []
@@ -933,6 +937,8 @@ def isolate_qc_rows(qc_rows, allele_qc):
             "breadth": percent(r.get("breadth")),
             "contigs": count(r.get("contigs")),
             "n50": count(r.get("n50")),
+            "assembly_length": megabases(r.get("assembly_length")),
+            "reference_length": megabases(r.get("reference_length")),
             "reference_ani": "" if ani is None else f"{ani:.2f}%" + ("" if aligned is None else f" ({aligned:.0f}%)"),
             "loci_missing": a.get("loci_missing", ""),
             "novel_alleles": a.get("novel_alleles", ""),
@@ -1044,7 +1050,7 @@ def html_table(rows, fields, headers=None, classes=""):
         for field in fields:
             value = row.get(field, "")
             text = value if isinstance(value, str) and value.startswith("<") else html.escape(str(value))
-            numeric = " class='num'" if re.fullmatch(r"[\d.,–-]+[%x]?", str(value) or "?") else ""
+            numeric = " class='num'" if re.fullmatch(r"[\d.,–-]+(?:[%x]| Mb)?", str(value) or "?") else ""
             cells.append(f"<td{numeric}>{text}</td>")
         body.append("<tr>" + "".join(cells) + "</tr>")
     return (f"<div class='table-wrap'><table class='sortable {classes}'><thead><tr>{head}</tr></thead>"
@@ -1230,7 +1236,7 @@ def build_html(context):
         parts.append("<h3>Every isolate</h3>")
         parts.append("<p class='note'>Reads, mapped reads, depth and breadth come from mapping each isolate's reads "
                      "back to its own assembly. ANI is skani's, from the assembly to the schema's reference genome, "
-                     "with the share of the assembly aligned. Missing loci are schema loci without a valid call; "
+                     "with the share of the assembly aligned; the reference size is that genome's length. Missing loci are schema loci without a valid call; "
                      "novel alleles are calls not yet in the schema, and many of them in one isolate often point "
                      "to sequencing or assembly errors rather than real differences.</p>")
         parts.append(html_table(c["isolates"], ISOLATE_FIELDS, ISOLATE_HEADERS))
