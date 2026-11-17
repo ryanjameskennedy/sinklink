@@ -136,8 +136,9 @@ workflow VARIANT_CALLING {
 
     //
     // Per schema: the pseudogenomes and the reference chromosome in one alignment,
-    // recombination removed with Gubbins when 3 or more sequences are at most
-    // 25% missing (Gubbins' own cut-off), then snp-dists
+    // recombination removed with Gubbins when 4 or more sequences are at most
+    // 25% missing (Gubbins' cut-off; RAxML needs 4), then snp-dists; a schema
+    // whose Gubbins run fails keeps its unfiltered alignment
     //
     GAWK_PSEUDOGENOME.out.output
         .map { meta, fasta -> [ [ id: meta.schema, reference: meta.reference ], fasta ] }
@@ -168,7 +169,7 @@ workflow VARIANT_CALLING {
             [ meta + [ usable: usable ], alignment ]
         }
         .branch { meta, _alignment ->
-            recombination: meta.usable >= 3
+            recombination: meta.usable >= 4
             direct: true
         }
         .set { ch_aligned }
@@ -177,8 +178,11 @@ workflow VARIANT_CALLING {
     GUBBINS.out.fasta
         .flatten()
         .map { fasta -> [ fasta.name.tokenize('.')[0], fasta ] }
-        .join(ch_aligned.recombination.map { meta, _alignment -> [ meta.id, meta ] })
-        .map { _schema, fasta, meta -> [ meta + [ recombination_filtered: true ], fasta ] }
+        .join(ch_aligned.recombination.map { meta, alignment -> [ meta.id, meta, alignment ] }, remainder: true)
+        .filter { _schema, _fasta, meta, _alignment -> meta }
+        .map { _schema, fasta, meta, alignment ->
+            fasta ? [ meta + [ recombination_filtered: true ], fasta ] : [ meta + [ recombination_filtered: false ], alignment ]
+        }
         .mix(ch_aligned.direct.map { meta, alignment -> [ meta + [ recombination_filtered: false ], alignment ] })
         .set { ch_snpdists }
     SNPDISTS ( ch_snpdists )

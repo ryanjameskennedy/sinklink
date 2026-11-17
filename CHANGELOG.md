@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Changed`
 
-- Gubbins is skipped unless 3 or more sequences in a schema's alignment are at most 25% `N` or gap (its own cut-off), instead of stopping the run when too few are left; the share missing per sequence is in `snp_distances/<schema>.missing.tsv`
+- Gubbins is skipped unless 4 or more sequences in a schema's alignment are at most 25% `N` or gap (its own cut-off, and the 4 RAxML needs for a tree), and a schema whose Gubbins run fails gets SNP distances without recombination removed, instead of stopping the run; the share missing per sequence is in `snp_distances/<schema>.missing.tsv`
 - `enterobacter_cloacae` and `enterobacter_cloacae_complex` isolates are typed with `ecloacae` instead of `ehormaechei`; `enterobacter_hormaechei` maps to `ehormaechei`
 - The isolate QC figure labels depth as over the isolate's own assembly, colours isolates by QC status, marks Nanopore isolates with triangles, keeps nearby points apart, zooms the percentage axes to the data and moves the cut-off labels into the legend
 - mlst types each isolate with its schema's scheme (`mlst_scheme` in `assets/schemas.tsv`, passed as `--scheme`) instead of detecting it; `ecloacae` and `ehormaechei` use the PubMLST _E. cloacae_ scheme, which covers the complex

@@ -29,10 +29,10 @@ genome, `snp_distance` counts the chromosome positions where both have a base
 and the bases differ. Positions with too few reads (below `--snp_min_depth`)
 in either isolate, and the reference's repeats and prophages, are left out, as
 are indels. `snp_recombination_filtered` is `yes` when Gubbins removed SNPs in
-recombinant regions first; it needs 3 or more sequences in the schema's
+recombinant regions first; it needs 4 or more sequences in the schema's
 alignment that are at most 25% `N` or gap (the reference counts as one), so a
-schema with a single isolate pair, or with isolates far from the reference,
-gets `no`.
+schema with only 2 isolates, or with isolates far from the reference, gets
+`no`, as does a schema whose Gubbins run failed.
 
 SNP distances have no threshold and do not change the verdict. Use them to
 check a pair near the allele threshold, or a `borderline` _K. oxytoca_ pair:
