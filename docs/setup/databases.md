@@ -55,10 +55,14 @@ the reference genomes, into the same folder (`--references_dir`); it is part of
 | smarcescens | _Serratia bockelmannii_                  | S3         | GCF_008011855.1 |
 | smarcescens | _Serratia nevei_                         | LMG 31536  | GCF_037948395.1 |
 | smarcescens | _Serratia nematodiphila_                 | DSM 21420  | GCF_000738675.1 |
+| smarcescens | _Serratia montpellierensis_              | PsyLou2A   | GCF_020858655.1 |
 
 KCTC 42172 is not marked as type material in NCBI, and _S. marcescens_ subsp.
 _sakuensis_ is now a synonym of _S. marcescens_, so it is a second
 _S. marcescens_ genome.
+
+_S. montpellierensis_ (Blackburn et al. 2024) is effectively but not yet
+validly published.
 
 For `ecloacae` and `ehormaechei`, the table lists the type strains of the 34
 _Enterobacter_ species and subspecies with a type-strain genome in NCBI RefSeq,
