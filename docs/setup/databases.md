@@ -58,9 +58,20 @@ the reference genomes, into the same folder (`--references_dir`); it is part of
 
 KCTC 42172 is not marked as type material in NCBI, and _S. marcescens_ subsp.
 _sakuensis_ is now a synonym of _S. marcescens_, so it is a second
-_S. marcescens_ genome. To add a species, add its schema, species, strain and
-genome accession to your copy of the table (`--type_strains`) and run
-`make type_strains` again.
+_S. marcescens_ genome.
+
+For `ecloacae` and `ehormaechei`, the table lists the type strains of the 34
+_Enterobacter_ species and subspecies with a type-strain genome in NCBI RefSeq,
+the _E. cloacae_ complex and its close relatives: among them _E. hormaechei_
+(DSM 12409, and the type strains of its subspecies _hoffmannii_, _oharae_,
+_steigerwaltii_ and _xiangfangensis_), _E. asburiae_ (ATCC 35953),
+_E. cloacae_ (ATCC 13047), _E. kobei_ (DSM 13645), _E. ludwigii_ (EN-119),
+_E. roggenkampii_ (DSM 16690) and _E. bugandensis_ (EB-247). An isolate is
+compared with the panel of its own schema; one row can name several schemas,
+separated by commas.
+
+To add a species, add its schema, species, strain and genome accession to your
+copy of the table (`--type_strains`) and run `make type_strains` again.
 
 ## Deacon (human read removal)
 

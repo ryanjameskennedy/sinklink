@@ -192,12 +192,15 @@ def referenceChannel(ch_samples, references_dir) {
 }
 
 //
-// The downloaded type strain genomes of each sample's schema (assets/type_strains.tsv): [ meta, [ fasta ] ]
+// The downloaded type strain genomes of each sample's schema (assets/type_strains.tsv, where a row
+// can list several schemas separated by commas): [ meta, [ fasta ] ]
 //
 def typeStrainChannel(ch_samples, references_dir, table) {
-    def panels = readTsv(table).groupBy { row -> row.schema }
-        .collectEntries { schema, rows -> [ schema, rows.collect { row -> file("${references_dir}/${row.accession}.fasta") } ] }
-    def missing = panels.values().flatten().findAll { f -> !f.exists() }
+    def panels = readTsv(table)
+        .collectMany { row -> row.schema.tokenize(',')*.trim().collect { schema -> [ schema, row.accession ] } }
+        .groupBy { schema, _accession -> schema }
+        .collectEntries { schema, rows -> [ schema, rows.collect { _schema, accession -> file("${references_dir}/${accession}.fasta") } ] }
+    def missing = panels.values().flatten().unique().findAll { f -> !f.exists() }
     if (missing) {
         log.warn("Type strain genomes ${missing*.name.join(', ')} are not in ${references_dir} (run make type_strains); species are called from the others")
     }
