@@ -2,13 +2,15 @@
 """Summarise read and assembly QC for one isolate and check it against thresholds.
 
 Reads QUAST, samtools coverage and flagstat, gambitcore, Kraken2/Bracken, mlst,
-Mash and skani output for one isolate, checks them against assets/qc_thresholds.tsv and the species,
+Mash and skani output for one isolate (skani also against the type strains of the species
+its schema covers, to name its species), checks them against assets/qc_thresholds.tsv and the species,
 genome size and reference genome expectations for its schema in
 assets/schemas.tsv, and writes a one-row TSV. Rows from all isolates are concatenated into qc_summary.tsv.
 """
 
 import argparse
 import csv
+import os
 import re
 import sys
 
@@ -18,6 +20,7 @@ FIELDS = [
     "assembly_length", "contigs", "n50", "gc",
     "reads", "mapped_fraction", "mean_depth", "breadth",
     "reference", "reference_length", "reference_ani", "reference_aligned_fraction", "reference_distance", "genome_fraction",
+    "species_call", "type_strain_species", "type_strain", "type_strain_ani", "type_strain_aligned_fraction",
     "gambit_species", "completeness", "gambit_qc",
     "species_source", "top_species", "top_species_fraction",
     "expected_species_fraction", "other_genus_fraction",
@@ -109,6 +112,35 @@ def skani_ani(path):
     return to_float(rows[0].get("ANI")), to_float(rows[0].get("Align_fraction_query"))
 
 
+SPECIES_ANI = 95
+
+
+def closest_type_strain(path, table):
+    """The type strain with the highest skani ANI to the assembly, and its species when the ANI is
+    at least the 95% species boundary."""
+    if not path or not table:
+        return {}
+    strains = {row["accession"]: row for row in read_tsv(table)}
+    best = None
+    for row in read_tsv(path):
+        ani = to_float(row.get("ANI"))
+        if ani is not None and (best is None or ani > best[0]):
+            accession = re.sub(r"\.(fasta|fna|fa)(\.gz)?$", "", os.path.basename(row.get("Ref_file", "")))
+            best = (ani, to_float(row.get("Align_fraction_query")), accession)
+    if best is None:
+        return {}
+    ani, aligned, accession = best
+    strain = strains.get(accession, {})
+    species = strain.get("species", "")
+    return {
+        "species_call": species if ani >= SPECIES_ANI else "",
+        "type_strain_species": species,
+        "type_strain": strain.get("strain", accession),
+        "type_strain_ani": ani,
+        "type_strain_aligned_fraction": aligned,
+    }
+
+
 def gambitcore_metrics(path):
     if not path:
         return {}
@@ -184,6 +216,8 @@ def main():
     parser.add_argument("--mlst", help="mlst TSV output")
     parser.add_argument("--mash", help="mash dist output, reference against assembly")
     parser.add_argument("--ani", help="skani dist output, assembly against reference")
+    parser.add_argument("--type-strains", help="skani dist output, assembly against the schema's type strains")
+    parser.add_argument("--type-strain-table", help="assets/type_strains.tsv")
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
@@ -204,6 +238,7 @@ def main():
     depth, breadth = coverage_metrics(args.coverage)
     reads, mapped_fraction = flagstat_metrics(args.flagstat)
     ani, ani_aligned = skani_ani(args.ani)
+    type_strain = closest_type_strain(args.type_strains, args.type_strain_table)
     gambit = gambitcore_metrics(args.gambitcore)
     source, fractions = species_fractions(args.bracken, args.kraken_report)
     mlst_scheme, st = mlst_result(args.mlst)
@@ -308,6 +343,11 @@ def main():
         "reference_aligned_fraction": fmt(ani_aligned, 1),
         "reference_distance": fmt(ref_distance, 4),
         "genome_fraction": fmt(quast.get("genome_fraction"), 2),
+        "species_call": type_strain.get("species_call", ""),
+        "type_strain_species": type_strain.get("type_strain_species", ""),
+        "type_strain": type_strain.get("type_strain", ""),
+        "type_strain_ani": fmt(type_strain.get("type_strain_ani"), 2),
+        "type_strain_aligned_fraction": fmt(type_strain.get("type_strain_aligned_fraction"), 1),
         "gambit_species": gambit.get("gambit_species", ""),
         "completeness": fmt(completeness, 2),
         "gambit_qc": gambit.get("gambit_qc", ""),

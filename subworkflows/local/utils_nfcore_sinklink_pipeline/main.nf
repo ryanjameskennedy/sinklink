@@ -192,6 +192,21 @@ def referenceChannel(ch_samples, references_dir) {
 }
 
 //
+// The downloaded type strain genomes of each sample's schema (assets/type_strains.tsv): [ meta, [ fasta ] ]
+//
+def typeStrainChannel(ch_samples, references_dir, table) {
+    def panels = readTsv(table).groupBy { row -> row.schema }
+        .collectEntries { schema, rows -> [ schema, rows.collect { row -> file("${references_dir}/${row.accession}.fasta") } ] }
+    def missing = panels.values().flatten().findAll { f -> !f.exists() }
+    if (missing) {
+        log.warn("Type strain genomes ${missing*.name.join(', ')} are not in ${references_dir} (run make type_strains); species are called from the others")
+    }
+    return ch_samples
+        .map { meta, _reads -> [ meta, (panels[meta.schema] ?: []).findAll { f -> f.exists() } ] }
+        .filter { _meta, fastas -> fastas }
+}
+
+//
 // Read a TSV file with a header into a list of maps
 //
 def readTsv(path) {

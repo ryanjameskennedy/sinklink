@@ -8,9 +8,10 @@ process SUMMARISE_QC {
         'biocontainers/python:3.9--1' }"
 
     input:
-    tuple val(meta), path(assembly), path(quast), path(coverage), path(flagstat), path(gambitcore), path(bracken), path(kraken_report), path(mlst), path(mash), path(ani)
+    tuple val(meta), path(assembly), path(quast), path(coverage), path(flagstat), path(gambitcore), path(bracken), path(kraken_report), path(mlst), path(mash), path(ani), path(type_strain_ani)
     path schema_table
     path thresholds
+    path type_strain_table
 
     output:
     tuple val(meta), path("*.qc.tsv"), emit: tsv
@@ -42,6 +43,7 @@ process SUMMARISE_QC {
         ${mlst ? "--mlst ${mlst}" : ''} \\
         ${mash ? "--mash ${mash}" : ''} \\
         ${ani ? "--ani ${ani}" : ''} \\
+        ${type_strain_ani ? "--type-strains ${type_strain_ani} --type-strain-table ${type_strain_table}" : ''} \\
         ${args} \\
         --output ${prefix}.qc.tsv
     """

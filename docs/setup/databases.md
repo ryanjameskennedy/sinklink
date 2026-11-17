@@ -5,6 +5,7 @@
 | Kraken2/Bracken    | `make kraken_db`    | `--kraken_db`      | always                                           |
 | Deacon human index | `make deacon_index` | `--deacon_index`   | unless `--skip_host_removal`                     |
 | Reference genomes  | `make references`   | `--references_dir` | unless `--skip_variant_calling`                  |
+| Type strains       | `make type_strains` | `--references_dir` | optional; species are not named without them     |
 | GAMBIT             | `make gambit_db`    | `--gambit_db`      | optional; completeness is not checked without it |
 
 ## Reference genomes
@@ -33,6 +34,33 @@ table (`--schema_table`) and run `make references` again.
 
 QUAST and Mash use the references whenever `--references_dir` is set, also
 with `--skip_variant_calling`.
+
+## Type strains
+
+Some schemas cover several closely related species that Kraken2 and the
+laboratory often cannot tell apart, and whose genomes sit just around the 95%
+ANI species boundary from each other. For these, `assets/type_strains.tsv`
+lists the genome of the type strain of each species, and each isolate's
+assembly is compared with them with skani to name its species (see
+[QC](../pipeline/qc.md#species-call)). `make type_strains` downloads them like
+the reference genomes, into the same folder (`--references_dir`); it is part of
+`make install`.
+
+| Schema      | Species                                  | Strain     | Genome          |
+| ----------- | ---------------------------------------- | ---------- | --------------- |
+| smarcescens | _Serratia marcescens_                    | ATCC 13880 | GCF_017654245.1 |
+| smarcescens | _Serratia marcescens_ subsp. _sakuensis_ | KCTC 42172 | GCF_003428265.1 |
+| smarcescens | _Serratia ureilytica_                    | JCM 16474  | GCF_039523675.1 |
+| smarcescens | _Serratia sarumanii_                     | K-M0706    | GCF_029962605.1 |
+| smarcescens | _Serratia bockelmannii_                  | S3         | GCF_008011855.1 |
+| smarcescens | _Serratia nevei_                         | LMG 31536  | GCF_037948395.1 |
+| smarcescens | _Serratia nematodiphila_                 | DSM 21420  | GCF_000738675.1 |
+
+KCTC 42172 is not marked as type material in NCBI, and _S. marcescens_ subsp.
+_sakuensis_ is now a synonym of _S. marcescens_, so it is a second
+_S. marcescens_ genome. To add a species, add its schema, species, strain and
+genome accession to your copy of the table (`--type_strains`) and run
+`make type_strains` again.
 
 ## Deacon (human read removal)
 

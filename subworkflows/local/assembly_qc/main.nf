@@ -1,7 +1,8 @@
 //
 // Assembly QC: QUAST statistics, Mash distance and skani ANI against the schema's
-// reference genome (when there is one), gambitcore completeness, read counts and
-// depth from mapping the reads to the isolate's own assembly, and 7-gene MLST
+// reference genome (when there is one), skani ANI against the type strains of the
+// species the schema covers, gambitcore completeness, read counts and depth from
+// mapping the reads to the isolate's own assembly, and 7-gene MLST
 //
 
 include { QUAST             } from '../../../modules/nf-core/quast/main'
@@ -13,6 +14,7 @@ include { SAMTOOLS_INDEX    } from '../../../modules/nf-core/samtools/index/main
 include { SAMTOOLS_COVERAGE } from '../../../modules/nf-core/samtools/coverage/main'
 include { SAMTOOLS_FLAGSTAT } from '../../../modules/nf-core/samtools/flagstat/main'
 include { SKANI_DIST        } from '../../../modules/nf-core/skani/dist/main'
+include { SKANI_DIST as SKANI_TYPE_STRAINS } from '../../../modules/nf-core/skani/dist/main'
 include { MLST              } from '../../../modules/nf-core/mlst/main'
 include { MASH_DIST         } from '../../../modules/nf-core/mash/dist/main'
 
@@ -22,6 +24,7 @@ workflow ASSEMBLY_QC {
     ch_assembly  // channel: [ val(meta), path(fasta) ]
     ch_reads     // channel: [ val(meta), [ fastq ] ]
     ch_reference // channel: [ val(meta), [ fasta, fai, gff, gbff ] ]
+    ch_type_strains // channel: [ val(meta), [ fasta ] ]
     gambit_db    // path: GAMBIT database folder, or [] to skip gambitcore
 
     main:
@@ -53,6 +56,15 @@ workflow ASSEMBLY_QC {
         }
         .set { ch_skani }
     SKANI_DIST ( ch_skani.assembly, ch_skani.reference )
+
+    ch_assembly
+        .join(ch_type_strains)
+        .multiMap { meta, fasta, type_strains ->
+            assembly    : [ meta, fasta ]
+            type_strains: [ [ id: meta.schema ], type_strains ]
+        }
+        .set { ch_type_strain_ani }
+    SKANI_TYPE_STRAINS ( ch_type_strain_ani.assembly, ch_type_strain_ani.type_strains )
     MLST ( ch_assembly )
 
     ch_gambitcore = channel.empty()
@@ -104,6 +116,7 @@ workflow ASSEMBLY_QC {
     mlst          = MLST.out.tsv                  // channel: [ val(meta), path(tsv) ]
     mash          = MASH_DIST.out.dist            // channel: [ val(meta), path(txt) ]
     ani           = SKANI_DIST.out.dist           // channel: [ val(meta), path(tsv) ]
+    type_strains  = SKANI_TYPE_STRAINS.out.dist   // channel: [ val(meta), path(tsv) ]
     multiqc_files = QUAST.out.tsv.map { _meta, tsv -> tsv }
         .mix(SAMTOOLS_FLAGSTAT.out.flagstat.map { _meta, txt -> txt }) // channel: [ path ]
 }

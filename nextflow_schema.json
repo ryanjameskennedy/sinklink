@@ -269,6 +269,14 @@
                     "fa_icon": "fas fa-table",
                     "hidden": true
                 },
+                "type_strains": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Type strain genomes per schema, used to name each isolate's species. Defaults to assets/type_strains.tsv.",
+                    "fa_icon": "fas fa-table",
+                    "hidden": true
+                },
                 "qc_thresholds": {
                     "type": "string",
                     "format": "file-path",

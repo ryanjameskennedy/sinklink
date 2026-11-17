@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
+- A species call within schemas that cover several close species: skani ANI from each assembly to the type strains in `assets/type_strains.tsv` (`ani/<sample>.type_strains.tsv`), with the closest type strain, its ANI and the species at 95% or more in `qc_summary.tsv` and the report; `make type_strains` downloads them (part of `make install`), starting with the _Serratia marcescens_ complex
 - An _Enterobacter cloacae_ complex schema (`ecloacae`): the Miller et al. 2026 cgMLST from Chewie-NS (1,812 loci), threshold ≤3 alleles, borderline ≤5, with GCF_905331265.2 as reference; `make ecloacae_all` unpacks the ready-to-use schema without PrepExternalSchema
 - `make kraken_db` downloads the full Kraken2 Standard database (85 GB), or another one with `KRAKEN_DB` and `KRAKEN_DB_DATE`
 - skani ANI from each assembly to its schema's reference genome (`ani/`), checked against 95% (`distant_reference`); the Mash distance is only checked when there is no ANI

@@ -47,6 +47,7 @@ or step by step:
 make -C containers all CONTAINERS_DIR=/path/to/singularity
 make databases ASSETS_DIR=/path/to/dbs
 make references ASSETS_DIR=/path/to/dbs CONTAINERS_DIR=/path/to/singularity
+make type_strains ASSETS_DIR=/path/to/dbs CONTAINERS_DIR=/path/to/singularity
 make schemas ASSETS_DIR=/path/to/dbs CONTAINERS_DIR=/path/to/singularity
 make check ASSETS_DIR=/path/to/dbs
 ```

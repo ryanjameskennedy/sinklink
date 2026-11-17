@@ -25,6 +25,7 @@ GAMBIT_URL := https://storage.googleapis.com/jlumpe-gambit/public/databases/refs
 GAMBIT_FILES := gambit-refseq-curated-1.0.gdb gambit-refseq-curated-1.0.gs
 REFERENCES_DIR := $(ASSETS_DIR)/references
 REFERENCES := $(shell awk -F'\t' 'NR==1 {for (i = 1; i <= NF; i++) if ($$i == "reference") col = i; next} $$col != "" {print $$col}' $(SCRIPT_DIR)/assets/schemas.tsv)
+TYPE_STRAINS := $(shell awk -F'\t' 'NR==1 {for (i = 1; i <= NF; i++) if ($$i == "accession") col = i; next} $$col != "" {print $$col}' $(SCRIPT_DIR)/assets/type_strains.tsv)
 NCBI_DATASETS := https://api.ncbi.nlm.nih.gov/datasets/v2/genome/accession
 DEACON_DIR := $(ASSETS_DIR)/deacon
 DEACON_INDEX := panhuman-1.k31w15.idx
@@ -115,7 +116,8 @@ NCBI_EFETCH := https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucc
 # Main rules
 # ==============================================================================
 .PHONY: print_paths install download_or_build_containers schemas databases gambit_db \
-	deacon_index kraken_db references check check_schemas check_databases check_references
+	deacon_index kraken_db references type_strains check check_schemas check_databases \
+	check_references check_type_strains
 
 print_paths:
 	@echo "SCRIPT_DIR:" $(SCRIPT_DIR)
@@ -131,6 +133,7 @@ print_paths:
 install: download_or_build_containers \
 	databases \
 	references \
+	type_strains \
 	schemas
 
 download_or_build_containers:
@@ -177,6 +180,10 @@ $(DEACON_DIR)/$(DEACON_INDEX):
 # plus its GenBank file for finding prophages with PhiSpy.
 references: $(foreach accn,$(REFERENCES),$(REFERENCES_DIR)/$(accn).fasta $(REFERENCES_DIR)/$(accn).fasta.fai $(REFERENCES_DIR)/$(accn).gbff)
 
+# The type strains of the species a schema covers (assets/type_strains.tsv), next to
+# the reference genomes; each isolate is compared with them to name its species.
+type_strains: $(foreach accn,$(TYPE_STRAINS),$(REFERENCES_DIR)/$(accn).fasta)
+
 $(REFERENCES_DIR)/%.fasta:
 	$(call log_message,Downloading reference genome $* ...)
 	mkdir -p $(REFERENCES_DIR) \
@@ -200,7 +207,7 @@ $(REFERENCES_DIR)/%.gbff:
 	&& mv $@.tmp $@ \
 	&& rm -f $@.zip
 
-check: check_databases check_references check_schemas
+check: check_databases check_references check_type_strains check_schemas
 
 check_databases:
 	@status=0; \
@@ -228,6 +235,17 @@ check_references:
 				echo "[!] reference: missing $(REFERENCES_DIR)/$$accn.$$ext"; status=1; \
 			fi; \
 		done; \
+	done; \
+	exit $$status
+
+check_type_strains:
+	@status=0; \
+	for accn in $(TYPE_STRAINS); do \
+		if [[ -s $(REFERENCES_DIR)/$$accn.fasta ]]; then \
+			echo "[✓] type strain: $(REFERENCES_DIR)/$$accn.fasta"; \
+		else \
+			echo "[!] type strain: missing $(REFERENCES_DIR)/$$accn.fasta"; status=1; \
+		fi; \
 	done; \
 	exit $$status
 

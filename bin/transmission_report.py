@@ -61,7 +61,7 @@ QC_STATUS = {
     "fail": ("Fail", "#d03b3b", "#ffffff"),
     "": ("Not checked", GREY, "#ffffff"),
 }
-ROMAN_WORDS = {"species", "complex", "group"}
+ROMAN_WORDS = {"species", "complex", "group", "subsp."}
 DISTANCE_TICKS = [0, 5, 10, 15, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000]
 MM = 1 / 25.4
 
@@ -904,9 +904,11 @@ def qc_figure(figs, qc_rows, allele_qc, schemas, cutoffs, width_mm):
 
 
 ISOLATE_FIELDS = ["sample", "transmission", "schema", "platform", "reads", "mapped", "mean_depth", "breadth",
-                  "contigs", "n50", "assembly_length", "reference_length", "reference_ani", "st", "loci_missing", "novel_alleles", "qc_status", "qc_flags"]
+                  "contigs", "n50", "assembly_length", "reference_length", "reference_ani",
+                  "closest_type_strain", "st", "loci_missing", "novel_alleles", "qc_status", "qc_flags"]
 ISOLATE_HEADERS = ["Sample", "Group", "Schema", "Platform", "Reads", "Mapped", "Depth", "Breadth", "Contigs", "N50",
-                   "Assembly size", "Reference size", "ANI to ref. (aligned)", "ST", "Missing loci", "Novel alleles", "QC", "Flags"]
+                   "Assembly size", "Reference size", "ANI to ref. (aligned)",
+                   "Closest type strain (ANI)", "ST", "Missing loci", "Novel alleles", "QC", "Flags"]
 
 
 def isolate_qc_rows(qc_rows, allele_qc):
@@ -928,6 +930,10 @@ def isolate_qc_rows(qc_rows, allele_qc):
         a = alleles.get(r["sample"], {})
         ani = to_float(r.get("reference_ani"))
         aligned = to_float(r.get("reference_aligned_fraction"))
+        type_ani = to_float(r.get("type_strain_ani"))
+        type_species = r.get("type_strain_species", "")
+        type_strain = " ".join(t for t in (species_html(type_species) if type_species else "",
+                                           html.escape(r.get("type_strain", ""))) if t)
         rows.append({
             **r,
             "transmission": r.get("transmission") or a.get("transmission", ""),
@@ -940,6 +946,7 @@ def isolate_qc_rows(qc_rows, allele_qc):
             "assembly_length": megabases(r.get("assembly_length")),
             "reference_length": megabases(r.get("reference_length")),
             "reference_ani": "" if ani is None else f"{ani:.2f}%" + ("" if aligned is None else f" ({aligned:.0f}%)"),
+            "closest_type_strain": f"{type_strain} ({type_ani:.2f}%)" if type_strain and type_ani is not None else "",
             "loci_missing": a.get("loci_missing", ""),
             "novel_alleles": a.get("novel_alleles", ""),
         })
@@ -1236,7 +1243,10 @@ def build_html(context):
         parts.append("<h3>Every isolate</h3>")
         parts.append("<p class='note'>Reads, mapped reads, depth and breadth come from mapping each isolate's reads "
                      "back to its own assembly. ANI is skani's, from the assembly to the schema's reference genome, "
-                     "with the share of the assembly aligned; the reference size is that genome's length. Missing loci are schema loci without a valid call; "
+                     "with the share of the assembly aligned; the reference size is that genome's length. The "
+                     "closest type strain is the type strain, among the species the schema covers, with the highest "
+                     "skani ANI to the assembly; at 95% or more the isolate belongs to that species. Missing loci "
+                     "are schema loci without a valid call; "
                      "novel alleles are calls not yet in the schema, and many of them in one isolate often point "
                      "to sequencing or assembly errors rather than real differences.</p>")
         parts.append(html_table(c["isolates"], ISOLATE_FIELDS, ISOLATE_HEADERS))

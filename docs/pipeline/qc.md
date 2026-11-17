@@ -64,6 +64,19 @@ an ANI (e.g. no reference genome), the Mash distance is checked instead
 their genome unmapped, so their variant calls and SNP distances cover less of
 the genome.
 
+## Species call
+
+For schemas with type strains in `assets/type_strains.tsv` (see
+[databases](../setup/databases.md#type-strains)), skani also compares the
+assembly with the type strain of each species the schema covers. The QC summary
+gives the closest type strain (`type_strain_species`, `type_strain`), its ANI
+and the share of the assembly aligned to it, and, when that ANI is 95% or more,
+the species (`species_call`). The call has no threshold of its own and does not
+change `qc_status`. It answers what Kraken2 cannot for close species: Kraken2
+splits the reads of one isolate between species whose genomes share most of
+their sequence, and many genomes in RefSeq still carry the name of the species
+they were split from.
+
 The species and genome size expectations for each schema are the
 `species_pattern`, `genera`, `genome_size_min_mb` and `genome_size_max_mb`
 columns of `assets/schemas.tsv`, listed on each

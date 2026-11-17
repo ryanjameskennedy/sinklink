@@ -24,6 +24,7 @@ The full schema, with types and validation, is
 | `--schema_table`   | Thresholds, accepted species and genome size per schema                      | `assets/schemas.tsv`                     |
 | `--species_map`    | Laboratory growth label to schema                                            | `assets/species_map.tsv`                 |
 | `--qc_thresholds`  | Read and assembly QC thresholds per platform                                 | `assets/qc_thresholds.tsv`               |
+| `--type_strains`   | Type strain genomes per schema, for naming each isolate's species            | `assets/type_strains.tsv`                |
 
 ## Analysis
 

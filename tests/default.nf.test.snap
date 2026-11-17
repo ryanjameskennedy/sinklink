@@ -110,6 +110,9 @@
                 "SKANI_DIST": [
                     "skani"
                 ],
+                "SKANI_TYPE_STRAINS": [
+                    "skani"
+                ],
                 "SKESA": [
                     "skesa"
                 ],
@@ -130,8 +133,11 @@
             [
                 "ani",
                 "ani/S01.ani.tsv",
+                "ani/S01.type_strains.tsv",
                 "ani/S02.ani.tsv",
+                "ani/S02.type_strains.tsv",
                 "ani/S03.ani.tsv",
+                "ani/S03.type_strains.tsv",
                 "assembly",
                 "assembly/S01.fa",
                 "assembly/S02.fa",
@@ -404,8 +410,11 @@
             ],
             [
                 "S01.ani.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S01.type_strains.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.ani.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.type_strains.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.ani.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.type_strains.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -630,7 +639,7 @@
                 "S03.vcf.gz.tbi:md5,d41d8cd98f00b204e9800998ecf8427e"
             ]
         ],
-        "timestamp": "2026-11-17T14:12:31.1494",
+        "timestamp": "2026-11-17T20:19:03.156624",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"
@@ -753,6 +762,9 @@
                 "SKANI_DIST": [
                     "skani"
                 ],
+                "SKANI_TYPE_STRAINS": [
+                    "skani"
+                ],
                 "SKESA": [
                     "skesa"
                 ],
@@ -776,8 +788,11 @@
             [
                 "ani",
                 "ani/S01.ani.tsv",
+                "ani/S01.type_strains.tsv",
                 "ani/S02.ani.tsv",
+                "ani/S02.type_strains.tsv",
                 "ani/S03.ani.tsv",
+                "ani/S03.type_strains.tsv",
                 "assembly",
                 "assembly/S01.fa",
                 "assembly/S02.fa",
@@ -1061,8 +1076,11 @@
             ],
             [
                 "S01.ani.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S01.type_strains.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.ani.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S02.type_strains.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.ani.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "S03.type_strains.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S01.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S02.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "S03.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -1295,7 +1313,7 @@
                 "S03.vcf.gz.tbi:md5,d41d8cd98f00b204e9800998ecf8427e"
             ]
         ],
-        "timestamp": "2026-11-17T14:12:47.91327",
+        "timestamp": "2026-11-17T20:19:32.167373",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"

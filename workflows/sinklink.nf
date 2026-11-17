@@ -19,6 +19,7 @@ include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pi
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_sinklink_pipeline'
 include { assetPath              } from '../subworkflows/local/utils_nfcore_sinklink_pipeline'
 include { referenceChannel       } from '../subworkflows/local/utils_nfcore_sinklink_pipeline'
+include { typeStrainChannel      } from '../subworkflows/local/utils_nfcore_sinklink_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -38,6 +39,7 @@ workflow SINKLINK {
     ch_schema_table = file(assetPath(params.schema_table, 'schemas.tsv'), checkIfExists: true)
     ch_species_map  = file(assetPath(params.species_map, 'species_map.tsv'), checkIfExists: true)
     ch_thresholds   = file(assetPath(params.qc_thresholds, 'qc_thresholds.tsv'), checkIfExists: true)
+    ch_type_strain_table = file(assetPath(params.type_strains, 'type_strains.tsv'), checkIfExists: true)
     ch_metadata     = file(params.metadata, checkIfExists: true)
     ch_gambit_db    = params.gambit_db ? file(params.gambit_db, checkIfExists: true) : []
 
@@ -51,6 +53,9 @@ workflow SINKLINK {
     }
     ch_reference = params.references_dir ?
         referenceChannel(ch_samplesheet, params.references_dir) :
+        channel.empty()
+    ch_type_strains = params.references_dir ?
+        typeStrainChannel(ch_samplesheet, params.references_dir, ch_type_strain_table) :
         channel.empty()
 
     //
@@ -68,9 +73,10 @@ workflow SINKLINK {
     ch_assembly = ASSEMBLY.out.assembly
 
     //
-    // SUBWORKFLOW: Assembly QC, ANI to the reference, read counts and depth, and 7-gene MLST
+    // SUBWORKFLOW: Assembly QC, ANI to the reference and the type strains, read counts and
+    // depth, and 7-gene MLST
     //
-    ASSEMBLY_QC ( ch_assembly, ch_reads, ch_reference, ch_gambit_db )
+    ASSEMBLY_QC ( ch_assembly, ch_reads, ch_reference, ch_type_strains, ch_gambit_db )
     ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.multiqc_files)
 
     //
@@ -105,10 +111,11 @@ workflow SINKLINK {
         .join(ASSEMBLY_QC.out.mlst, remainder: true)
         .join(ASSEMBLY_QC.out.mash, remainder: true)
         .join(ASSEMBLY_QC.out.ani, remainder: true)
+        .join(ASSEMBLY_QC.out.type_strains, remainder: true)
         .map { row -> row.collect { item -> item == null ? [] : item } }
         .set { ch_qc_input }
 
-    SUMMARISE_QC ( ch_qc_input, ch_schema_table, ch_thresholds )
+    SUMMARISE_QC ( ch_qc_input, ch_schema_table, ch_thresholds, ch_type_strain_table )
 
     SUMMARISE_QC.out.tsv
         .map { _meta, tsv -> tsv }
