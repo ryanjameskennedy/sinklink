@@ -230,11 +230,11 @@ def pair_tip(pair):
 
 
 def isolate_tip(sid, sample):
-    patient = sample.get("studypatientnumber", "").strip()
+    number = sample.get("studypatientnumber", "").strip()
     sampled = parse_date(sample.get("date"))
     return [
         f"{sid} ({sample.get('transmission', '')})" if sample.get("transmission") else sid,
-        " · ".join(x for x in (sample.get("sample_type", "").strip(), f"patient {patient}" if patient else "") if x),
+        " · ".join(x for x in (sample.get("sample_type", "").strip(), f"Study patient number {number}" if number else "") if x),
         f"sampled {sampled.date().isoformat()}" if sampled else "",
     ]
 
