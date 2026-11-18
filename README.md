@@ -1,7 +1,7 @@
 # sinklink
 
 [![nf-test](https://github.com/ryanjameskennedy/sinklink/actions/workflows/nf-test.yml/badge.svg)](https://github.com/ryanjameskennedy/sinklink/actions/workflows/nf-test.yml)
-[![Docs](https://readthedocs.org/projects/sinklink/badge/?version=latest)](https://sinklink.readthedocs.io)
+[![Docs](https://img.shields.io/readthedocs/sinklink/latest)](https://sinklink.readthedocs.io)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A525.04.0-23aa62.svg)](https://www.nextflow.io/)
 
 _Did the sink infect the patient?_
