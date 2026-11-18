@@ -14,6 +14,8 @@ process TRANSMISSION_REPORT {
     path metadata
     path schema_table
     path qc_thresholds
+    path type_strain_table
+    path group_ani, stageAs: 'group_ani/*'
 
     output:
     path "report/transmission_report.html", emit: html
@@ -38,6 +40,8 @@ process TRANSMISSION_REPORT {
         --metadata ${metadata} \\
         --schemas ${schema_table} \\
         --qc-thresholds ${qc_thresholds} \\
+        --type-strains ${type_strain_table} \\
+        --group-ani group_ani \\
         --pipeline-version ${workflow.manifest.version} \\
         --outdir report \\
         ${args}

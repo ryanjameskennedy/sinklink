@@ -27,6 +27,7 @@ The schema accepts _K. oxytoca_, _K. michiganensis_, _K. grimontii_, _K. pasteur
 | `species_pattern`               | `^Klebsiella (oxytoca\|michiganensis\|grimontii\|pasteurii\|huaxiensis\|spallanzanii)$` |
 | `genera`                        | Klebsiella, Raoultella                                                                  |
 | Expected genome size            | 5.5–6.8 Mb                                                                              |
+| `mlst_scheme`                   | `koxytoca`                                                                              |
 
 ## In the VASK study
 

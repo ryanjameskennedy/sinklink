@@ -25,6 +25,7 @@ The schema accepts _S. marcescens_ and _S. nematodiphila_.
 | `species_pattern`               | `^Serratia (marcescens\|nematodiphila)$` |
 | `genera`                        | Serratia                                 |
 | Expected genome size            | 4.8–5.8 Mb                               |
+| `mlst_scheme`                   | `serratia`                               |
 
 ## In the VASK study
 

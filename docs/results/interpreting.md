@@ -19,8 +19,12 @@ locus. Missing or ambiguous calls (`LNF`, `PLOT3`, `PLOT5`, `ASM`, `ALM`,
 differences. Novel alleles keep their `*` prefix so they never match a schema
 allele with the same number.
 
-The `notes` column lists QC flags of either isolate, different 7-gene STs and
-pairs sequenced on different platforms.
+The `notes` column lists QC flags of either isolate, different 7-gene STs,
+pairs sequenced on different platforms and pairs whose isolates were called as
+different species from the type strains (see
+[QC](../pipeline/qc.md#species-call)). Isolates of different species are not
+the same strain whatever their allele count; the verdict still follows the
+threshold, so read it together with this note.
 
 ## SNP distances
 
@@ -29,9 +33,10 @@ genome, `snp_distance` counts the chromosome positions where both have a base
 and the bases differ. Positions with too few reads (below `--snp_min_depth`)
 in either isolate, and the reference's repeats and prophages, are left out, as
 are indels. `snp_recombination_filtered` is `yes` when Gubbins removed SNPs in
-recombinant regions first; it needs 3 or more sequences in the schema's
-alignment (the reference counts as one), so a schema with a single isolate
-pair gets `no`.
+recombinant regions first; it needs 4 or more sequences in the schema's
+alignment that are at most 25% `N` or gap (the reference counts as one), so a
+schema with only 2 isolates, or with isolates far from the reference, gets
+`no`, as does a schema whose Gubbins run failed.
 
 SNP distances have no threshold and do not change the verdict. Use them to
 check a pair near the allele threshold, or a `borderline` _K. oxytoca_ pair:

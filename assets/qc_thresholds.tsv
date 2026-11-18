@@ -1,9 +1,11 @@
 metric	illumina	nanopore	severity	description
 min_depth	30	40	fail	Mean read depth over the sample's own assembly
+min_mapped_fraction	0.9	0.9	warn	Share of the sample's reads that map back to its own assembly; below it, reads are missing from the assembly (contamination, host reads or a poor assembly)
 max_contigs	500	50	warn	Contigs of 500 bp or more (QUAST)
 min_n50	15000	100000	warn	Assembly N50 (QUAST)
 genome_size	schemas.tsv	schemas.tsv	warn	Assembly length inside genome_size_min_mb to genome_size_max_mb for the schema
 min_completeness	90	90	warn	gambitcore completeness (%)
-max_reference_distance	0.05	0.05	warn	Mash distance from the assembly to the schema's reference genome (roughly 1 - ANI); above it, reads map poorly and variant calls are less reliable
+min_reference_ani	95	95	warn	skani ANI (%) from the assembly to the schema's reference genome; below it the isolate is probably another species than the reference, reads map poorly and variant calls are less reliable
+max_reference_distance	0.05	0.05	warn	Mash distance from the assembly to the reference (roughly 1 - ANI); only checked when there is no ANI
 min_expected_species_fraction	0.8	0.8	fail	Bracken fraction of reads assigned to species the schema covers (species_pattern)
 max_other_genus_fraction	0.05	0.05	fail	Largest Bracken fraction of reads from a genus outside the schema's genera (contamination)

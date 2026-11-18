@@ -3,7 +3,7 @@
 # Makefile.
 #
 #   make print_paths
-#   make install ASSETS_DIR=/mnt/cache/dbs CONTAINERS_DIR=/mnt/cache/singularity
+#   make install ASSETS_DIR=/path/to/dbs CONTAINERS_DIR=/path/to/singularity
 #
 # Single organisms can be set up on their own, e.g. `make paeruginosa_all`.
 # ==============================================================================
@@ -25,10 +25,16 @@ GAMBIT_URL := https://storage.googleapis.com/jlumpe-gambit/public/databases/refs
 GAMBIT_FILES := gambit-refseq-curated-1.0.gdb gambit-refseq-curated-1.0.gs
 REFERENCES_DIR := $(ASSETS_DIR)/references
 REFERENCES := $(shell awk -F'\t' 'NR==1 {for (i = 1; i <= NF; i++) if ($$i == "reference") col = i; next} $$col != "" {print $$col}' $(SCRIPT_DIR)/assets/schemas.tsv)
+TYPE_STRAINS := $(shell awk -F'\t' 'NR==1 {for (i = 1; i <= NF; i++) if ($$i == "accession") col = i; next} $$col != "" {print $$col}' $(SCRIPT_DIR)/assets/type_strains.tsv)
 NCBI_DATASETS := https://api.ncbi.nlm.nih.gov/datasets/v2/genome/accession
 DEACON_DIR := $(ASSETS_DIR)/deacon
 DEACON_INDEX := panhuman-1.k31w15.idx
 DEACON_URL := https://objectstorage.uk-london-1.oraclecloud.com/n/lrbvkel2wjot/b/human-genome-bucket/o/deacon/3/$(DEACON_INDEX)
+KRAKEN_DB ?= standard
+KRAKEN_DB_DATE ?= 20260626
+KRAKEN_ARCHIVE := k2_$(KRAKEN_DB)_$(KRAKEN_DB_DATE).tar.gz
+KRAKEN_DIR := $(ASSETS_DIR)/kraken2/$(KRAKEN_DB)_$(KRAKEN_DB_DATE)
+KRAKEN_URL := https://genome-idx.s3.amazonaws.com/kraken/$(KRAKEN_ARCHIVE)
 
 SINGULARITY ?= singularity
 PREP_CPUS ?= 4
@@ -47,7 +53,8 @@ endef
 
 # ------------------------------------------------------------------------------
 # Schemas. Each needs an allele download URL, the archive name to save it as and
-# the seed (reference) genome used to train Prodigal for PrepExternalSchema.
+# the seed (reference) genome used to train Prodigal for PrepExternalSchema, or
+# READY_<schema> for a ready-to-use chewBBACA schema that is only unpacked.
 # Thresholds used when checking distances live in assets/schemas.tsv.
 # ------------------------------------------------------------------------------
 SCHEMAS := paeruginosa \
@@ -56,6 +63,7 @@ SCHEMAS := paeruginosa \
 	smarcescens \
 	cfreundii \
 	ehormaechei \
+	ecloacae \
 	smaltophilia
 
 NAME_paeruginosa := P. aeruginosa
@@ -88,6 +96,13 @@ URL_ehormaechei := https://www.cgmlst.org/ncs/schema/Ehormaechei/alleles/
 ARCHIVE_ehormaechei := alleles.zip
 SEED_ehormaechei := NZ_CP100388.1
 
+# Miller et al. 2026 cgMLST for the whole complex, a ready-to-use chewBBACA
+# schema on Chewie-NS (species 21, schema 1) with its own Prodigal training file.
+NAME_ecloacae := E. cloacae complex
+URL_ecloacae := https://chewbbaca.online/api/NS/api/species/21/schemas/1/zip?request_type=download
+ARCHIVE_ecloacae := ecloacae_cgMLST.zip
+READY_ecloacae := yes
+
 # Groschel et al. 2020 wgMLST, published as a single FASTA of all alleles.
 NAME_smaltophilia := S. maltophilia
 URL_smaltophilia := https://figshare.com/ndownloader/files/18042350
@@ -101,7 +116,8 @@ NCBI_EFETCH := https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucc
 # Main rules
 # ==============================================================================
 .PHONY: print_paths install download_or_build_containers schemas databases gambit_db \
-	deacon_index references check check_schemas check_databases check_references
+	deacon_index kraken_db references type_strains check check_schemas check_databases \
+	check_references check_type_strains
 
 print_paths:
 	@echo "SCRIPT_DIR:" $(SCRIPT_DIR)
@@ -111,11 +127,13 @@ print_paths:
 	@echo "GAMBIT_DIR:" $(GAMBIT_DIR)
 	@echo "REFERENCES_DIR:" $(REFERENCES_DIR)
 	@echo "DEACON_DIR:" $(DEACON_DIR)
+	@echo "KRAKEN_DIR:" $(KRAKEN_DIR)
 	@echo "BIND_ROOTS:" $(BIND_ROOTS)
 
 install: download_or_build_containers \
 	databases \
 	references \
+	type_strains \
 	schemas
 
 download_or_build_containers:
@@ -126,8 +144,19 @@ schemas: $(addsuffix _all,$(SCHEMAS))
 
 databases: gambit_db deacon_index
 
-# The Kraken2 database is too large to download here; point the pipeline at an
-# existing one (e.g. the JASEN one) with --kraken_db.
+# Not part of `databases`: the full Standard database is an 85 GB download.
+# Pick another one from the Langmead lab index with KRAKEN_DB (e.g.
+# standard_16_GB, pluspf) and KRAKEN_DB_DATE.
+kraken_db: $(KRAKEN_DIR)/hash.k2d
+
+$(KRAKEN_DIR)/hash.k2d:
+	$(call log_message,Downloading Kraken2/Bracken database $(KRAKEN_ARCHIVE) ...)
+	mkdir -p $(KRAKEN_DIR) \
+	&& wget "$(KRAKEN_URL)" -O $(KRAKEN_DIR)/$(KRAKEN_ARCHIVE) --no-verbose |& tee -a $(INSTALL_LOG) \
+	&& tar -xzf $(KRAKEN_DIR)/$(KRAKEN_ARCHIVE) -C $(KRAKEN_DIR) \
+	&& [[ -s $@ && -s $(KRAKEN_DIR)/taxo.k2d ]] \
+	&& find $(KRAKEN_DIR) -maxdepth 1 -name $(KRAKEN_ARCHIVE) -delete
+
 gambit_db: $(addprefix $(GAMBIT_DIR)/,$(GAMBIT_FILES))
 
 $(GAMBIT_DIR)/%:
@@ -150,6 +179,10 @@ $(DEACON_DIR)/$(DEACON_INDEX):
 # downloaded from NCBI Datasets with jasentool as FASTA and GFF, then indexed,
 # plus its GenBank file for finding prophages with PhiSpy.
 references: $(foreach accn,$(REFERENCES),$(REFERENCES_DIR)/$(accn).fasta $(REFERENCES_DIR)/$(accn).fasta.fai $(REFERENCES_DIR)/$(accn).gbff)
+
+# The type strains of the species a schema covers (assets/type_strains.tsv), next to
+# the reference genomes; each isolate is compared with them to name its species.
+type_strains: $(foreach accn,$(TYPE_STRAINS),$(REFERENCES_DIR)/$(accn).fasta)
 
 $(REFERENCES_DIR)/%.fasta:
 	$(call log_message,Downloading reference genome $* ...)
@@ -174,7 +207,7 @@ $(REFERENCES_DIR)/%.gbff:
 	&& mv $@.tmp $@ \
 	&& rm -f $@.zip
 
-check: check_databases check_references check_schemas
+check: check_databases check_references check_type_strains check_schemas
 
 check_databases:
 	@status=0; \
@@ -205,6 +238,17 @@ check_references:
 	done; \
 	exit $$status
 
+check_type_strains:
+	@status=0; \
+	for accn in $(TYPE_STRAINS); do \
+		if [[ -s $(REFERENCES_DIR)/$$accn.fasta ]]; then \
+			echo "[✓] type strain: $(REFERENCES_DIR)/$$accn.fasta"; \
+		else \
+			echo "[!] type strain: missing $(REFERENCES_DIR)/$$accn.fasta"; status=1; \
+		fi; \
+	done; \
+	exit $$status
+
 check_schemas:
 	@status=0; \
 	for schema in $(SCHEMAS); do \
@@ -230,6 +274,7 @@ define schema_rules
 
 $(1)_all: $(1)_prep_schema
 
+ifndef READY_$(1)
 $(1)_download_reference: $(GENOMES_DIR)/$(SEED_$(1)).fasta
 
 $(GENOMES_DIR)/$(SEED_$(1)).fasta:
@@ -247,6 +292,7 @@ $(PRODIGAL_TRAINING_DIR)/$(1).trn: $(GENOMES_DIR)/$(SEED_$(1)).fasta
 	&& $(SINGULARITY) exec $(BIND_ARGS) $(CONTAINERS_DIR)/prodigal.sif \
 		prodigal -i $$< -t $$@ -p single |& tee -a $(INSTALL_LOG) \
 	&& [[ -s $$@ ]]
+endif
 
 $(1)_download_schema: $(SCHEMAS_DIR)/$(1)/download/$(ARCHIVE_$(1))
 
@@ -280,6 +326,18 @@ $(SCHEMAS_DIR)/$(1)/alleles/unpacking.done: $(SCHEMAS_DIR)/$(1)/download/$(ARCHI
 
 $(1)_prep_schema: $(SCHEMAS_DIR)/$(1)/alleles_rereffed
 
+ifdef READY_$(1)
+$(SCHEMAS_DIR)/$(1)/alleles_rereffed: | $(SCHEMAS_DIR)/$(1)/alleles/unpacking.done
+	$$(call log_message,Moving the ready-to-use $(NAME_$(1)) schema into place ...)
+	config=$$$$(find $(SCHEMAS_DIR)/$(1)/alleles -name .schema_config | head -n 1) \
+	&& [[ -n $$$$config ]] \
+	&& rm -rf $$@.tmp \
+	&& mkdir $$@.tmp \
+	&& cp -a "$$$$(dirname $$$$config)/." $$@.tmp/ \
+	&& find $$@.tmp -maxdepth 1 -name unpacking.done -delete \
+	&& mv $$@.tmp $$@ \
+	&& find $(SCHEMAS_DIR)/$(1)/alleles -type f ! -name 'unpacking.done' -delete
+else
 $(SCHEMAS_DIR)/$(1)/alleles_rereffed: $(PRODIGAL_TRAINING_DIR)/$(1).trn | $(SCHEMAS_DIR)/$(1)/alleles/unpacking.done
 	$$(call log_message,Prepping $(NAME_$(1)) schema with chewBBACA ...)
 	rm -rf $$@ $$@.tmp \
@@ -292,6 +350,7 @@ $(SCHEMAS_DIR)/$(1)/alleles_rereffed: $(PRODIGAL_TRAINING_DIR)/$(1).trn | $(SCHE
 	&& [[ $$$${PIPESTATUS[0]} -eq 0 ]] \
 	&& mv $$@.tmp $$@ \
 	&& find $(SCHEMAS_DIR)/$(1)/alleles -type f ! -name 'unpacking.done' -delete
+endif
 endef
 
 $(foreach schema,$(SCHEMAS),$(eval $(call schema_rules,$(schema))))

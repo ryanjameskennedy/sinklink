@@ -13,8 +13,11 @@
 - Hamerlinck H, et al. Sanitary installations and wastewater plumbing as reservoir for the long-term circulation and transmission of carbapenemase producing _Citrobacter freundii_ clones in a hospital setting. _Antimicrob Resist Infect Control_ 2023;12:58. [PMC10280848](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10280848/)
 - Kampmeier S, et al. Development and evaluation of a core genome multilocus sequencing typing (cgMLST) scheme for _Serratia marcescens_ molecular surveillance and outbreak investigations. _J Clin Microbiol_ 2022;60:e01196-22. [doi:10.1128/jcm.01196-22](https://doi.org/10.1128/jcm.01196-22)
 - Kieninger B, et al. Development and validation of a core genome multilocus sequence typing scheme for _Citrobacter freundii_. _J Clin Microbiol_ 2025;63:e00860-25. [doi:10.1128/jcm.00860-25](https://doi.org/10.1128/jcm.00860-25)
+- Miller H, Bakker S, Dyet K, Winter D. Development and evaluation of a core genome multi-locus sequence typing scheme for the _Enterobacter cloacae_ complex. _bioRxiv_ 2026. [doi:10.64898/2026.09.14.751580](https://doi.org/10.64898/2026.09.14.751580)
 - Prior K, et al. Accurate and reproducible whole-genome genotyping for bacterial genomic surveillance with Nanopore sequencing data. _J Clin Microbiol_ 2025;63:e00369-25. [doi:10.1128/jcm.00369-25](https://doi.org/10.1128/jcm.00369-25)
+- Shaw J, Yu YW. Fast and robust metagenomic sequence comparison through sparse chaining with skani. _Nat Methods_ 2023;20:1661–1665. [doi:10.1038/s41592-023-02018-3](https://doi.org/10.1038/s41592-023-02018-3)
 - Tönnies H, Prior K, Harmsen D, Mellmann A. Establishment and evaluation of a core genome multilocus sequence typing scheme for whole-genome sequence-based typing of _Pseudomonas aeruginosa_. _J Clin Microbiol_ 2021;59:e01987-20. [PMC8106710](https://pmc.ncbi.nlm.nih.gov/articles/PMC8106710/)
 - Zentgraf J, Schmitz JE, Rahmann S. Cleanifier: contamination removal from microbial sequences using spaced seeds of a human pangenome index. _Bioinformatics_ 2025;42:btaf632. [doi:10.1093/bioinformatics/btaf632](https://doi.org/10.1093/bioinformatics/btaf632)
 - Ridom cgMLST.org schema list: <https://www.cgmlst.org/ncs>
+- Chewie-NS schema list: <https://chewbbaca.online/stats>
 - Review of ICU sink studies (sink-to-patient vs patient-to-sink): <https://mdpi.com/2673-947X/2/2/8>
