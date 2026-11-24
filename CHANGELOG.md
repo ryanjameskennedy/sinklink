@@ -3,7 +3,13 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## v0.6.0 - 2026-11-25
+
+Takes the species check from the closest type strain where a schema has type
+strains, adds the _Klebsiella_ type strains, counts _S. maltophilia_ distances
+over the paper's 1,275 core loci and fails isolates with fragmented or wrongly
+sized assemblies. These changes have run only on test inputs and as stubs in
+CI, not yet on real data.
 
 ### `Added`
 
