@@ -9,13 +9,13 @@ with separate values for Illumina and Nanopore and a severity per check.
 | ------------------------------------------------------------------ | -------- | -------- | -------- | ------------------- |
 | Mean read depth over the assembly                                  | ≥30×     | ≥40×     | fail     | `low_depth`         |
 | Share of reads that map back to the assembly                       | ≥0.9     | ≥0.9     | warn     | `low_mapped_reads`  |
-| Contigs ≥500 bp (QUAST)                                            | ≤500     | ≤50      | warn     | `many_contigs`      |
-| N50                                                                | ≥15 kb   | ≥100 kb  | warn     | `low_n50`           |
-| Assembly length inside the schema's expected range                 | yes      | yes      | warn     | `genome_size`       |
+| Contigs ≥500 bp (QUAST)                                            | ≤500     | ≤50      | fail     | `many_contigs`      |
+| N50                                                                | ≥15 kb   | ≥100 kb  | fail     | `low_n50`           |
+| Assembly length inside the schema's expected range                 | yes      | yes      | fail     | `genome_size`       |
 | gambitcore completeness                                            | ≥90%     | ≥90%     | warn     | `low_completeness`  |
 | skani ANI from the assembly to the schema's reference genome       | ≥95%     | ≥95%     | warn     | `distant_reference` |
 | Bracken fraction of reads from species the schema covers           | ≥0.8     | ≥0.8     | fail     | `species_mismatch`  |
-| Largest fraction of reads from a genus outside the schema's genera | ≤0.05    | ≤0.05    | fail     | `contamination`     |
+| Largest fraction of reads from a genus outside the schema's genera | ≤0.05    | ≤0.05    | warn     | `contamination`     |
 
 ```{note}
 These are starting points, not published cut-offs: adjust them to your lab's
@@ -48,9 +48,12 @@ mosdepth.
 
 There is no read count threshold: depth already accounts for the number and
 length of the reads relative to the genome, and an isolate with too few reads
-fails `low_depth`. Low N50 and many contigs are warnings, since a fragmented
-assembly mostly costs allele calls at contig ends, which the allele calling QC
-below catches.
+fails `low_depth`. A fragmented assembly (`many_contigs`, `low_n50`) or one of
+the wrong size (`genome_size`) fails: it loses allele calls at contig ends and
+can hide contamination or a mixed culture. Reads from another genus
+(`contamination`) are a warning: when contaminant reads have reached the
+assembly, the genome size check fails and the mapped share and completeness
+usually warn.
 
 ## ANI to the reference
 
