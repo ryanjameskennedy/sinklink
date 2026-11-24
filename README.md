@@ -50,7 +50,7 @@ Then run every isolate, whatever its species, with one samplesheet and one
 metadata file:
 
 ```bash
-nextflow run ryanjameskennedy/sinklink -r v0.5.0 -profile singularity \
+nextflow run ryanjameskennedy/sinklink -r v0.6.0 -profile singularity \
     -c server.config -params-file server.yaml \
     --input samplesheet.csv \
     --metadata metadata.csv \
