@@ -115,10 +115,11 @@ _E. cloacae_.
 
 ## Allele calling QC
 
-For cgMLST schemas an isolate also fails with `low_calls` if fewer than 90% of
-loci are called (`min_called_fraction` in `assets/schemas.tsv`). The wgMLST
-_S. maltophilia_ scheme has no such cut-off, since each genome contains only
-about a quarter of its loci.
+An isolate also fails with `low_calls` if fewer than 90% of loci are called
+(`min_called_fraction` in `assets/schemas.tsv`). For the wgMLST
+_S. maltophilia_ scheme, of which each genome carries only about a quarter,
+this and the distances count only the 1,275 core loci in
+`assets/core_loci/smaltophilia.txt`.
 
 `allele_qc.tsv` lists, per isolate, the loci called, the missing loci (schema
 loci without a valid call: not found, partial at a contig end, or ambiguous)

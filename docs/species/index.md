@@ -3,7 +3,8 @@
 Each species is typed with its own scheme and compared against its own
 allele-difference threshold. The allele difference of a pair is the number of
 loci where both isolates have a valid chewBBACA call and the calls differ;
-loci missing in either isolate are not counted.
+loci missing in either isolate are not counted. For the wgMLST
+_S. maltophilia_ scheme only its 1,275 core loci are compared.
 
 - **At or below the threshold** (`within_threshold`): the two isolates are
   classed as the same strain, the genomic requirement for calling them the same
@@ -31,7 +32,7 @@ so both are listed.
 | [_Citrobacter freundii_](cfreundii.md)                    | `cfreundii`    | cgmlst.org Cfreundii (3,250)           | ≤10                 | [cgmlst.org complex type distance](https://www.cgmlst.org/ncs/schema/Cfreundii/)           | [Kieninger et al. 2025](https://doi.org/10.1128/jcm.00860-25)                    |
 | [_Enterobacter hormaechei_](ehormaechei.md)               | `ehormaechei`  | cgmlst.org Ehormaechei (2,178)         | ≤12                 | [cgmlst.org complex type distance](https://www.cgmlst.org/ncs/schema/Ehormaechei/)         | [Prior et al. 2025](https://doi.org/10.1128/jcm.00369-25)                        |
 | [_Enterobacter cloacae_ complex](ecloacae.md)             | `ecloacae`     | Chewie-NS ECC cgMLST (1,812)           | ≤3 (borderline ≤5)  | [Miller et al. 2026](https://doi.org/10.64898/2026.09.14.751580) (preprint)                | [Miller et al. 2026](https://doi.org/10.64898/2026.09.14.751580)                 |
-| [_Stenotrophomonas maltophilia_ complex](smaltophilia.md) | `smaltophilia` | Gröschel 2020 wgMLST (17,603)          | ≤10                 | [Gröschel et al. 2020](https://doi.org/10.1038/s41467-020-15123-0) (d10)                   | [Gröschel et al. 2020](https://doi.org/10.1038/s41467-020-15123-0)               |
+| [_Stenotrophomonas maltophilia_ complex](smaltophilia.md) | `smaltophilia` | Gröschel 2020 wgMLST (1,275 of 17,603) | ≤10                 | [Gröschel et al. 2020](https://doi.org/10.1038/s41467-020-15123-0) (d10)                   | [Gröschel et al. 2020](https://doi.org/10.1038/s41467-020-15123-0)               |
 
 Only the _K. oxytoca_, _E. cloacae_ complex and _S. maltophilia_ thresholds come
 from a paper that tested them on isolates; the cgmlst.org values are the complex type distances
