@@ -30,7 +30,7 @@ BLOCKS = [
         "fill": "#f2c230",
         "opacity": 0.2,
         "ink": "#b07d00",
-        "stations": ["quast", "mash", "gambitcore", "mlst", "mapping", "coverage", "qc_summary", "qc_out"],
+        "stations": ["quast", "mash", "skani", "gambitcore", "mlst", "mapping", "coverage", "qc_summary", "qc_out"],
     },
     {
         "title": "Typing",

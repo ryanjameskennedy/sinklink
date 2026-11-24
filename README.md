@@ -1,7 +1,7 @@
 # sinklink
 
 [![nf-test](https://github.com/ryanjameskennedy/sinklink/actions/workflows/nf-test.yml/badge.svg)](https://github.com/ryanjameskennedy/sinklink/actions/workflows/nf-test.yml)
-[![Docs](https://readthedocs.org/projects/sinklink/badge/?version=latest)](https://sinklink.readthedocs.io)
+[![Docs](https://img.shields.io/readthedocs/sinklink/latest)](https://sinklink.readthedocs.io)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A525.04.0-23aa62.svg)](https://www.nextflow.io/)
 
 _Did the sink infect the patient?_
@@ -15,7 +15,8 @@ Illumina or Nanopore reads, it:
 2. assembles each isolate (SKESA for Illumina, Flye + Medaka for Nanopore);
 3. QCs the assembly (QUAST, Mash and skani ANI against the species' reference
    genome, gambitcore, reads and depth, 7-gene MLST) and confirms the species
-   from the reads (Kraken2/Bracken);
+   from skani ANI to type strains where the schema has them, and from the reads
+   (Kraken2/Bracken);
 4. calls variants against the species' reference genome (Snippy for Illumina,
    Clair3 for Nanopore);
 5. calls alleles with chewBBACA against species-specific cgMLST/wgMLST schemas;
@@ -49,7 +50,7 @@ Then run every isolate, whatever its species, with one samplesheet and one
 metadata file:
 
 ```bash
-nextflow run ryanjameskennedy/sinklink -r v0.4.0 -profile singularity \
+nextflow run ryanjameskennedy/sinklink -r v0.5.0 -profile singularity \
     -c server.config -params-file server.yaml \
     --input samplesheet.csv \
     --metadata metadata.csv \

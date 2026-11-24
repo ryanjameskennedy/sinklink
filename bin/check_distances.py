@@ -2,7 +2,8 @@
 """Compare isolates within each transmission group.
 
 For every pair of isolates in a group, counts allele differences over the loci
-called in both isolates and compares the count with the species threshold in
+called in both isolates (only the schema's core loci when assets/core_loci lists
+them) and compares the count with the species threshold in
 assets/schemas.tsv. When both isolates are in a snp-dists matrix for their
 schema (masked pseudogenomes, recombination removed with Gubbins when there were
 enough usable isolates), their SNP distance is added; there is no SNP threshold, so
@@ -52,30 +53,44 @@ def schema_of_alleles(path):
     return name[: -len(suffix)] if name.endswith(suffix) else None
 
 
-def load_profiles(path):
-    """Return (loci in schema, {sample: {locus: allele}}, {sample: novel allele count}).
+def load_core_loci(paths):
+    """{schema: set of loci} from files named <schema>.txt, one locus per line."""
+    core = {}
+    for path in paths:
+        with open(path) as handle:
+            core[Path(path).stem] = {line.strip() for line in handle if line.strip()}
+    return core
 
-    Novel alleles are the calls chewBBACA inferred in this run (INF-).
+
+def load_profiles(path, core=None):
+    """Return (loci compared, {sample: {locus: allele}}, {sample: novel allele count}).
+
+    With a set of core loci, only those loci are kept. Novel alleles are the calls
+    chewBBACA inferred in this run (INF-).
     """
     if not path:
         return None, {}, {}
     with open(path, newline="") as handle:
         reader = csv.reader(handle, delimiter="\t")
         header = next(reader)
-        loci = header[1:]
+        loci = [locus[: -len(".fasta")] if locus.endswith(".fasta") else locus for locus in header[1:]]
+        keep = [i for i, locus in enumerate(loci) if core is None or locus in core]
+        if not keep:
+            sys.exit(f"none of the core loci are in {path}")
         profiles, novel = {}, {}
         for row in reader:
             sample = row[0]
             for ext in (".fasta", ".fna", ".fa"):
                 if sample.endswith(ext):
                     sample = sample[: -len(ext)]
-            novel[sample] = sum(1 for v in row[1:] if v.strip().startswith("INF-"))
+            values = [row[1 + i] for i in keep]
+            novel[sample] = sum(1 for v in values if v.strip().startswith("INF-"))
             profiles[sample] = {
-                locus: allele
-                for locus, allele in zip(loci, (normalise_call(v) for v in row[1:]))
+                loci[i]: allele
+                for i, allele in zip(keep, (normalise_call(v) for v in values))
                 if allele is not None
             }
-    return len(loci), profiles, novel
+    return len(keep), profiles, novel
 
 
 def load_snp_dists(paths):
@@ -136,6 +151,8 @@ def main():
                         help="snp-dists matrices named <schema>[.gubbins].snp_dists.tsv")
     parser.add_argument("--species-map", required=True)
     parser.add_argument("--schemas", required=True)
+    parser.add_argument("--core-loci", nargs="*", default=[],
+                        help="files named <schema>.txt listing the loci to compare for that schema")
     args = parser.parse_args()
 
     out_dir = Path(args.outdir)
@@ -154,9 +171,11 @@ def main():
     with open(args.samplesheet, newline="", encoding="utf-8-sig") as handle:
         samples = list(csv.DictReader(handle))
 
+    core_loci = load_core_loci(args.core_loci)
     profiles, n_loci, novel = {}, {}, {}
     for schema in schemas:
-        n_loci[schema], profiles[schema], novel[schema] = load_profiles(allele_files.get(schema))
+        n_loci[schema], profiles[schema], novel[schema] = load_profiles(allele_files.get(schema),
+                                                                       core_loci.get(schema))
 
     qc_rows, sample_info = [], {}
     for sample in samples:
@@ -240,8 +259,6 @@ def main():
 
             notes = {species_map[s["growth"]]["note"] for s in (a, b)
                      if s["growth"] in species_map and species_map[s["growth"]]["note"]}
-            if a["schema"] == "smaltophilia":
-                notes.add("wgMLST distance over loci shared by both; Groschel used 1275 core loci")
             failed = [f"{s['sample']}:{s['qc']}" for s in (a, b) if s["qc"] != "pass"]
             failed += [f"{s['sample']}:assembly {s['assembly_qc']} ({s['assembly_flags']})"
                        for s in (a, b) if s["assembly_qc"] in ("fail", "warn")]

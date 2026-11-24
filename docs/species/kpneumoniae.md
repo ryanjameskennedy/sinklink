@@ -19,6 +19,10 @@ typing, ≤21 SNPs has been used to define nosocomial transmission in Europe
 ## Species check
 
 The schema accepts _K. pneumoniae_, _K. quasipneumoniae_, _K. variicola_, _K. quasivariicola_ and _K. africana_.
+Each isolate is named from skani ANI to their type strains (see
+[type strains](../setup/databases.md#type-strains)), which decides the species
+check; laboratories often report _K. variicola_ and _K. quasipneumoniae_ as
+_K. pneumoniae_.
 
 | Setting in `assets/schemas.tsv` | Value                                                                             |
 | ------------------------------- | --------------------------------------------------------------------------------- |

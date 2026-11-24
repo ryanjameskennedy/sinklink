@@ -21,6 +21,10 @@ only 10 alleles from the cluster.
 ## Species check
 
 The schema accepts _K. oxytoca_, _K. michiganensis_, _K. grimontii_, _K. pasteurii_, _K. huaxiensis_ and _K. spallanzanii_; reads from _Raoultella_ are not counted as contamination.
+Each isolate is named from skani ANI to their type strains (see
+[type strains](../setup/databases.md#type-strains)), which decides the species
+check. Recent Kraken2 databases name _Raoultella_ species as _Klebsiella_
+(e.g. _K. ornithinolytica_); their reads give a `mixed_reads` warning.
 
 | Setting in `assets/schemas.tsv` | Value                                                                                   |
 | ------------------------------- | --------------------------------------------------------------------------------------- |

@@ -13,6 +13,7 @@ process CHECK_DISTANCES {
     path snp_dists, stageAs: "snp_dists/*"
     path schema_table
     path species_map
+    path core_loci, stageAs: "core_loci/*"
 
     output:
     path "allele_qc.tsv"         , emit: allele_qc
@@ -32,6 +33,7 @@ process CHECK_DISTANCES {
         ${snp_dists ? '--snp-dists snp_dists/*' : ''} \\
         --species-map ${species_map} \\
         --schemas ${schema_table} \\
+        ${core_loci ? '--core-loci core_loci/*' : ''} \\
         --qc-summary ${qc_summary} \\
         --outdir . \\
         ${args}

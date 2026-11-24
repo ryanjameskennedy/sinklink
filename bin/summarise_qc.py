@@ -293,17 +293,29 @@ def main():
         if ref_distance is not None and value is not None:
             check(severity, f"distant_reference({ref_distance:.3f}>{value:g})", ref_distance > value)
 
+    pattern = schema_info.get("species_pattern")
+    regex = re.compile(pattern) if pattern else None
+    if type_strain and regex:
+        closest = type_strain["type_strain_species"] or type_strain["type_strain"]
+        call = " ".join(type_strain["species_call"].split()[:2])
+        _, severity = limit("min_expected_species_fraction")
+        check(severity, f"species_mismatch(closest {closest} {type_strain['type_strain_ani']:.2f}% ANI)",
+              not (call and regex.search(call)))
+
     top_species = top_fraction = expected_fraction = other_genus = None
     if fractions:
         top_species, top_fraction = max(fractions, key=lambda item: item[1])
-        pattern = schema_info.get("species_pattern")
         genera = {g.strip() for g in schema_info.get("genera", "").split(",") if g.strip()}
-        if pattern:
-            regex = re.compile(pattern)
+        if regex:
             expected_fraction = sum(f for name, f in fractions if regex.search(name))
             value, severity = limit("min_expected_species_fraction")
-            if value is not None:
+            if value is not None and not type_strain:
                 check(severity, f"species_mismatch(top {top_species} {top_fraction:.2f})",
+                      expected_fraction < value)
+            elif value is not None:
+                others = [(name, f) for name, f in fractions if not regex.search(name)]
+                other, other_fraction = max(others, key=lambda item: item[1], default=("", 0.0))
+                check("warn", f"mixed_reads({expected_fraction:.2f}<{value:g}, top other {other} {other_fraction:.2f})",
                       expected_fraction < value)
         if genera:
             by_genus = {}
@@ -317,7 +329,7 @@ def main():
                 value, severity = limit("max_other_genus_fraction")
                 if value is not None:
                     check(severity, f"contamination({genus} {other_genus:.2f})", other_genus > value)
-    elif has_assembly:
+    elif has_assembly and not type_strain:
         check("warn", "species_not_checked", True)
 
     severities = {severity for severity, _ in flags}
