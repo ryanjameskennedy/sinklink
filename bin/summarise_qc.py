@@ -312,6 +312,11 @@ def main():
             if value is not None and not type_strain:
                 check(severity, f"species_mismatch(top {top_species} {top_fraction:.2f})",
                       expected_fraction < value)
+            elif value is not None:
+                others = [(name, f) for name, f in fractions if not regex.search(name)]
+                other, other_fraction = max(others, key=lambda item: item[1], default=("", 0.0))
+                check("warn", f"mixed_reads({expected_fraction:.2f}<{value:g}, top other {other} {other_fraction:.2f})",
+                      expected_fraction < value)
         if genera:
             by_genus = {}
             for name, fraction in fractions:

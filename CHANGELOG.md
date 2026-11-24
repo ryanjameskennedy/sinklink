@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Added`
 
 - Type strains for the _Klebsiella pneumoniae_ species complex (8 genomes, `kpneumoniae`) and the _Klebsiella oxytoca_ species complex (6 genomes, `koxytoca`)
+- `mixed_reads` warns when less than 0.8 of the reads come from species in `species_pattern` for schemas with type strains, naming the species outside it with the most reads; it catches a second species of the same genus, such as _Raoultella_, now _Klebsiella_ in NCBI taxonomy
 
 ### `Changed`
 

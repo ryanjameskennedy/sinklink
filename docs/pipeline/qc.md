@@ -22,8 +22,9 @@ These are starting points, not published cut-offs: adjust them to your lab's
 validation. The genome size ranges are approximate.
 ```
 
-Other flags: `no_assembly` (fail), `no_schema`, `depth_not_measured` and
-`species_not_checked` (warn, e.g. when Kraken2 classified no reads to species).
+Other flags: `no_assembly` fails; `no_schema`, `depth_not_measured`,
+`species_not_checked` (e.g. when Kraken2 classified no reads to species) and
+`mixed_reads` (see [species call](#species-call)) warn.
 
 The QC summary also reports, without a threshold, the number of reads, the
 breadth (the share of the assembly covered by at least one read), the reference
@@ -85,6 +86,14 @@ species in the schema's `species_pattern` is 95% or more (subspecies count as
 their species). The flag names the closest type strain's species and its ANI.
 Schemas without type strains, or runs without the type strain genomes, keep the
 Bracken check: at least 0.8 of the reads from species in `species_pattern`.
+
+The type strain call only sees the assembly's main organism, so for schemas with
+type strains the Bracken check stays as a warning, `mixed_reads`, which names
+the species outside `species_pattern` with the most reads. It catches a second
+species of the same genus, which `contamination` cannot: _Raoultella_ is now
+part of _Klebsiella_ in NCBI taxonomy and in recent Kraken2 databases, so
+_K. ornithinolytica_ or _K. oxytoca_ reads in a _K. pneumoniae_ sample only show
+up here.
 
 Each transmission group with type strains also gets an all-against-all skani
 comparison of its isolates and the type strains, drawn in the report as a
