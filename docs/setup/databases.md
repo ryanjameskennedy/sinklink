@@ -1,12 +1,12 @@
 # Databases
 
-| Database           | Set up with         | Parameter          | Needed                                           |
-| ------------------ | ------------------- | ------------------ | ------------------------------------------------ |
-| Kraken2/Bracken    | `make kraken_db`    | `--kraken_db`      | always                                           |
-| Deacon human index | `make deacon_index` | `--deacon_index`   | unless `--skip_host_removal`                     |
-| Reference genomes  | `make references`   | `--references_dir` | unless `--skip_variant_calling`                  |
-| Type strains       | `make type_strains` | `--references_dir` | optional; species are not named without them     |
-| GAMBIT             | `make gambit_db`    | `--gambit_db`      | optional; completeness is not checked without it |
+| Database           | Set up with         | Parameter          | Needed                                                                          |
+| ------------------ | ------------------- | ------------------ | ------------------------------------------------------------------------------- |
+| Kraken2/Bracken    | `make kraken_db`    | `--kraken_db`      | always                                                                          |
+| Deacon human index | `make deacon_index` | `--deacon_index`   | unless `--skip_host_removal`                                                    |
+| Reference genomes  | `make references`   | `--references_dir` | unless `--skip_variant_calling`                                                 |
+| Type strains       | `make type_strains` | `--references_dir` | optional; without them species are not named and the species check uses Bracken |
+| GAMBIT             | `make gambit_db`    | `--gambit_db`      | optional; completeness is not checked without it                                |
 
 ## Reference genomes
 

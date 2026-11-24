@@ -60,10 +60,13 @@ QC'd but not allele called.
 
 ## Species checks
 
-The laboratory label is not trusted on its own: Kraken2/Bracken must assign at
-least 80% of the reads to species the schema covers (`species_pattern`), and no
-other genus may exceed 5% (see [quality control](../pipeline/qc.md)). Each
-species page lists what its schema accepts.
+The laboratory label is not trusted on its own. For schemas with type strains
+(_S. marcescens_, _Enterobacter_ and _Klebsiella_), the isolate's closest type
+strain must be a species the schema covers (`species_pattern`) at 95% ANI or
+more; for the others, Kraken2/Bracken must assign at least 80% of the reads to
+those species. Reads from another genus above 5% give a warning (see
+[quality control](../pipeline/qc.md#species-call)). Each species page lists
+what its schema accepts.
 
 ## Adding a species
 
