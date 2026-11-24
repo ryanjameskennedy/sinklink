@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Changed`
 
+- For schemas with type strains, `species_mismatch` comes from the closest type strain instead of Bracken: an isolate fails unless its ANI to the type strain of a species in the schema's `species_pattern` is 95% or more; schemas without type strains keep the Bracken check
+- The `smarcescens` `species_pattern` covers the _S. marcescens_ complex species with a type strain (_S. ureilytica_, _S. sarumanii_, _S. bockelmannii_, _S. nevei_ and _S. montpellierensis_ added)
 - `many_contigs`, `low_n50` and `genome_size` fail instead of warn, and `contamination` warns instead of failing
 
 ## v0.5.0 - 2026-11-18
