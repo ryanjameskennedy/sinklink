@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### `Added`
+
+- Type strains for the _Klebsiella pneumoniae_ species complex (8 genomes, `kpneumoniae`) and the _Klebsiella oxytoca_ species complex (6 genomes, `koxytoca`)
+
 ### `Changed`
 
 - For schemas with type strains, `species_mismatch` comes from the closest type strain instead of Bracken: an isolate fails unless its ANI to the type strain of a species in the schema's `species_pattern` is 95% or more; schemas without type strains keep the Bracken check

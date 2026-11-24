@@ -46,16 +46,30 @@ assembly is compared with them with skani to name its species (see
 the reference genomes, into the same folder (`--references_dir`); it is part of
 `make install`.
 
-| Schema      | Species                                  | Strain     | Genome          |
-| ----------- | ---------------------------------------- | ---------- | --------------- |
-| smarcescens | _Serratia marcescens_                    | ATCC 13880 | GCF_017654245.1 |
-| smarcescens | _Serratia marcescens_ subsp. _sakuensis_ | KCTC 42172 | GCF_003428265.1 |
-| smarcescens | _Serratia ureilytica_                    | JCM 16474  | GCF_039523675.1 |
-| smarcescens | _Serratia sarumanii_                     | K-M0706    | GCF_029962605.1 |
-| smarcescens | _Serratia bockelmannii_                  | S3         | GCF_008011855.1 |
-| smarcescens | _Serratia nevei_                         | LMG 31536  | GCF_037948395.1 |
-| smarcescens | _Serratia nematodiphila_                 | DSM 21420  | GCF_000738675.1 |
-| smarcescens | _Serratia montpellierensis_              | PsyLou2A   | GCF_020858655.1 |
+| Schema      | Species                                                | Strain      | Genome          |
+| ----------- | ------------------------------------------------------ | ----------- | --------------- |
+| smarcescens | _Serratia marcescens_                                  | ATCC 13880  | GCF_017654245.1 |
+| smarcescens | _Serratia marcescens_ subsp. _sakuensis_               | KCTC 42172  | GCF_003428265.1 |
+| smarcescens | _Serratia ureilytica_                                  | JCM 16474   | GCF_039523675.1 |
+| smarcescens | _Serratia sarumanii_                                   | K-M0706     | GCF_029962605.1 |
+| smarcescens | _Serratia bockelmannii_                                | S3          | GCF_008011855.1 |
+| smarcescens | _Serratia nevei_                                       | LMG 31536   | GCF_037948395.1 |
+| smarcescens | _Serratia nematodiphila_                               | DSM 21420   | GCF_000738675.1 |
+| smarcescens | _Serratia montpellierensis_                            | PsyLou2A    | GCF_020858655.1 |
+| kpneumoniae | _Klebsiella pneumoniae_ subsp. _pneumoniae_            | ATCC 13883  | GCF_006364295.1 |
+| kpneumoniae | _Klebsiella pneumoniae_ subsp. _ozaenae_               | NBRC 105683 | GCF_001598715.1 |
+| kpneumoniae | _Klebsiella pneumoniae_ subsp. _rhinoscleromatis_      | ATCC 13884  | GCF_000163455.1 |
+| kpneumoniae | _Klebsiella quasipneumoniae_ subsp. _quasipneumoniae_  | 01A030      | GCF_020525925.1 |
+| kpneumoniae | _Klebsiella quasipneumoniae_ subsp. _similipneumoniae_ | 07A044      | GCF_020525685.1 |
+| kpneumoniae | _Klebsiella variicola_ subsp. _variicola_              | DSM 15968   | GCF_000828055.2 |
+| kpneumoniae | _Klebsiella quasivariicola_                            | KPN1705     | GCF_002269255.1 |
+| kpneumoniae | _Klebsiella africana_                                  | 200023      | GCF_020526085.1 |
+| koxytoca    | _Klebsiella oxytoca_                                   | NCTC 13727  | GCF_900636985.1 |
+| koxytoca    | _Klebsiella michiganensis_                             | DSM 25444   | GCF_002925905.1 |
+| koxytoca    | _Klebsiella grimontii_                                 | 06D021      | GCF_900200035.1 |
+| koxytoca    | _Klebsiella pasteurii_                                 | SB6412      | GCF_902158725.1 |
+| koxytoca    | _Klebsiella huaxiensis_                                | WCHKl090001 | GCF_003261575.2 |
+| koxytoca    | _Klebsiella spallanzanii_                              | SB6411      | GCF_902158555.1 |
 
 KCTC 42172 is not marked as type material in NCBI, and _S. marcescens_ subsp.
 _sakuensis_ is now a synonym of _S. marcescens_, so it is a second
@@ -63,6 +77,10 @@ _S. marcescens_ genome.
 
 _S. montpellierensis_ (Blackburn et al. 2024) is effectively but not yet
 validly published.
+
+_K. variicola_ subsp. _tropica_ has no type-strain genome in RefSeq; its
+isolates share more than 95% ANI with _K. variicola_ subsp. _variicola_ and are
+called _K. variicola_.
 
 For `ecloacae` and `ehormaechei`, the table lists the type strains of the 34
 _Enterobacter_ species and subspecies with a type-strain genome in NCBI RefSeq,
