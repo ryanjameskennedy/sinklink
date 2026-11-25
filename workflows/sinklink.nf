@@ -149,7 +149,8 @@ workflow SINKLINK {
         ch_alleles.collect().ifEmpty([]),
         ch_snp_dists.collect().ifEmpty([]),
         ch_schema_table,
-        ch_species_map
+        ch_species_map,
+        files("${projectDir}/assets/core_loci/*.txt")
     )
 
     //

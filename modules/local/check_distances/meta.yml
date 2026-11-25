@@ -27,6 +27,9 @@ input:
   - species_map:
       type: file
       description: assets/species_map.tsv
+  - core_loci:
+      type: file
+      description: Files named <schema>.txt listing the loci to compare for that schema (assets/core_loci)
 output:
   allele_qc:
     - allele_qc.tsv:

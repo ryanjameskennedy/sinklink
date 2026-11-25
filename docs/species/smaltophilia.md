@@ -4,7 +4,7 @@
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | Schema           | `smaltophilia`                                                                                                                             |
 | Scheme           | Gröschel et al. 2020 wgMLST ([figshare 10005047](https://figshare.com/articles/dataset/Smaltophilia_wgMLST_all-alleles_fasta_gz/10005047)) |
-| Loci             | 17,603 (about 4,174 per genome)                                                                                                            |
+| Loci             | 1,275 core loci compared, of 17,603 (about 4,174 per genome)                                                                               |
 | Seed genome      | NC_010943.1 (K279a, used to train Prodigal)                                                                                                |
 | Reference genome | [GCF_020641395.2](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_020641395.2/) (ACYCa.6E) (used for QUAST, Mash and variant calling)     |
 | Threshold        | ≤10 alleles (d10)                                                                                                                          |
@@ -42,10 +42,13 @@ How the paper defined relatedness:
   assembly-based (BLAST) calls. chewBBACA calls alleles differently, so counts
   will not match the paper exactly: treat 10 as a guide.
 
-sinklink counts differences over all wgMLST loci called in both isolates (the
-paper's list of 1,275 core loci is in its supplementary data), and applies no
-minimum fraction of called loci, since each genome carries only about a quarter
-of the scheme.
+sinklink calls alleles for all 17,603 loci but, like the paper, counts
+differences only over the 1,275 core loci called in both isolates. The core loci
+are the ones marked "99 percent core genome" in the paper's Supplementary
+Data 2, listed in `assets/core_loci/smaltophilia.txt` under the scheme's own
+locus names (`STENO00001` there is `STENO_1` in the FASTA). Missing loci, novel
+alleles and the `low_calls` check (at least 90% of loci called) count the core
+loci too.
 
 ## Species check
 

@@ -9,21 +9,22 @@ with separate values for Illumina and Nanopore and a severity per check.
 | ------------------------------------------------------------------ | -------- | -------- | -------- | ------------------- |
 | Mean read depth over the assembly                                  | ≥30×     | ≥40×     | fail     | `low_depth`         |
 | Share of reads that map back to the assembly                       | ≥0.9     | ≥0.9     | warn     | `low_mapped_reads`  |
-| Contigs ≥500 bp (QUAST)                                            | ≤500     | ≤50      | warn     | `many_contigs`      |
-| N50                                                                | ≥15 kb   | ≥100 kb  | warn     | `low_n50`           |
-| Assembly length inside the schema's expected range                 | yes      | yes      | warn     | `genome_size`       |
+| Contigs ≥500 bp (QUAST)                                            | ≤500     | ≤50      | fail     | `many_contigs`      |
+| N50                                                                | ≥15 kb   | ≥100 kb  | fail     | `low_n50`           |
+| Assembly length inside the schema's expected range                 | yes      | yes      | fail     | `genome_size`       |
 | gambitcore completeness                                            | ≥90%     | ≥90%     | warn     | `low_completeness`  |
 | skani ANI from the assembly to the schema's reference genome       | ≥95%     | ≥95%     | warn     | `distant_reference` |
-| Bracken fraction of reads from species the schema covers           | ≥0.8     | ≥0.8     | fail     | `species_mismatch`  |
-| Largest fraction of reads from a genus outside the schema's genera | ≤0.05    | ≤0.05    | fail     | `contamination`     |
+| Species the schema covers (see [species call](#species-call))      | yes      | yes      | fail     | `species_mismatch`  |
+| Largest fraction of reads from a genus outside the schema's genera | ≤0.05    | ≤0.05    | warn     | `contamination`     |
 
 ```{note}
 These are starting points, not published cut-offs: adjust them to your lab's
 validation. The genome size ranges are approximate.
 ```
 
-Other flags: `no_assembly` (fail), `no_schema`, `depth_not_measured` and
-`species_not_checked` (warn, e.g. when Kraken2 classified no reads to species).
+Other flags: `no_assembly` fails; `no_schema`, `depth_not_measured`,
+`species_not_checked` (e.g. when Kraken2 classified no reads to species) and
+`mixed_reads` (see [species call](#species-call)) warn.
 
 The QC summary also reports, without a threshold, the number of reads, the
 breadth (the share of the assembly covered by at least one read), the reference
@@ -48,9 +49,12 @@ mosdepth.
 
 There is no read count threshold: depth already accounts for the number and
 length of the reads relative to the genome, and an isolate with too few reads
-fails `low_depth`. Low N50 and many contigs are warnings, since a fragmented
-assembly mostly costs allele calls at contig ends, which the allele calling QC
-below catches.
+fails `low_depth`. A fragmented assembly (`many_contigs`, `low_n50`) or one of
+the wrong size (`genome_size`) fails: it loses allele calls at contig ends and
+can hide contamination or a mixed culture. Reads from another genus
+(`contamination`) are a warning: when contaminant reads have reached the
+assembly, the genome size check fails and the mapped share and completeness
+usually warn.
 
 ## ANI to the reference
 
@@ -71,11 +75,25 @@ For schemas with type strains in `assets/type_strains.tsv` (see
 assembly with the type strain of each species the schema covers. The QC summary
 gives the closest type strain (`type_strain_species`, `type_strain`), its ANI
 and the share of the assembly aligned to it, and, when that ANI is 95% or more,
-the species (`species_call`). The call has no threshold of its own and does not
-change `qc_status`. It answers what Kraken2 cannot for close species: Kraken2
-splits the reads of one isolate between species whose genomes share most of
-their sequence, and many genomes in RefSeq still carry the name of the species
-they were split from.
+the species (`species_call`). It answers what Kraken2 cannot for close species:
+Kraken2 splits the reads of one isolate between species whose genomes share
+most of their sequence, and many genomes in RefSeq still carry the name of the
+species they were split from.
+
+For these schemas the species check uses the call instead of Bracken: the
+isolate fails with `species_mismatch` unless its ANI to the type strain of a
+species in the schema's `species_pattern` is 95% or more (subspecies count as
+their species). The flag names the closest type strain's species and its ANI.
+Schemas without type strains, or runs without the type strain genomes, keep the
+Bracken check: at least 0.8 of the reads from species in `species_pattern`.
+
+The type strain call only sees the assembly's main organism, so for schemas with
+type strains the Bracken check stays as a warning, `mixed_reads`, which names
+the species outside `species_pattern` with the most reads. It catches a second
+species of the same genus, which `contamination` cannot: _Raoultella_ is now
+part of _Klebsiella_ in NCBI taxonomy and in recent Kraken2 databases, so
+_K. ornithinolytica_ or _K. oxytoca_ reads in a _K. pneumoniae_ sample only show
+up here.
 
 Each transmission group with type strains also gets an all-against-all skani
 comparison of its isolates and the type strains, drawn in the report as a
@@ -88,19 +106,20 @@ The species and genome size expectations for each schema are the
 `species_pattern`, `genera`, `genome_size_min_mb` and `genome_size_max_mb`
 columns of `assets/schemas.tsv`, listed on each
 [species page](../species/index.md). The species check matters most for the
-species complexes: an `enterobacter_hormaechei` isolate that Bracken calls
-_E. cloacae_ fails with `species_mismatch`, because that scheme only covers
-_E. hormaechei_. Isolates labelled _E. cloacae_ (complex) use the scheme for the
+species complexes: an `enterobacter_hormaechei` isolate whose closest type
+strain is _E. cloacae_ fails with `species_mismatch`, because that scheme only
+covers _E. hormaechei_. Isolates labelled _E. cloacae_ (complex) use the scheme for the
 whole complex instead, where an _E. hormaechei_ isolate passes the species
 check but gets a `distant_reference` warning, the reference being
 _E. cloacae_.
 
 ## Allele calling QC
 
-For cgMLST schemas an isolate also fails with `low_calls` if fewer than 90% of
-loci are called (`min_called_fraction` in `assets/schemas.tsv`). The wgMLST
-_S. maltophilia_ scheme has no such cut-off, since each genome contains only
-about a quarter of its loci.
+An isolate also fails with `low_calls` if fewer than 90% of loci are called
+(`min_called_fraction` in `assets/schemas.tsv`). For the wgMLST
+_S. maltophilia_ scheme, of which each genome carries only about a quarter,
+this and the distances count only the 1,275 core loci in
+`assets/core_loci/smaltophilia.txt`.
 
 `allele_qc.tsv` lists, per isolate, the loci called, the missing loci (schema
 loci without a valid call: not found, partial at a contig end, or ambiguous)

@@ -15,7 +15,7 @@ Example configs for our own servers live in
 config and a parameters file for your server:
 
 ```bash
-tmux new -s sinklink 'nextflow run ryanjameskennedy/sinklink -r v0.5.0 -profile singularity \
+tmux new -s sinklink 'nextflow run ryanjameskennedy/sinklink -r v0.6.0 -profile singularity \
     -c server.config -params-file server.yaml \
     --input samplesheet.csv --metadata metadata.csv --outdir results'
 ```

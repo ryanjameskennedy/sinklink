@@ -31,7 +31,7 @@ The schema accepts _E. hormaechei_ only.
 - Isolates labelled _E. cloacae_ or _E. cloacae_ complex use the
   [scheme for the whole complex](ecloacae.md) instead, since the lab label
   rarely says which member of the complex it is. An isolate labelled
-  _E. hormaechei_ that Bracken calls _E. cloacae_ or _E. asburiae_ fails with
-  `species_mismatch`.
+  _E. hormaechei_ whose closest type strain is _E. cloacae_ or _E. asburiae_
+  fails with `species_mismatch`.
 
 Full citations are in the [references](../reference/references.md).

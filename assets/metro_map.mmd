@@ -48,6 +48,7 @@ graph LR
     %% Assembly QC
     quast[QUAST]
     mash[Mash]
+    skani[skani]
     gambitcore[gambitcore]
     mlst[mlst]
     mapping[BWA-MEM / minimap2]
@@ -57,7 +58,8 @@ graph LR
 
     assembly_fa -->|qc| quast
     quast -->|qc| mash
-    mash -->|qc| gambitcore
+    mash -->|qc| skani
+    skani -->|qc| gambitcore
     gambitcore -->|qc| mlst
     mlst -->|qc| mapping
     mapping -->|qc| coverage

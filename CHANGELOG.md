@@ -3,6 +3,28 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.6.0 - 2026-11-25
+
+Takes the species check from the closest type strain where a schema has type
+strains, adds the _Klebsiella_ type strains, counts _S. maltophilia_ distances
+over the paper's 1,275 core loci and fails isolates with fragmented or wrongly
+sized assemblies. These changes have run only on test inputs and as stubs in
+CI, not yet on real data.
+
+### `Added`
+
+- Type strains for the _Klebsiella pneumoniae_ species complex (8 genomes, `kpneumoniae`) and the _Klebsiella oxytoca_ species complex (6 genomes, `koxytoca`)
+- The 1,275 core loci of the Gröschel et al. 2020 _S. maltophilia_ scheme (Supplementary Data 2) in `assets/core_loci/smaltophilia.txt`
+- `mixed_reads` warns when less than 0.8 of the reads come from species in `species_pattern` for schemas with type strains, naming the species outside it with the most reads; it catches a second species of the same genus, such as _Raoultella_, now _Klebsiella_ in NCBI taxonomy
+
+### `Changed`
+
+- For schemas with type strains, `species_mismatch` comes from the closest type strain instead of Bracken: an isolate fails unless its ANI to the type strain of a species in the schema's `species_pattern` is 95% or more; schemas without type strains keep the Bracken check
+- The `smarcescens` `species_pattern` covers the _S. marcescens_ complex species with a type strain (_S. ureilytica_, _S. sarumanii_, _S. bockelmannii_, _S. nevei_ and _S. montpellierensis_ added)
+- `smaltophilia` allele distances, missing loci and novel alleles count only the 1,275 core loci, as in the paper's d10 threshold, instead of every wgMLST locus called in both isolates, and isolates with fewer than 90% of them called fail with `low_calls`
+- The metro map shows skani on the assembly QC track
+- `many_contigs`, `low_n50` and `genome_size` fail instead of warn, and `contamination` warns instead of failing
+
 ## v0.5.0 - 2026-11-18
 
 Adds ANI, read and allele QC, a species call from type strains, an

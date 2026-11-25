@@ -18,14 +18,16 @@ used ≤20 alleles, with most outbreak isolates ≤4 apart.
 
 ## Species check
 
-The schema accepts _S. marcescens_ and _S. nematodiphila_.
+The schema accepts the species of the _S. marcescens_ complex: _S. marcescens_,
+_S. nematodiphila_, _S. ureilytica_, _S. sarumanii_, _S. bockelmannii_,
+_S. nevei_ and _S. montpellierensis_.
 
-| Setting in `assets/schemas.tsv` | Value                                    |
-| ------------------------------- | ---------------------------------------- |
-| `species_pattern`               | `^Serratia (marcescens\|nematodiphila)$` |
-| `genera`                        | Serratia                                 |
-| Expected genome size            | 4.8–5.8 Mb                               |
-| `mlst_scheme`                   | `serratia`                               |
+| Setting in `assets/schemas.tsv` | Value                                                                                                  |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `species_pattern`               | `^Serratia (marcescens\|nematodiphila\|ureilytica\|sarumanii\|bockelmannii\|nevei\|montpellierensis)$` |
+| `genera`                        | Serratia                                                                                               |
+| Expected genome size            | 4.8–5.8 Mb                                                                                             |
+| `mlst_scheme`                   | `serratia`                                                                                             |
 
 ## In the VASK study
 
@@ -34,7 +36,10 @@ Transmission_7 (50 days, three patients).
 ## Notes
 
 - NICU outbreaks reported as _S. marcescens_ have turned out to involve
-  _S. sarumanii_ and _S. bockelmannii_; these fail the species check.
+  _S. sarumanii_ and _S. bockelmannii_. These and the other species of the
+  _S. marcescens_ complex with a type strain in `assets/type_strains.tsv` pass
+  the species check, since Kraken2 cannot tell them apart; the species call
+  names them.
 - The cgmlst.org download can be slow; see [schemas](../setup/schemas.md) if it
   fails.
 
